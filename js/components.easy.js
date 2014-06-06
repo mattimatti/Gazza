@@ -17,7 +17,7 @@
 
 
 		dispose: function() {
-
+			console.clear();
 		}
 
 

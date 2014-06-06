@@ -27,12 +27,17 @@
 
 		initialize: function() {
 
-			console.debug('ComponentFade initialize', arguments);
+			this.plugin = this.$el.find('.component');
 
+			if(!this.plugin){
+				return;
+			}
+
+			console.clear();
+			console.debug('ComponentFade initialize');
 
 			this.initSound();
 
-			this.plugin = this.$el.find('.component');
 
 			// get the front and back image
 			this.front = this.$el.find('.front').show();
@@ -187,6 +192,7 @@
 				this.showFront();
 				this.back.hide();
 			}
+
 		}
 
 

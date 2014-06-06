@@ -28,13 +28,17 @@
 		hqImage: null,
 
 		initialize: function() {
-			console.debug('initialize', arguments);
-
-
-			this.initSound();
-
+			
 			this.plugin = this.$el.find('.component');
 
+			if(!this.plugin){
+				return;
+			}
+
+			console.clear();
+			console.debug('initialize', arguments);
+
+			this.initSound();
 
 			// must be wrapped in a container div
 			var container = $("<div class='pancontainer'></div>");
@@ -107,7 +111,6 @@
 		},
 
 		dispose: function() {
-			console.debug('dispose');
 
 			this.disposeSound();
 
