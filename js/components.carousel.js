@@ -221,8 +221,6 @@
 			this.setupNextPair();
 			this.showNext();
 
-			console.clear();
-
 		}
 
 
