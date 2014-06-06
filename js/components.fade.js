@@ -180,6 +180,7 @@
 		},
 
 		dispose: function() {
+			this.disposeSound();
 			this.$el.off();
 			this.stopLooping();
 			if (!this.frontVisible) {

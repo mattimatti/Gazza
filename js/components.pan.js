@@ -71,6 +71,7 @@
 
 		clickComponent : function(){
 			console.debug('clickComponent');
+			this.sound.playSound('click');
 			this.toggleZoom();
 		},
 

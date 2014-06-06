@@ -36,7 +36,7 @@
 		// play an arbitrary sound
 		playSound: function(soundId) {
 
-			console.error('playSound', soundId);
+			console.debug('playSound', soundId);
 
 			if (!createjs.Sound.initializeDefaultPlugins()) {
 				return;

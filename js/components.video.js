@@ -22,7 +22,10 @@
 
 
 		initialize: function() {
+
 			console.debug('video initialize', arguments);
+
+			this.initSound();
 
 			var $video = this.$el.find('video');
 
@@ -59,9 +62,11 @@
 				console.error("clicking a video not inited");
 			}
 
+			this.sound.playSound('click');
+
 			// put it in try catch.. if the video is not playing fires an error..
 			// HTML5 full of Bullshit .
-			
+
 			var isPlaying = false;
 			try {
 				isPlaying = this.plugin.isPlaying();
@@ -76,8 +81,20 @@
 
 		},
 
+		initSound: function() {
+			console.error('initSound');
+			this.sound = new window.ComponentSound();
+			this.sound.registerSoundById('click');
+		},
+
+
+		disposeSound: function() {
+			this.sound.removeAllSounds();
+			delete this.sound;
+		},
 
 		dispose: function() {
+			this.disposeSound();
 			console.debug('video dispose');
 			if (this.plugin) {
 				this.plugin.pause();
@@ -85,7 +102,7 @@
 				this.plugin.controlBar.hide();
 				this.plugin.controls(false);
 			}
-
+			console.clear();
 		}
 
 

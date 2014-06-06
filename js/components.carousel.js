@@ -4,6 +4,8 @@
 	var Component = function(element, options) {
 		this.$el = $(element);
 
+		this.elementId = this.$el.attr('id');
+
 
 		// Default options for the fade plugin
 
@@ -40,6 +42,11 @@
 
 			this.itemsCount = this.items.length;
 			console.debug('this.itemsCount', this.itemsCount);
+
+			// if no items no carousel
+			if(this.itemsCount === 0){
+				return;
+			}
 
 			var firstElement = $(this.items.get(0));
 
@@ -145,7 +152,7 @@
 
 		showNext: function() {
 
-			console.debug('showNext', this.frontVisible, 'duration', this.options.duration);
+			console.debug(this.elementId + ': showNext', this.frontVisible, 'duration', this.options.duration);
 
 			this.disposeTransitions();
 
