@@ -20,6 +20,14 @@
 	$.extend(Component.prototype, {
 
 
+		// register a sound full path
+		registerSoundFullPath: function(fullPath) {
+			createjs.Sound.alternateExtensions = ["mp3"];
+			createjs.Sound.registerSound(fullPath, soundid);
+		},
+
+
+		// register a sound just by id. the defalt folder 
 		registerSoundById: function(soundid, customAudioPath) {
 
 			createjs.Sound.alternateExtensions = ["mp3"];
@@ -32,6 +40,8 @@
 			var fullPath = path + soundid + '.ogg';
 			createjs.Sound.registerSound(fullPath, soundid);
 		},
+
+
 
 		// play an arbitrary sound
 		playSound: function(soundId) {

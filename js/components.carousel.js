@@ -12,7 +12,8 @@
 		this.defaults = {
 			loop: true,
 			delay: .5,
-			duration: 1
+			duration: 1,
+			sound:null
 		};
 
 		// merge default options with
@@ -199,14 +200,18 @@
 
 
 		initSound : function(){
+			if(this.options.sound){
 			this.sound = new window.ComponentSound();
-			this.sound.registerSoundById('click');
+			this.sound.registerSoundFullPath('click', this.options.sound);
+			}
 		},
 
 
 		disposeSound : function(){
-			this.sound.removeAllSounds();
-			delete this.sound;
+			if(this.sound){
+				this.sound.removeAllSounds();
+				delete this.sound;
+			}
 		},
 
 

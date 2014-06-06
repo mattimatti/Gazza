@@ -100,14 +100,18 @@
 		},
 
 		initSound : function(){
+			if(this.options.sound){
 			this.sound = new window.ComponentSound();
-			this.sound.registerSoundById('click');
+			this.sound.registerSoundFullPath('click', this.options.sound);
+			}
 		},
 
 
 		disposeSound : function(){
-			this.sound.removeAllSounds();
-			delete this.sound;
+			if(this.sound){
+				this.sound.removeAllSounds();
+				delete this.sound;
+			}
 		},
 
 		dispose: function() {
@@ -118,6 +122,7 @@
 				this.plugin.panzoom('reset');
 				this.zoomIn = false;
 				this.swapSource(this.originalimage);
+				// remove click
 				this.plugin.off();
 				this.plugin.panzoom("destroy");
 				this.plugin.unwrap();

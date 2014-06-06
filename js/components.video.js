@@ -10,7 +10,8 @@
 			autoplay: true,
 			interactive: false,
 			controls: false,
-			preload: 'none'
+			preload: 'none',
+			sound:null
 		};
 
 		// merge default options with
@@ -85,19 +86,19 @@
 
 		},
 
-		initSound: function() {
-			console.debug('initSound');
+		initSound : function(){
+			if(this.options.sound){
 			this.sound = new window.ComponentSound();
-			this.sound.registerSoundById('click');
+			this.sound.registerSoundFullPath('click', this.options.sound);
+			}
 		},
 
 
-		disposeSound: function() {
-			if (this.sound) {
+		disposeSound : function(){
+			if(this.sound){
 				this.sound.removeAllSounds();
 				delete this.sound;
 			}
-
 		},
 
 		dispose: function() {
