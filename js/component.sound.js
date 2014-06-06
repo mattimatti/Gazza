@@ -1,4 +1,4 @@
-component.sound.js(function() {
+(function() {
 
 	// component Easy do nothing it's just for completeness of the api
 
