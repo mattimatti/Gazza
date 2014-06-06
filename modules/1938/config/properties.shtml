@@ -1,0 +1,24 @@
+"events":{
+
+       "onEnter": 'play',
+       "onLeave": 'stop'
+
+    
+
+
+},
+
+"CSS_default":{
+      
+ 		"is_shim": "fixed_topos",
+        "sup_bar":"fixed_head"
+
+
+},
+
+"frame":{
+
+		"data0p" :"onEnter",
+		"data99p" :"onLeave"
+
+}

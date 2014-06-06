@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <title>Anchors</title>
+    <link href="css/base.css" rel="stylesheet" type="text/css" />
+    <link rel="stylesheet" href="js/vendor/video-js-4.1.0/video-js.css"/>
+    <link rel="stylesheet" href="css/video-js.css"/>
+    <style>
+    .overlay{
+    /*can't make it work properly*/
+    display:none;
+    position: absolute;
+    z-index:10000;
+    width: 100%;
+    height: 100%;
+    top: 0px;
+    left:0px;
+    img {
+    margin: auto;
+    cursor: pointer;
+    }
+    }
+
+
+    .interactive {
+      cursor: pointer;
+    }
+
+    </style>
+  </head>
+  <body>
+    <div id="skrollr-body">
+      <div id="content">
+        <div class="anno">
+          <h1>1934</h1>
+          <h2>Gli oggetti che hanno fatto la storia del calcio</h2>
+          
+
+
+          <div class="box"   id='1934_01'   obj-type='image-easy'  obj-config='{}'>
+            <img class="component responsive" src="modules/1934/assets/imgs/fotovittoria.jpg" />
+          </div>
+
+
+
+
+          
+          <div class="box"   id='1934_02'   obj-type='image-360'  obj-config='{}'>
+          </div>
+          <div class="box"   id='1934_03'   obj-type='image-pan'  obj-config='{}'>
+            
+          </div>
+          
+          <div class="box"   id='1934_04'   obj-type='image-fade'  obj-config='{"interactive":true}'>
+            <div class="component">
+              <img class="front responsive" src="modules/1934/assets/imgs/moneta1.jpg" />
+              <img class="back hide responsive" src="modules/1934/assets/imgs/moneta2.jpg" />
+            </div>
+            <h3><span class="blinker" ><span class="blink_1" ></span><span class="blink_2" ></span><span class="blink_3" ></span></span><strong>image-fade</strong> {"interactive":true}.<br/></h3>
+          </div>
+
+        </div>
+        <div class="anno">
+          <h1>1938</h1>
+
+          <div class="box"   id='1938_00'   obj-type='carousel'  obj-config='{"duration":1}'>
+              
+                <div class="component responsive">
+                  <img class="responsive item" src="modules/1934/assets/imgs/moneta1.jpg" />
+                  <img class="responsive item hide" src="modules/1934/assets/imgs/moneta2.jpg" />
+                  <img class="responsive item hide" src="modules/1934/assets/imgs/moneta1.jpg" />
+                  <img class="responsive item hide" src="modules/1934/assets/imgs/moneta2.jpg" />
+                </div>
+             
+               <h3><span class="blinker" ><span class="blink_1" ></span><span class="blink_2" ></span><span class="blink_3" ></span></span><strong>carousel</strong> {"duration":1}.<br/></h3>
+          </div>
+
+           <div class="box"   id='1938_99'   obj-type='carousel'  obj-config='{"duration":1,"interactive":true}'>
+              
+                <div class="component responsive">
+                  <img class="responsive item" src="modules/1934/assets/imgs/moneta1.jpg" />
+                  <img class="responsive item hide" src="modules/1934/assets/imgs/moneta2.jpg" />
+                  <img class="responsive item hide" src="modules/1934/assets/imgs/moneta1.jpg" />
+                  <img class="responsive item hide" src="modules/1934/assets/imgs/moneta2.jpg" />
+                </div>
+             
+               <h3><span class="blinker" ><span class="blink_1" ></span><span class="blink_2" ></span><span class="blink_3" ></span></span><strong>carousel</strong> {"duration":1,"interactive":true}.<br/></h3>
+          </div>
+
+
+          
+          <div class="box"   id='1938_01'   obj-type='image-fade'  obj-config='{"loop":true, "duration":2}'>
+            <div class="component">
+              <img class="front responsive" src="modules/1934/assets/imgs/moneta1.jpg" />
+              <img class="back hide responsive" src="modules/1934/assets/imgs/moneta2.jpg" />
+            </div>
+            <h3><span class="blinker" ><span class="blink_1" ></span><span class="blink_2" ></span><span class="blink_3" ></span></span><strong>image-fade</strong> {"loop":true, "duration":2}.<br/></h3>
+          </div>
+
+          <div class="box"   id='1938_02'   obj-type='image-360'  obj-config='{"images":"modules/1934/assets/imgs/scarpa#.jpg|1..2|1","frame":2,"speed":0.5}'>
+            <img class="component responsive" src="modules/1934/assets/imgs/scarpa1.jpg" />
+            <h3><span class="blinker" ><span class="blink_1" ></span><span class="blink_2" ></span><span class="blink_3" ></span></span><strong>image-360</strong>{"images":"modules/1934/assets/imgs/scarpa#.jpg|1..2|1","frame":2,"speed":0.5}</br></h3>
+          </div>
+
+          <div class="box"   id='1938_03'   obj-type='image-easy'  obj-config='{}'>
+            <img class="component responsive" src="modules/1934/assets/imgs/fotovittoria.jpg" />
+            <h3><span class="blinker" ><span class="blink_1" ></span><span class="blink_2" ></span><span class="blink_3" ></span></span><strong>image-easy</strong> static.
+            Lorem Ipsum del calcio. La partita &#232; Francia - Galles</h3>
+          </div>
+          <div class="box"   id='1938_04'   obj-type='image-360'  obj-config='{"images":"modules/1934/assets/imgs/scarpa#.jpg|1..2|1","interactive":true}'>
+            <img class="component responsive" src="modules/1934/assets/imgs/scarpa1.jpg" />
+            <h3><span class="blinker" ><span class="blink_1" ></span><span class="blink_2" ></span><span class="blink_3" ></span></span><strong>image-360 </strong> {"images":"modules/1934/assets/imgs/scarpa#.jpg|1..2|1","interactive":true}.<br/></h3>
+          </div>
+          <div class="box"   id='1938_05'   obj-type='image-pan'  obj-config='{"hqSrc": "modules/1934/assets/imgs/prima34.jpg" }'>
+              <img class="component responsive" src="modules/1934/assets/imgs/1934.jpg" />
+          </div>
+        </div>
+        <div class="anno">
+          <h1>1950</h1>
+          <div class="box"   id='1950_01'   obj-type='video-clip'  obj-config='{}'>
+            
+          <video width="auto" height="600" src="http://vjs.zencdn.net/v/oceans.mp4" class="responsive component video-js vjs-default-skin" data-setup="{}" controls></video>
+          <h3><span class="blinker" ><span class="blink_1" ></span><span class="blink_2" ></span><span class="blink_3" ></span></span><strong>video-clip</strong> {}.<br/><br/></h3>
+        </div>
+        <div class="box"   id='1950_01Bis'   obj-type='video-clip'  obj-config='{"interactive":true}'>
+            
+          <video  width="auto" height="600" src="http://vjs.zencdn.net/v/oceans.mp4" class="responsive component video-js vjs-default-skin" data-setup="{}" controls></video>
+          <h3><span class="blinker" ><span class="blink_1" ></span><span class="blink_2" ></span><span class="blink_3" ></span></span><strong>video-clip</strong> {"interactive":true}.<br/><br/></h3>
+        </div>
+        <div class="box"   id='1950_02'   obj-type='image-360'  obj-config='{"kiave1":1,"kiave2":2}'> </div>
+        <div class="box"   id='1950_03'   obj-type='image-easy'  obj-config='{"kiave1":1,"kiave2":2}'> </div>
+        <div class="box"   id='1950_04'   obj-type='image-pan'  obj-config='{"kiave1":1,"kiave2":2}'> </div>
+        <div class="box"   id='1950_05'   obj-type='image-easy'  obj-config='{"kiave1":1,"kiave2":2}'> </div>
+        <div class="box"   id='1950_06'   obj-type='image-360'  obj-config='{"kiave1":1,"kiave2":2}'> </div>
+        <div class="box"   id='1950_07'   obj-type='image-easy'  obj-config='{"kiave1":1,"kiave2":2}'> </div>
+        <div class="box"   id='1950_08'   obj-type='image-360'  obj-config='{"kiave1":1,"kiave2":2}'> </div>
+        <div class="box"   id='1950_09'   obj-type='image-easy'  obj-config='{"kiave1":1,"kiave2":2}'> </div>
+        <div class="box"   id='1950_10'   obj-type='image-easy'  obj-config='{"kiave1":1,"kiave2":2}'> </div>
+        <div class="box"   id='1950_11'   obj-type='carousel'  obj-config='{}'>
+        </div>
+        <div class="box"   id='1950_12'   obj-type='image-360'  obj-config='{"kiave1":1,"kiave2":2}'> </div>
+        <div class="box"   id='1950_13'   obj-type='image-360'  obj-config='{"kiave1":1,"kiave2":2}'> </div>
+      </div>
+    </div>
+  </div>
+  <!-- LIBS -->
+  <script type="text/javascript" src="js/vendor/jquery-1.9.1.js"></script>
+  <script type="text/javascript" src="js/vendor/skrollr.min.js"></script>
+  <script type="text/javascript" src="js/vendor/jquery.reel.js"></script>
+  <script type="text/javascript" src="js/vendor/jquery.panzoom.js"></script>
+  <script type="text/javascript" src="js/vendor/TweenMax.js"></script>
+  <script type="text/javascript" src="js/vendor/video-js-4.1.0/video.js"></script>
+  <!-- COMPONENTS -->
+  <script type="text/javascript" src="js/components.pan.js"></script>
+  <script type="text/javascript" src="js/components.easy.js"></script>
+  <script type="text/javascript" src="js/components.360.js"></script>
+  <script type="text/javascript" src="js/components.carousel.js"></script>
+  <script type="text/javascript" src="js/components.fade.js"></script>
+  <script type="text/javascript" src="js/components.video.js"></script>
+  <script type="text/javascript" src="js/components.menu.js"></script>
+  <script type="text/javascript" src="js/components.scroller.js"></script>
+</body>
+</html>

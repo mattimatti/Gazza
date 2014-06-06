@@ -1,0 +1,70 @@
+﻿<!DOCTYPE html>
+<!--#config timefmt="%Y%m%d%H%M" -->
+<!--#set var="sezione"        value="infografichemini" -->
+<!--#set var="sottosezione"   value="default" -->
+<!--#set var="tipologia"      value="whitelabel" -->
+<!--#set var="lang"           value="it" -->
+<!--#set var="ARTICLE_TITLE"  value=" - Gazzetta dello Sport" -->
+
+<!--#include virtual="/includes2013/SSI/config/global.config" -->
+<!--#include virtual="${HEAD_PATH}/writehtmltag.shtml" -->
+
+<head>
+<!--#include virtual="${HEAD_PATH}/default.shtml" -->
+</head>
+
+<body id="<!--#echo var='sezione' -->" class="sub-<!--#echo var='sottosezione' --> type-<!--#echo var='tipologia' -->">
+
+<!--#include virtual="${SSI_PATH}/config/ssiVariables.shtml" --> 
+
+<!--#set var="info_path"		value="./modules/" --> 
+<!--#set var="res_path"		value="./" --> 
+<!--#set var="ani_path"		value="../../" --> 
+
+<!--#set var="de" value="" --> 
+
+<!--#if expr="$QUERY_STRING = /de=([a-zA-Z0-9]+)/" --> 
+<!--#set var="de" value="$1" --> 
+<!--#endif --> 
+
+<!--#if expr="$HTTP_HOST = /(staging+)/" --> 
+
+<!-- cosa fa quando trova "staging"? --> 
+
+<!--#endif -->
+
+
+
+<div class="master-container"> 
+  
+  <!--#set var="module_id"		value="anno_1930" --> 
+  <!--#set var="module_dir"		value="1930" --> 
+  <!--#set var="module_pos"		value="1" --> 
+  <!--#set var="module_nav1"	value="${module_id}" -->
+  
+  <div id="<!--#echo var='module_id' -->" > 
+    <!--#include virtual="modules/${module_dir}/index.shtml" --> 
+  </div>
+</div>
+
+
+
+
+
+<div id="nav_click" class="disp_<!--#echo var='device' -->"></div>
+<div id="is_nav" class="disp_<!--#echo var='device' -->">
+  <ul>
+    <li> <span>&nbsp;</span> <a href="#s/<!--#echo var='module_nav1' -->"><strong>1930</strong></a> </li>
+  </ul>
+</div>
+
+<!--#include virtual="${FOOTER_PATH}/footer.shtml" --> 
+
+<script>
+
+TrackNielsen("refresh_ce-awe");
+
+s.trackAjaxFotoGallery("12345");
+</script>
+</body>
+</html>
