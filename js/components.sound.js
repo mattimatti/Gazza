@@ -82,7 +82,11 @@
 
 		removeAllSounds: function() {
 			if(createjs.Sound){
-				createjs.Sound.removeAllSounds();
+				try{
+					createjs.Sound.removeAllSounds();
+				}catch(e){
+				}
+				
 			}
 			
 		}

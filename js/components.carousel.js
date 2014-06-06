@@ -224,8 +224,12 @@
 			this.stopLooping();
 			this.disposeTransitions();
 
-			//this.setupNextPair();
-			//this.showNext();
+			this.prepareItems();
+
+			this.imageIndex = -1;
+
+			this.setupNextPair();
+			this.showNext();
 
 		}
 
