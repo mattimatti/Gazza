@@ -29,6 +29,9 @@
 
 			console.debug('ComponentFade initialize', arguments);
 
+
+			this.initSound();
+
 			this.plugin = this.$el.find('.component');
 
 			// get the front and back image
@@ -87,6 +90,8 @@
 			if(this.transitioning){
 				return;
 			}
+
+			this.sound.playSound('click');
 			this.toggleImage();
 		},
 
@@ -163,7 +168,16 @@
 			}
 		},
 
+		initSound : function(){
+			this.sound = new window.ComponentSound();
+			this.sound.registerSoundById('click');
+		},
 
+
+		disposeSound : function(){
+			this.sound.removeAllSounds();
+			delete this.sound;
+		},
 
 		dispose: function() {
 			this.$el.off();

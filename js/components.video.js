@@ -44,6 +44,7 @@
 			// make the video interactive on click
 			if (this.options.interactive) {
 				this.$el.on("click", $.proxy(this.toggleVideoPlayback, this));
+				this.$el.addClass('interactive');
 			} else {
 				this.plugin.play();
 			}

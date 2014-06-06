@@ -30,6 +30,9 @@
 		initialize: function() {
 			console.debug('initialize', arguments);
 
+
+			this.initSound();
+
 			this.plugin = this.$el.find('.component');
 
 
@@ -91,8 +94,21 @@
 			
 		},
 
+		initSound : function(){
+			this.sound = new window.ComponentSound();
+			this.sound.registerSoundById('click');
+		},
+
+
+		disposeSound : function(){
+			this.sound.removeAllSounds();
+			delete this.sound;
+		},
+
 		dispose: function() {
 			console.debug('dispose');
+
+			this.disposeSound();
 
 			if (this.plugin) {
 				this.plugin.panzoom('reset');

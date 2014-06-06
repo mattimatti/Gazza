@@ -26,9 +26,13 @@
 
 		imageIndex: -1,
 
+		sound : null,
+
 		initialize: function() {
 
 			console.debug('ComponentCarousel::initialize');
+
+			this.initSound();
 
 			this.plugin = this.$el.find('.component');
 
@@ -51,6 +55,8 @@
 			this.prepareItems();
 
 			// setup which will be the first pair
+
+
 			
 
 			//if interactive is set disable loop
@@ -133,6 +139,7 @@
 			console.debug('clickComponent', this.frontVisible);
 			this.setupNextPair();
 			this.showNext();
+			this.sound.playSound('click');
 		},
 
 
@@ -183,6 +190,17 @@
 			}
 		},
 
+
+		initSound : function(){
+			this.sound = new window.ComponentSound();
+			this.sound.registerSoundById('click');
+		},
+
+
+		disposeSound : function(){
+			this.sound.removeAllSounds();
+			delete this.sound;
+		},
 
 
 		dispose: function() {
