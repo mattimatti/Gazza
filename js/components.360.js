@@ -8,7 +8,7 @@
 		// Default options for the reel plugin
 		this.defaults = {
 			images: null,
-			cursor: 'none', // define the cursor
+			cursor: 'default', // define the cursor
 			draggable:false
 		};
 
@@ -23,7 +23,7 @@
 
 
 			if(this.options.interactive){
-				this.options.cursor = undefined;
+				this.options.cursor = 'pointer';
 				this.options.draggable = true;
 			}
 

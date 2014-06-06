@@ -133,16 +133,6 @@
     </div>
     
     
-    
-       <!--#set var="module_id"		value="anno_1954" --> 
-    <!--#set var="module_dir"		value="1954" --> 
-    <!--#set var="module_pos"		value="5" --> 
-    <!--#set var="module_nav4"	value="${module_id}" -->
-    
-    <div id="<!--#echo var='module_id' -->" > 
-      <!--#include virtual="modules/${module_dir}/index.shtml" --> 
-    </div>
-    
        <!--#set var="module_id"		value="anno_2002" --> 
     <!--#set var="module_dir"		value="2002" --> 
     <!--#set var="module_pos"		value="5" --> 

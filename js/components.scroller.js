@@ -108,14 +108,14 @@
 
 	// append behaviours
 	$(".box").attr("data-emit-events","data-emit-events");
-	$(".box").attr("data--100-top","").attr("data-100-bottom","");
+	$(".box").attr("data-top-bottom","").attr("data-100-bottom","");
 
 
 	skrollr.init({
 		forceHeight: true,
 		keyframe: function(element, name, direction) {
 
-			console.log(element.id, name, direction );
+			//	console.log(element.id, name, direction );
 
 			var elm = Modules[element.getAttribute('obj-type')];
 			var cfg = (element.getAttribute('obj-config'));
@@ -123,13 +123,11 @@
 			// parse to json object
 			cfg = $.parseJSON(cfg);
 
-
-
 			//element.className='box skrollable '+direction;
 
 			if (direction === 'down') {
 
-				('data-100Top' === name) ? elm.remove(element, cfg) : elm.init(element, cfg);
+				('dataTopBottom' === name) ? elm.remove(element, cfg) : elm.init(element, cfg);
 
 			} else {
 

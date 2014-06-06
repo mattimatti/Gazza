@@ -1,1 +1,20 @@
-<h1>1930</h1>
+<div class="anno" id=<!--#echo var='module_id' -->>
+  <h1><!--#echo var='module_dir' --></h1>
+  <h2>Gli oggetti che hanno fatto la storia del calcio</h2>
+  
+  <div class="box"   id='<!--#echo var='module_dir' -->_01'   obj-type='image-360'  obj-config='{"images":"<!--#echo var='info_path' --><!--#echo var='module_dir' -->/assets/imgs/<!--#echo var='img_pref' -->pallone#.jpg|1..11|1","frames":11,"autosize":true,"responsive":true,"speed":0,"cursor":"pointer","interactive":true}'> <img class="component responsive" src="<!--#echo var='info_path' --><!--#echo var='module_dir' -->/assets/imgs/<!--#echo var='img_pref' -->pallone1.jpg" />
+    <h3><span class="blinker" ><span class="blink_1" ></span><span class="blink_2" ></span><span class="blink_3" ></span></span><strong>Il Pallone</strong> Questo &#232; il primo pallone con cui fu segnato il primo gol. 
+      Lorem Ipsum del calcio. La partita &#232; Francia - Galles</h3>
+  </div>
+  
+  <div class="box"   id='<!--#echo var='module_dir' -->_02'   obj-type='image-pan'  obj-config='{"maxZoom":3,"kiave2":2}'> <img class="component responsive" src="<!--#echo var='info_path' --><!--#echo var='module_dir' -->/assets/imgs/<!--#echo var='img_pref' -->poster.jpg" />
+    <h3><span class="blinker" ><span class="blink_1" ></span><span class="blink_2" ></span><span class="blink_3" ></span></span><strong>Il Pallone</strong> Questo &#232; il primo pallone con cui fu segnato il primo gol. 
+      Lorem Ipsum del calcio. La partita &#232; Francia - Galles</h3>
+  </div>
+  
+  <div class="box"   id='<!--#echo var='module_dir' -->_03'   obj-type='image-360'  obj-config='{"images":"<!--#echo var='info_path' --><!--#echo var='module_dir' -->/assets/imgs/<!--#echo var='img_pref' -->stadio#.jpg|1..4|1","frames":4,"autosize":true,"responsive":true,"speed":0.5,"cursor":"default"}'> <img class="component responsive" src="<!--#echo var='info_path' --><!--#echo var='module_dir' -->/assets/imgs/<!--#echo var='img_pref' -->stadio1.jpg" />
+    <h3><strong>Il Pallone</strong> Questo &#232; il primo pallone con cui fu segnato il primo gol. 
+      Lorem Ipsum del calcio. La partita &#232; Francia - Galles</h3>
+  </div>
+  
+</div>
