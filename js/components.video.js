@@ -23,16 +23,18 @@
 
 		initialize: function() {
 
-			console.debug('video initialize', arguments);
-
-			this.initSound();
-
 			var $video = this.$el.find('video');
 
 			this.video = this.$el.find('video').get(0);
 
-			console.debug('this.video', this.video);
+			if(!this.video){
+				return;
+			}
 
+
+			
+			console.clear();
+			console.debug('video initialize');
 
 			// if interactive set autoplay at false
 			if (this.options.interactive) {
@@ -48,6 +50,7 @@
 			if (this.options.interactive) {
 				this.$el.on("click", $.proxy(this.toggleVideoPlayback, this));
 				this.$el.addClass('interactive');
+				this.initSound();
 			} else {
 				this.plugin.play();
 			}
@@ -62,6 +65,7 @@
 				console.error("clicking a video not inited");
 			}
 
+			this.initSound();
 			this.sound.playSound('click');
 
 			// put it in try catch.. if the video is not playing fires an error..
@@ -69,10 +73,10 @@
 
 			var isPlaying = false;
 			try {
-				isPlaying = this.plugin.isPlaying();
+				isPlaying = this.plugin.paused();
 			} catch (e) {}
 
-			console.debug("toggleVideoPlayback", this.plugin);
+			console.debug("toggleVideoPlayback", this.plugin, this.plugin.paused());
 			if (isPlaying) {
 				this.plugin.pause();
 			} else {
@@ -82,27 +86,30 @@
 		},
 
 		initSound: function() {
-			console.error('initSound');
+			console.debug('initSound');
 			this.sound = new window.ComponentSound();
 			this.sound.registerSoundById('click');
 		},
 
 
 		disposeSound: function() {
-			this.sound.removeAllSounds();
-			delete this.sound;
+			if(this.sound){
+				this.sound.removeAllSounds();
+				delete this.sound;
+			}
+
 		},
 
 		dispose: function() {
-			this.disposeSound();
-			console.debug('video dispose');
+
 			if (this.plugin) {
+				this.disposeSound();
 				this.plugin.pause();
 				this.plugin.currentTime(0);
 				this.plugin.controlBar.hide();
 				this.plugin.controls(false);
 			}
-			console.clear();
+			
 		}
 
 

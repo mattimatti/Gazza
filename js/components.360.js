@@ -29,11 +29,6 @@
 
 			this.plugin = this.$el.find('.component');
 
-			// no component no instance
-			if(!this.plugin){
-				return;
-			}
-
 			// override the size. plugin needs them explicitly
 			this.plugin.attr("width", this.plugin.width());
 			this.plugin.attr("height", this.plugin.height());
@@ -55,7 +50,7 @@
 			if(this.plugin){
 				this.plugin.unreel();
 			}
-			console.clear();
+			
 		}
 
 

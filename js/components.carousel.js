@@ -218,8 +218,8 @@
 			this.stopLooping();
 			this.disposeTransitions();
 
-			this.setupNextPair();
-			this.showNext();
+			//this.setupNextPair();
+			//this.showNext();
 
 		}
 

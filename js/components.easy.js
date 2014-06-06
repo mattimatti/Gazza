@@ -12,12 +12,12 @@
 
 
 		initialize: function() {
-
+			console.clear();
+			console.debug('ComponentEasy initialize');
 		},
 
 
 		dispose: function() {
-			console.clear();
 		}
 
 
