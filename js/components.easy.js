@@ -4,8 +4,14 @@
 
 	var Component = function(element, options) {
 		this.options = options;
-		this.$el = element;
+		this.$el = $(element);
 	}
+
+	// MIXIN
+	
+	$.extend(Component.prototype, window.MixinPreloader);
+
+	//extend prototype
 
 	$.extend(Component.prototype, {
 

@@ -17,6 +17,12 @@
 
 	};
 
+	// MIXIN
+	
+	$.extend(Component.prototype, window.MixinPreloader);
+
+	//extend prototype
+
 	$.extend(Component.prototype, {
 
 		initialize: function() {

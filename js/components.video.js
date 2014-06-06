@@ -1,7 +1,6 @@
 (function() {
 
 	var Component = function(element, options) {
-		console.debug('constructor', arguments);
 
 		this.$el = $(element);
 
@@ -17,6 +16,12 @@
 		// merge default options with
 		this.options = $.extend(this.defaults, options);
 	}
+
+	// MIXIN
+	
+	$.extend(Component.prototype, window.MixinPreloader);
+
+	//extend prototype
 
 	$.extend(Component.prototype, {
 

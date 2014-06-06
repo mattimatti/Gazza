@@ -8,10 +8,9 @@
 		// Default options for the reel plugin
 		this.defaults = {
 			mode: 'fade',
-			interactive:false,
 			pager: false,
 			controls:false,
-			responsive:false,
+			responsive:true,
 			auto:true
 		};
 
@@ -20,26 +19,40 @@
 
 	};
 
+	// MIXIN
+	
+	$.extend(Component.prototype, window.MixinPreloader);
+
+	//extend prototype
+
 	$.extend(Component.prototype, {
 
 		initialize: function() {
 
 
 			if(this.options.interactive){
-				this.options.cursor = 'pointer';
-				this.options.draggable = true;
+				this.options.auto = false;
+				delete this.options.interactive;
 			}
 
-			this.plugin = this.$el.find('.component');
+			delete this.options.sound;
+			delete this.options.duration;
 
-			// override the size. plugin needs them explicitly
-			this.plugin.attr("width", this.plugin.width());
-			this.plugin.attr("height", this.plugin.height());
+			console.debug('instance bxSlider with options', this.options);
 
+			//console.debug(this.$el.find('.component'));
+			///console.debug($('.component'));
 
-			console.debug('instance reel with options', this.options);
-			// setup the plugin
-			this.plugin.bxSlider(this.options);
+			//this.plugin = $(this.$el.find('.component')).bxSlider(this.options);
+
+			var parentId = this.$el.attr('id');
+
+			 //this.plugin = $('.bxslider',this.$el).bxSlider(this.options);
+			 this.plugin = $('.bxslider').bxSlider(this.options);
+			//console.debug(this.plugin);
+
+			
+
 		},
 		
 
@@ -47,7 +60,7 @@
 		dispose: function() {
 
 			if(this.plugin){
-				this.plugin.destroySlider();
+				//this.plugin.destroySlider();
 			}
 			
 		}

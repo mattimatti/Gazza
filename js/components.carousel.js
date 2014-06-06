@@ -13,13 +13,19 @@
 			loop: true,
 			delay: .5,
 			duration: 1,
-			sound:null
+			sound: null
 		};
 
 		// merge default options with
 		this.options = $.extend(this.defaults, options);
 
 	};
+
+	// MIXIN
+
+	$.extend(Component.prototype, window.MixinPreloader);
+
+	//extend prototype
 
 	$.extend(Component.prototype, {
 
@@ -29,11 +35,11 @@
 
 		imageIndex: -1,
 
-		sound : null,
+		sound: null,
 
 		initialize: function() {
 
-			console.debug('ComponentCarousel::initialize');
+
 
 			this.initSound();
 
@@ -45,10 +51,14 @@
 			console.debug('this.itemsCount', this.itemsCount);
 
 			// if no items no carousel
-			if(this.itemsCount === 0){
+			if (this.itemsCount === 0) {
 				console.error("carousel must have at least one item");
 				return;
 			}
+
+			console.clear();
+
+			console.error(this.elementId + ': Carousel initialize');
 
 			var firstElement = $(this.items.get(0));
 
@@ -66,7 +76,6 @@
 			// setup which will be the first pair
 
 
-			
 
 			//if interactive is set disable loop
 			if (this.options.interactive) {
@@ -90,7 +99,11 @@
 		},
 
 		prepareItems: function() {
-			console.debug('prepareItems');
+			console.debug(this.elementId + ':prepareItems');
+
+			if (!this.items) {
+				this.items = this.$el.find('.item');
+			}
 
 			// hide all images
 			this.items.hide();
@@ -102,15 +115,19 @@
 				element.css("position", "absolute");
 				element.css("top", 0);
 				element.css("left", 0);
-				//element.css("zIndex", index);
+				element.css("zIndex", self.items.length - 1 - index);
 				element.css("height", self.plugin.height());
 				element.css("width", self.plugin.width());
+
+
+				console.debug('index', index, element.css('zIndex'));
 			});
 
 
-			// show teh first
 
-			$(this.items.get(0)).show();
+			// show the first
+
+			$(this.items.get(0)).show().fadeTo(0, 1).css('zIndex', 1001);
 
 		},
 
@@ -118,7 +135,7 @@
 
 		setupNextPair: function() {
 
-			console.debug('setupNextPair');
+			console.debug(this.elementId + ':setupNextPair');
 
 			if (this.imageIndex + 1 >= this.itemsCount) {
 				this.imageIndex = -1;
@@ -145,7 +162,10 @@
 
 		// the user click
 		clickComponent: function() {
-			console.debug('clickComponent', this.frontVisible);
+			if (this.transitioning) {
+				return;
+			}
+			console.debug(this.elementId + ':clickComponent', this.frontVisible);
 			this.setupNextPair();
 			this.showNext();
 			this.sound.playSound('click');
@@ -161,6 +181,8 @@
 			// show only current pair
 			this.front.show().css('zIndex', 1001);
 			this.back.show().css('zIndex', 1000);
+
+			this.transitioning = true;
 
 			TweenMax.to(this.front, this.options.duration, {
 				alpha: 0,
@@ -178,7 +200,8 @@
 		onNextVisible: function() {
 
 			this.frontVisible = false;
-			console.debug('onNextVisible frontVisible?', this.frontVisible);
+			console.debug(this.elementId + ':onNextVisible frontVisible?', this.frontVisible);
+			this.transitioning = false;
 			if (this.options.loop) {
 				this.setupNextPair();
 				this.showNext();
@@ -200,16 +223,16 @@
 		},
 
 
-		initSound : function(){
+		initSound: function() {
 			this.sound = new window.ComponentSound();
-			if(this.options.sound){
+			if (this.options.sound) {
 				this.sound.registerSoundFullPath(this.options.sound);
 			}
 		},
 
 
-		disposeSound : function(){
-			if(this.sound){
+		disposeSound: function() {
+			if (this.sound) {
 				this.sound.removeAllSounds();
 				delete this.sound;
 			}
@@ -217,19 +240,24 @@
 
 
 		dispose: function() {
-			console.debug('dispose carousel');
+			
 
-			this.$el.off();
+			if (this.plugin) {
 
-			this.stopLooping();
-			this.disposeTransitions();
+				console.error(this.elementId + ': Carousel dispose');
 
-			this.prepareItems();
+				this.$el.off();
 
-			this.imageIndex = -1;
+				this.stopLooping();
+				this.disposeTransitions();
 
-			this.setupNextPair();
-			this.showNext();
+				this.prepareItems();
+
+				this.imageIndex = -1;
+				this.transitioning = false;
+			}
+
+
 
 		}
 

@@ -1,15 +1,26 @@
 	var instancesPool = [];
 
+	var preloadAssets = function() {
+
+
+	}
+
+
 	var Modules = {
 
 		'image-fade': {
 
-			init: function(a, b) {
+			preload: function(a, b) {
 				var obj = new window.ComponentFade(a, b);
-				obj.initialize();
+				obj.preload();
 				instancesPool[a.id] = obj;
 			},
+			init: function(a, b) {
+				if (instancesPool[a.id]) {
+					instancesPool[a.id].initialize();
+				}
 
+			},
 			remove: function(a, b) {
 				if (instancesPool[a.id]) {
 					instancesPool[a.id].dispose();
@@ -20,12 +31,17 @@
 
 		'image-360': {
 
-			init: function(a, b) {
+			preload: function(a, b) {
 				var obj = new window.ComponentReel(a, b);
-				obj.initialize();
+				obj.preload();
 				instancesPool[a.id] = obj;
 			},
+			init: function(a, b) {
+				if (instancesPool[a.id]) {
+					instancesPool[a.id].initialize();
+				}
 
+			},
 			remove: function(a, b) {
 				if (instancesPool[a.id]) {
 					instancesPool[a.id].dispose();
@@ -35,12 +51,17 @@
 
 		'video-clip': {
 
-			init: function(a, b) {
+			preload: function(a, b) {
 				var obj = new window.ComponentVideo(a, b);
-				obj.initialize();
+				obj.preload();
 				instancesPool[a.id] = obj;
 			},
+			init: function(a, b) {
+				if (instancesPool[a.id]) {
+					instancesPool[a.id].initialize();
+				}
 
+			},
 			remove: function(a, b) {
 				if (instancesPool[a.id]) {
 					instancesPool[a.id].dispose();
@@ -50,13 +71,18 @@
 
 		'image-easy': {
 
-			init: function(a, b) {
+			preload: function(a, b) {
 				var obj = new window.ComponentEasy(a, b);
-				obj.initialize();
+				obj.preload();
 				instancesPool[a.id] = obj;
 
 			},
+			init: function(a, b) {
+				if (instancesPool[a.id]) {
+					instancesPool[a.id].initialize();
+				}
 
+			},
 			remove: function(a, b) {
 				if (instancesPool[a.id]) {
 					instancesPool[a.id].dispose();
@@ -67,10 +93,17 @@
 
 		'image-pan': {
 
-			init: function(a, b) {
+			preload: function(a, b) {
 				var obj = new window.ComponentPan(a, b);
-				obj.initialize();
+				obj.preload();
 				instancesPool[a.id] = obj;
+
+			},
+
+			init: function(a, b) {
+				if (instancesPool[a.id]) {
+					instancesPool[a.id].initialize();
+				}
 
 			},
 
@@ -85,13 +118,20 @@
 
 		'carousel': {
 
-			init: function(a, b) {
-				if(!instancesPool[a.id]){
+			preload: function(a, b) {
+				if (!instancesPool[a.id]) {
 					var obj = new window.ComponentCarousel(a, b);
-						obj.initialize();
-						instancesPool[a.id] = obj;
+					obj.preload();
+					instancesPool[a.id] = obj;
 				}
-				
+
+			},
+
+			init: function(a, b) {
+				if (instancesPool[a.id]) {
+					instancesPool[a.id].initialize();
+				}
+
 			},
 
 			remove: function(a, b) {
@@ -107,15 +147,14 @@
 	};
 
 	// append behaviours
-	$(".box").attr("data-emit-events","data-emit-events");
-	$(".box").attr("data-top-bottom","").attr("data-100-bottom","");
-
-
+	$(".box").attr("data-emit-events", "data-emit-events");
+	$(".box").attr("data-top-bottom", "").attr("data-100-bottom", "").attr("data-bottom-top", "").attr("data-bottom", "");
+	
 	skrollr.init({
 		forceHeight: true,
 		keyframe: function(element, name, direction) {
 
-			//	console.log(element.id, name, direction );
+			//console.log(element.id, name, direction );
 
 			var elm = Modules[element.getAttribute('obj-type')];
 			var cfg = (element.getAttribute('obj-config'));
@@ -126,12 +165,32 @@
 			//element.className='box skrollable '+direction;
 
 			if (direction === 'down') {
-
-				('dataTopBottom' === name) ? elm.remove(element, cfg) : elm.init(element, cfg);
-
+				switch (name) {
+					case 'dataTopBottom':
+						elm.remove(element, cfg);
+						break;
+					case 'dataBottomTop':
+					case 'dataBottom':
+						elm.preload(element, cfg);
+						break;
+					default:
+						elm.init(element, cfg);
+						break;
+				}
 			} else {
+				switch (name) {
+					case 'data100Bottom':
+						elm.remove(element, cfg);
+						break;
+					case 'dataBottomTop':
+					case 'dataBottom':
+						elm.preload(element, cfg);
+						break;
+					default:
+						elm.init(element, cfg);
+						break;
+				}
 
-				('data100Bottom' === name) ? elm.remove(element, cfg) : elm.init(element, cfg);
 			}
 
 		}

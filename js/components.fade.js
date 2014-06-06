@@ -2,9 +2,8 @@
 
 
 	var Component = function(element, options) {
-		console.debug('ComponentFade constructor', arguments);
-		this.$el = $(element);
 
+		this.$el = $(element);
 
 		// Default options for the fade plugin
 	
@@ -19,6 +18,12 @@
 		this.options = $.extend(this.defaults, options);
 
 	};
+
+	// MIXIN
+	
+	$.extend(Component.prototype, window.MixinPreloader);
+
+	//extend prototype	
 
 	$.extend(Component.prototype, {
 
@@ -79,6 +84,8 @@
 				// assign click event
 				this.plugin.on('click', $.proxy(this.clickComponent, this));
 				this.plugin.addClass('interactive');
+
+				this.initSound();
 			}
 
 			// if loopstart toggling
@@ -93,6 +100,7 @@
 		// the user click
 		clickComponent : function(){
 			console.debug('clickComponent');
+
 			if(this.transitioning){
 				return;
 			}
