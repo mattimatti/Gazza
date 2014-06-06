@@ -27,12 +27,12 @@
 
 			this.video = this.$el.find('video').get(0);
 
-			if(!this.video){
+			if (!this.video) {
 				return;
 			}
 
 
-			
+
 			console.clear();
 			console.debug('video initialize');
 
@@ -71,13 +71,13 @@
 			// put it in try catch.. if the video is not playing fires an error..
 			// HTML5 full of Bullshit .
 
-			var isPlaying = false;
+			var isPaused = true;
 			try {
-				isPlaying = this.plugin.paused();
+				isPaused = this.plugin.paused();
 			} catch (e) {}
 
 			console.debug("toggleVideoPlayback", this.plugin, this.plugin.paused());
-			if (isPlaying) {
+			if (!isPaused) {
 				this.plugin.pause();
 			} else {
 				this.plugin.play();
@@ -93,7 +93,7 @@
 
 
 		disposeSound: function() {
-			if(this.sound){
+			if (this.sound) {
 				this.sound.removeAllSounds();
 				delete this.sound;
 			}
@@ -109,7 +109,10 @@
 				this.plugin.controlBar.hide();
 				this.plugin.controls(false);
 			}
-			
+			this.$el.off();
+			delete this.$el;
+			delete this.plugin;
+
 		}
 
 
