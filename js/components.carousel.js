@@ -46,6 +46,7 @@
 
 			// if no items no carousel
 			if(this.itemsCount === 0){
+				console.error("carousel must have at least one item");
 				return;
 			}
 
@@ -200,9 +201,9 @@
 
 
 		initSound : function(){
-			if(this.options.sound){
 			this.sound = new window.ComponentSound();
-			this.sound.registerSoundFullPath('click', this.options.sound);
+			if(this.options.sound){
+				this.sound.registerSoundFullPath(this.options.sound);
 			}
 		},
 

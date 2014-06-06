@@ -175,9 +175,10 @@
 		},
 
 		initSound : function(){
-			if(this.options.sound){
+			console.debug('initSound', this.options.sound);
 			this.sound = new window.ComponentSound();
-			this.sound.registerSoundFullPath('click', this.options.sound);
+			if(this.options.sound){
+				this.sound.registerSoundFullPath(this.options.sound);
 			}
 		},
 
