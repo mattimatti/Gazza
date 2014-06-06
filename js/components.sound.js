@@ -81,7 +81,10 @@
 
 
 		removeAllSounds: function() {
-			createjs.Sound.removeAllSounds();
+			if(createjs.Sound){
+				createjs.Sound.removeAllSounds();
+			}
+			
 		}
 
 	});
