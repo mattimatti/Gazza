@@ -6,12 +6,7 @@ require.config({
 		tweenmax: 'vendor/TweenMax',
 		reel: 'vendor/jquery.reel',
 		panzoom: 'vendor/jquery.panzoom'
-	}/*,
-	shim: {
-		tweenmax: {
-			exports: 'TweenMax'
-		}
-	}*/
+	}
 
 });
 
@@ -22,6 +17,5 @@ require([
 	'app',
 	'tweenmax'
 ], function(App) {
-	console.error("MAIN", arguments);
 	App.initialize();
 });
