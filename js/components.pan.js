@@ -141,4 +141,4 @@ define(['jquery','mixins.preloader','components.sound','panzoom'], function($,Mi
 
 	return Component;
 
-})
+});

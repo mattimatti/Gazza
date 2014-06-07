@@ -267,4 +267,4 @@ define(['jquery','mixins.preloader','components.sound'], function($,MixinPreload
 
 	return Component;
 
-})
+});

@@ -17,7 +17,7 @@ define(['jquery'], function($){
 				return;
 			}
 
-			if(this.$el.find('img').length ==0){
+			if(this.$el.find('img').length === 0){
 				this.initialize();
 				return;
 			}
@@ -27,10 +27,12 @@ define(['jquery'], function($){
 
 			// var firstImageElement= this.$el.find('img').first();
 
-			// if(!this.preloadElement(firstImageElement)){
-			// 	this.initialize();
-			// 	return;
-			// }
+			/*
+			if(!this.preloadElement(firstImageElement)){
+				this.initialize();
+				return;
+			}
+			*/
 
 
 		},

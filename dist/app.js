@@ -20334,9 +20334,2313 @@ if ( typeof define === "function" && define.amd && define.amd.jQuery ) {
 
 });
 
+/*jslint strict: false, plusplus: false, sub: true */
+/*global window, navigator, document, importScripts, jQuery, setTimeout, opera */
+
+var requirejs, require, define;
+(function (undefined) {
+    //Change this version number for each release.
+    var version = "1.0.8",
+        commentRegExp = /(\/\*([\s\S]*?)\*\/|([^:]|^)\/\/(.*)$)/mg,
+        cjsRequireRegExp = /require\(\s*["']([^'"\s]+)["']\s*\)/g,
+        currDirRegExp = /^\.\//,
+        jsSuffixRegExp = /\.js$/,
+        ostring = Object.prototype.toString,
+        ap = Array.prototype,
+        aps = ap.slice,
+        apsp = ap.splice,
+        isBrowser = !!(typeof window !== "undefined" && navigator && document),
+        isWebWorker = !isBrowser && typeof importScripts !== "undefined",
+        //PS3 indicates loaded and complete, but need to wait for complete
+        //specifically. Sequence is "loading", "loaded", execution,
+        // then "complete". The UA check is unfortunate, but not sure how
+        //to feature test w/o causing perf issues.
+        readyRegExp = isBrowser && navigator.platform === 'PLAYSTATION 3' ?
+                      /^complete$/ : /^(complete|loaded)$/,
+        defContextName = "_",
+        //Oh the tragedy, detecting opera. See the usage of isOpera for reason.
+        isOpera = typeof opera !== "undefined" && opera.toString() === "[object Opera]",
+        empty = {},
+        contexts = {},
+        globalDefQueue = [],
+        interactiveScript = null,
+        checkLoadedDepth = 0,
+        useInteractive = false,
+        reservedDependencies = {
+            require: true,
+            module: true,
+            exports: true
+        },
+        req, cfg = {}, currentlyAddingScript, s, head, baseElement, scripts, script,
+        src, subPath, mainScript, dataMain, globalI, ctx, jQueryCheck, checkLoadedTimeoutId;
+
+    function isFunction(it) {
+        return ostring.call(it) === "[object Function]";
+    }
+
+    function isArray(it) {
+        return ostring.call(it) === "[object Array]";
+    }
+
+    /**
+     * Simple function to mix in properties from source into target,
+     * but only if target does not already have a property of the same name.
+     * This is not robust in IE for transferring methods that match
+     * Object.prototype names, but the uses of mixin here seem unlikely to
+     * trigger a problem related to that.
+     */
+    function mixin(target, source, force) {
+        for (var prop in source) {
+            if (!(prop in empty) && (!(prop in target) || force)) {
+                target[prop] = source[prop];
+            }
+        }
+        return req;
+    }
+
+    /**
+     * Constructs an error with a pointer to an URL with more information.
+     * @param {String} id the error ID that maps to an ID on a web page.
+     * @param {String} message human readable error.
+     * @param {Error} [err] the original error, if there is one.
+     *
+     * @returns {Error}
+     */
+    function makeError(id, msg, err) {
+        var e = new Error(msg + '\nhttp://requirejs.org/docs/errors.html#' + id);
+        if (err) {
+            e.originalError = err;
+        }
+        return e;
+    }
+
+    /**
+     * Used to set up package paths from a packagePaths or packages config object.
+     * @param {Object} pkgs the object to store the new package config
+     * @param {Array} currentPackages an array of packages to configure
+     * @param {String} [dir] a prefix dir to use.
+     */
+    function configurePackageDir(pkgs, currentPackages, dir) {
+        var i, location, pkgObj;
+
+        for (i = 0; (pkgObj = currentPackages[i]); i++) {
+            pkgObj = typeof pkgObj === "string" ? { name: pkgObj } : pkgObj;
+            location = pkgObj.location;
+
+            //Add dir to the path, but avoid paths that start with a slash
+            //or have a colon (indicates a protocol)
+            if (dir && (!location || (location.indexOf("/") !== 0 && location.indexOf(":") === -1))) {
+                location = dir + "/" + (location || pkgObj.name);
+            }
+
+            //Create a brand new object on pkgs, since currentPackages can
+            //be passed in again, and config.pkgs is the internal transformed
+            //state for all package configs.
+            pkgs[pkgObj.name] = {
+                name: pkgObj.name,
+                location: location || pkgObj.name,
+                //Remove leading dot in main, so main paths are normalized,
+                //and remove any trailing .js, since different package
+                //envs have different conventions: some use a module name,
+                //some use a file name.
+                main: (pkgObj.main || "main")
+                      .replace(currDirRegExp, '')
+                      .replace(jsSuffixRegExp, '')
+            };
+        }
+    }
+
+    /**
+     * jQuery 1.4.3-1.5.x use a readyWait/ready() pairing to hold DOM
+     * ready callbacks, but jQuery 1.6 supports a holdReady() API instead.
+     * At some point remove the readyWait/ready() support and just stick
+     * with using holdReady.
+     */
+    function jQueryHoldReady($, shouldHold) {
+        if ($.holdReady) {
+            $.holdReady(shouldHold);
+        } else if (shouldHold) {
+            $.readyWait += 1;
+        } else {
+            $.ready(true);
+        }
+    }
+
+    if (typeof define !== "undefined") {
+        //If a define is already in play via another AMD loader,
+        //do not overwrite.
+        return;
+    }
+
+    if (typeof requirejs !== "undefined") {
+        if (isFunction(requirejs)) {
+            //Do not overwrite and existing requirejs instance.
+            return;
+        } else {
+            cfg = requirejs;
+            requirejs = undefined;
+        }
+    }
+
+    //Allow for a require config object
+    if (typeof require !== "undefined" && !isFunction(require)) {
+        //assume it is a config object.
+        cfg = require;
+        require = undefined;
+    }
+
+    /**
+     * Creates a new context for use in require and define calls.
+     * Handle most of the heavy lifting. Do not want to use an object
+     * with prototype here to avoid using "this" in require, in case it
+     * needs to be used in more super secure envs that do not want this.
+     * Also there should not be that many contexts in the page. Usually just
+     * one for the default context, but could be extra for multiversion cases
+     * or if a package needs a special context for a dependency that conflicts
+     * with the standard context.
+     */
+    function newContext(contextName) {
+        var context, resume,
+            config = {
+                waitSeconds: 7,
+                baseUrl: "./",
+                paths: {},
+                pkgs: {},
+                catchError: {}
+            },
+            defQueue = [],
+            specified = {
+                "require": true,
+                "exports": true,
+                "module": true
+            },
+            urlMap = {},
+            defined = {},
+            loaded = {},
+            waiting = {},
+            waitAry = [],
+            urlFetched = {},
+            managerCounter = 0,
+            managerCallbacks = {},
+            plugins = {},
+            //Used to indicate which modules in a build scenario
+            //need to be full executed.
+            needFullExec = {},
+            fullExec = {},
+            resumeDepth = 0;
+
+        /**
+         * Trims the . and .. from an array of path segments.
+         * It will keep a leading path segment if a .. will become
+         * the first path segment, to help with module name lookups,
+         * which act like paths, but can be remapped. But the end result,
+         * all paths that use this function should look normalized.
+         * NOTE: this method MODIFIES the input array.
+         * @param {Array} ary the array of path segments.
+         */
+        function trimDots(ary) {
+            var i, part;
+            for (i = 0; (part = ary[i]); i++) {
+                if (part === ".") {
+                    ary.splice(i, 1);
+                    i -= 1;
+                } else if (part === "..") {
+                    if (i === 1 && (ary[2] === '..' || ary[0] === '..')) {
+                        //End of the line. Keep at least one non-dot
+                        //path segment at the front so it can be mapped
+                        //correctly to disk. Otherwise, there is likely
+                        //no path mapping for a path starting with '..'.
+                        //This can still fail, but catches the most reasonable
+                        //uses of ..
+                        break;
+                    } else if (i > 0) {
+                        ary.splice(i - 1, 2);
+                        i -= 2;
+                    }
+                }
+            }
+        }
+
+        /**
+         * Given a relative module name, like ./something, normalize it to
+         * a real name that can be mapped to a path.
+         * @param {String} name the relative name
+         * @param {String} baseName a real name that the name arg is relative
+         * to.
+         * @returns {String} normalized name
+         */
+        function normalize(name, baseName) {
+            var pkgName, pkgConfig;
+
+            //Adjust any relative paths.
+            if (name && name.charAt(0) === ".") {
+                //If have a base name, try to normalize against it,
+                //otherwise, assume it is a top-level require that will
+                //be relative to baseUrl in the end.
+                if (baseName) {
+                    if (config.pkgs[baseName]) {
+                        //If the baseName is a package name, then just treat it as one
+                        //name to concat the name with.
+                        baseName = [baseName];
+                    } else {
+                        //Convert baseName to array, and lop off the last part,
+                        //so that . matches that "directory" and not name of the baseName's
+                        //module. For instance, baseName of "one/two/three", maps to
+                        //"one/two/three.js", but we want the directory, "one/two" for
+                        //this normalization.
+                        baseName = baseName.split("/");
+                        baseName = baseName.slice(0, baseName.length - 1);
+                    }
+
+                    name = baseName.concat(name.split("/"));
+                    trimDots(name);
+
+                    //Some use of packages may use a . path to reference the
+                    //"main" module name, so normalize for that.
+                    pkgConfig = config.pkgs[(pkgName = name[0])];
+                    name = name.join("/");
+                    if (pkgConfig && name === pkgName + '/' + pkgConfig.main) {
+                        name = pkgName;
+                    }
+                } else if (name.indexOf("./") === 0) {
+                    // No baseName, so this is ID is resolved relative
+                    // to baseUrl, pull off the leading dot.
+                    name = name.substring(2);
+                }
+            }
+            return name;
+        }
+
+        /**
+         * Creates a module mapping that includes plugin prefix, module
+         * name, and path. If parentModuleMap is provided it will
+         * also normalize the name via require.normalize()
+         *
+         * @param {String} name the module name
+         * @param {String} [parentModuleMap] parent module map
+         * for the module name, used to resolve relative names.
+         *
+         * @returns {Object}
+         */
+        function makeModuleMap(name, parentModuleMap) {
+            var index = name ? name.indexOf("!") : -1,
+                prefix = null,
+                parentName = parentModuleMap ? parentModuleMap.name : null,
+                originalName = name,
+                normalizedName, url, pluginModule;
+
+            if (index !== -1) {
+                prefix = name.substring(0, index);
+                name = name.substring(index + 1, name.length);
+            }
+
+            if (prefix) {
+                prefix = normalize(prefix, parentName);
+            }
+
+            //Account for relative paths if there is a base name.
+            if (name) {
+                if (prefix) {
+                    pluginModule = defined[prefix];
+                    if (pluginModule && pluginModule.normalize) {
+                        //Plugin is loaded, use its normalize method.
+                        normalizedName = pluginModule.normalize(name, function (name) {
+                            return normalize(name, parentName);
+                        });
+                    } else {
+                        normalizedName = normalize(name, parentName);
+                    }
+                } else {
+                    //A regular module.
+                    normalizedName = normalize(name, parentName);
+
+                    url = urlMap[normalizedName];
+                    if (!url) {
+                        //Calculate url for the module, if it has a name.
+                        //Use name here since nameToUrl also calls normalize,
+                        //and for relative names that are outside the baseUrl
+                        //this causes havoc. Was thinking of just removing
+                        //parentModuleMap to avoid extra normalization, but
+                        //normalize() still does a dot removal because of
+                        //issue #142, so just pass in name here and redo
+                        //the normalization. Paths outside baseUrl are just
+                        //messy to support.
+                        url = context.nameToUrl(name, null, parentModuleMap);
+
+                        //Store the URL mapping for later.
+                        urlMap[normalizedName] = url;
+                    }
+                }
+            }
+
+            return {
+                prefix: prefix,
+                name: normalizedName,
+                parentMap: parentModuleMap,
+                url: url,
+                originalName: originalName,
+                fullName: prefix ? prefix + "!" + (normalizedName || '') : normalizedName
+            };
+        }
+
+        /**
+         * Determine if priority loading is done. If so clear the priorityWait
+         */
+        function isPriorityDone() {
+            var priorityDone = true,
+                priorityWait = config.priorityWait,
+                priorityName, i;
+            if (priorityWait) {
+                for (i = 0; (priorityName = priorityWait[i]); i++) {
+                    if (!loaded[priorityName]) {
+                        priorityDone = false;
+                        break;
+                    }
+                }
+                if (priorityDone) {
+                    delete config.priorityWait;
+                }
+            }
+            return priorityDone;
+        }
+
+        function makeContextModuleFunc(func, relModuleMap, enableBuildCallback) {
+            return function () {
+                //A version of a require function that passes a moduleName
+                //value for items that may need to
+                //look up paths relative to the moduleName
+                var args = aps.call(arguments, 0), lastArg;
+                if (enableBuildCallback &&
+                    isFunction((lastArg = args[args.length - 1]))) {
+                    lastArg.__requireJsBuild = true;
+                }
+                args.push(relModuleMap);
+                return func.apply(null, args);
+            };
+        }
+
+        /**
+         * Helper function that creates a require function object to give to
+         * modules that ask for it as a dependency. It needs to be specific
+         * per module because of the implication of path mappings that may
+         * need to be relative to the module name.
+         */
+        function makeRequire(relModuleMap, enableBuildCallback, altRequire) {
+            var modRequire = makeContextModuleFunc(altRequire || context.require, relModuleMap, enableBuildCallback);
+
+            mixin(modRequire, {
+                nameToUrl: makeContextModuleFunc(context.nameToUrl, relModuleMap),
+                toUrl: makeContextModuleFunc(context.toUrl, relModuleMap),
+                defined: makeContextModuleFunc(context.requireDefined, relModuleMap),
+                specified: makeContextModuleFunc(context.requireSpecified, relModuleMap),
+                isBrowser: req.isBrowser
+            });
+            return modRequire;
+        }
+
+        /*
+         * Queues a dependency for checking after the loader is out of a
+         * "paused" state, for example while a script file is being loaded
+         * in the browser, where it may have many modules defined in it.
+         */
+        function queueDependency(manager) {
+            context.paused.push(manager);
+        }
+
+        function execManager(manager) {
+            var i, ret, err, errFile, errModuleTree,
+                cb = manager.callback,
+                map = manager.map,
+                fullName = map.fullName,
+                args = manager.deps,
+                listeners = manager.listeners,
+                execCb = config.requireExecCb || req.execCb,
+                cjsModule;
+
+            //Call the callback to define the module, if necessary.
+            if (cb && isFunction(cb)) {
+                if (config.catchError.define) {
+                    try {
+                        ret = execCb(fullName, manager.callback, args, defined[fullName]);
+                    } catch (e) {
+                        err = e;
+                    }
+                } else {
+                    ret = execCb(fullName, manager.callback, args, defined[fullName]);
+                }
+
+                if (fullName) {
+                    //If setting exports via "module" is in play,
+                    //favor that over return value and exports. After that,
+                    //favor a non-undefined return value over exports use.
+                    cjsModule = manager.cjsModule;
+                    if (cjsModule &&
+                        cjsModule.exports !== undefined &&
+                        //Make sure it is not already the exports value
+                        cjsModule.exports !== defined[fullName]) {
+                        ret = defined[fullName] = manager.cjsModule.exports;
+                    } else if (ret === undefined && manager.usingExports) {
+                        //exports already set the defined value.
+                        ret = defined[fullName];
+                    } else {
+                        //Use the return value from the function.
+                        defined[fullName] = ret;
+                        //If this module needed full execution in a build
+                        //environment, mark that now.
+                        if (needFullExec[fullName]) {
+                            fullExec[fullName] = true;
+                        }
+                    }
+                }
+            } else if (fullName) {
+                //May just be an object definition for the module. Only
+                //worry about defining if have a module name.
+                ret = defined[fullName] = cb;
+
+                //If this module needed full execution in a build
+                //environment, mark that now.
+                if (needFullExec[fullName]) {
+                    fullExec[fullName] = true;
+                }
+            }
+
+            //Clean up waiting. Do this before error calls, and before
+            //calling back listeners, so that bookkeeping is correct
+            //in the event of an error and error is reported in correct order,
+            //since the listeners will likely have errors if the
+            //onError function does not throw.
+            if (waiting[manager.id]) {
+                delete waiting[manager.id];
+                manager.isDone = true;
+                context.waitCount -= 1;
+                if (context.waitCount === 0) {
+                    //Clear the wait array used for cycles.
+                    waitAry = [];
+                }
+            }
+
+            //Do not need to track manager callback now that it is defined.
+            delete managerCallbacks[fullName];
+
+            //Allow instrumentation like the optimizer to know the order
+            //of modules executed and their dependencies.
+            if (req.onResourceLoad && !manager.placeholder) {
+                req.onResourceLoad(context, map, manager.depArray);
+            }
+
+            if (err) {
+                errFile = (fullName ? makeModuleMap(fullName).url : '') ||
+                           err.fileName || err.sourceURL;
+                errModuleTree = err.moduleTree;
+                err = makeError('defineerror', 'Error evaluating ' +
+                                'module "' + fullName + '" at location "' +
+                                errFile + '":\n' +
+                                err + '\nfileName:' + errFile +
+                                '\nlineNumber: ' + (err.lineNumber || err.line), err);
+                err.moduleName = fullName;
+                err.moduleTree = errModuleTree;
+                return req.onError(err);
+            }
+
+            //Let listeners know of this manager's value.
+            for (i = 0; (cb = listeners[i]); i++) {
+                cb(ret);
+            }
+
+            return undefined;
+        }
+
+        /**
+         * Helper that creates a callack function that is called when a dependency
+         * is ready, and sets the i-th dependency for the manager as the
+         * value passed to the callback generated by this function.
+         */
+        function makeArgCallback(manager, i) {
+            return function (value) {
+                //Only do the work if it has not been done
+                //already for a dependency. Cycle breaking
+                //logic in forceExec could mean this function
+                //is called more than once for a given dependency.
+                if (!manager.depDone[i]) {
+                    manager.depDone[i] = true;
+                    manager.deps[i] = value;
+                    manager.depCount -= 1;
+                    if (!manager.depCount) {
+                        //All done, execute!
+                        execManager(manager);
+                    }
+                }
+            };
+        }
+
+        function callPlugin(pluginName, depManager) {
+            var map = depManager.map,
+                fullName = map.fullName,
+                name = map.name,
+                plugin = plugins[pluginName] ||
+                        (plugins[pluginName] = defined[pluginName]),
+                load;
+
+            //No need to continue if the manager is already
+            //in the process of loading.
+            if (depManager.loading) {
+                return;
+            }
+            depManager.loading = true;
+
+            load = function (ret) {
+                depManager.callback = function () {
+                    return ret;
+                };
+                execManager(depManager);
+
+                loaded[depManager.id] = true;
+
+                //The loading of this plugin
+                //might have placed other things
+                //in the paused queue. In particular,
+                //a loader plugin that depends on
+                //a different plugin loaded resource.
+                resume();
+            };
+
+            //Allow plugins to load other code without having to know the
+            //context or how to "complete" the load.
+            load.fromText = function (moduleName, text) {
+                /*jslint evil: true */
+                var hasInteractive = useInteractive;
+
+                //Indicate a the module is in process of loading.
+                loaded[moduleName] = false;
+                context.scriptCount += 1;
+
+                //Indicate this is not a "real" module, so do not track it
+                //for builds, it does not map to a real file.
+                context.fake[moduleName] = true;
+
+                //Turn off interactive script matching for IE for any define
+                //calls in the text, then turn it back on at the end.
+                if (hasInteractive) {
+                    useInteractive = false;
+                }
+
+                req.exec(text);
+
+                if (hasInteractive) {
+                    useInteractive = true;
+                }
+
+                //Support anonymous modules.
+                context.completeLoad(moduleName);
+            };
+
+            //No need to continue if the plugin value has already been
+            //defined by a build.
+            if (fullName in defined) {
+                load(defined[fullName]);
+            } else {
+                //Use parentName here since the plugin's name is not reliable,
+                //could be some weird string with no path that actually wants to
+                //reference the parentName's path.
+                plugin.load(name, makeRequire(map.parentMap, true, function (deps, cb) {
+                    var moduleDeps = [],
+                        i, dep, depMap;
+                    //Convert deps to full names and hold on to them
+                    //for reference later, when figuring out if they
+                    //are blocked by a circular dependency.
+                    for (i = 0; (dep = deps[i]); i++) {
+                        depMap = makeModuleMap(dep, map.parentMap);
+                        deps[i] = depMap.fullName;
+                        if (!depMap.prefix) {
+                            moduleDeps.push(deps[i]);
+                        }
+                    }
+                    depManager.moduleDeps = (depManager.moduleDeps || []).concat(moduleDeps);
+                    return context.require(deps, cb);
+                }), load, config);
+            }
+        }
+
+        /**
+         * Adds the manager to the waiting queue. Only fully
+         * resolved items should be in the waiting queue.
+         */
+        function addWait(manager) {
+            if (!waiting[manager.id]) {
+                waiting[manager.id] = manager;
+                waitAry.push(manager);
+                context.waitCount += 1;
+            }
+        }
+
+        /**
+         * Function added to every manager object. Created out here
+         * to avoid new function creation for each manager instance.
+         */
+        function managerAdd(cb) {
+            this.listeners.push(cb);
+        }
+
+        function getManager(map, shouldQueue) {
+            var fullName = map.fullName,
+                prefix = map.prefix,
+                plugin = prefix ? plugins[prefix] ||
+                                (plugins[prefix] = defined[prefix]) : null,
+                manager, created, pluginManager, prefixMap;
+
+            if (fullName) {
+                manager = managerCallbacks[fullName];
+            }
+
+            if (!manager) {
+                created = true;
+                manager = {
+                    //ID is just the full name, but if it is a plugin resource
+                    //for a plugin that has not been loaded,
+                    //then add an ID counter to it.
+                    id: (prefix && !plugin ?
+                        (managerCounter++) + '__p@:' : '') +
+                        (fullName || '__r@' + (managerCounter++)),
+                    map: map,
+                    depCount: 0,
+                    depDone: [],
+                    depCallbacks: [],
+                    deps: [],
+                    listeners: [],
+                    add: managerAdd
+                };
+
+                specified[manager.id] = true;
+
+                //Only track the manager/reuse it if this is a non-plugin
+                //resource. Also only track plugin resources once
+                //the plugin has been loaded, and so the fullName is the
+                //true normalized value.
+                if (fullName && (!prefix || plugins[prefix])) {
+                    managerCallbacks[fullName] = manager;
+                }
+            }
+
+            //If there is a plugin needed, but it is not loaded,
+            //first load the plugin, then continue on.
+            if (prefix && !plugin) {
+                prefixMap = makeModuleMap(prefix);
+
+                //Clear out defined and urlFetched if the plugin was previously
+                //loaded/defined, but not as full module (as in a build
+                //situation). However, only do this work if the plugin is in
+                //defined but does not have a module export value.
+                if (prefix in defined && !defined[prefix]) {
+                    delete defined[prefix];
+                    delete urlFetched[prefixMap.url];
+                }
+
+                pluginManager = getManager(prefixMap, true);
+                pluginManager.add(function (plugin) {
+                    //Create a new manager for the normalized
+                    //resource ID and have it call this manager when
+                    //done.
+                    var newMap = makeModuleMap(map.originalName, map.parentMap),
+                        normalizedManager = getManager(newMap, true);
+
+                    //Indicate this manager is a placeholder for the real,
+                    //normalized thing. Important for when trying to map
+                    //modules and dependencies, for instance, in a build.
+                    manager.placeholder = true;
+
+                    normalizedManager.add(function (resource) {
+                        manager.callback = function () {
+                            return resource;
+                        };
+                        execManager(manager);
+                    });
+                });
+            } else if (created && shouldQueue) {
+                //Indicate the resource is not loaded yet if it is to be
+                //queued.
+                loaded[manager.id] = false;
+                queueDependency(manager);
+                addWait(manager);
+            }
+
+            return manager;
+        }
+
+        function main(inName, depArray, callback, relModuleMap) {
+            var moduleMap = makeModuleMap(inName, relModuleMap),
+                name = moduleMap.name,
+                fullName = moduleMap.fullName,
+                manager = getManager(moduleMap),
+                id = manager.id,
+                deps = manager.deps,
+                i, depArg, depName, depPrefix, cjsMod;
+
+            if (fullName) {
+                //If module already defined for context, or already loaded,
+                //then leave. Also leave if jQuery is registering but it does
+                //not match the desired version number in the config.
+                if (fullName in defined || loaded[id] === true ||
+                    (fullName === "jquery" && config.jQuery &&
+                     config.jQuery !== callback().fn.jquery)) {
+                    return;
+                }
+
+                //Set specified/loaded here for modules that are also loaded
+                //as part of a layer, where onScriptLoad is not fired
+                //for those cases. Do this after the inline define and
+                //dependency tracing is done.
+                specified[id] = true;
+                loaded[id] = true;
+
+                //If module is jQuery set up delaying its dom ready listeners.
+                if (fullName === "jquery" && callback) {
+                    jQueryCheck(callback());
+                }
+            }
+
+            //Attach real depArray and callback to the manager. Do this
+            //only if the module has not been defined already, so do this after
+            //the fullName checks above. IE can call main() more than once
+            //for a module.
+            manager.depArray = depArray;
+            manager.callback = callback;
+
+            //Add the dependencies to the deps field, and register for callbacks
+            //on the dependencies.
+            for (i = 0; i < depArray.length; i++) {
+                depArg = depArray[i];
+                //There could be cases like in IE, where a trailing comma will
+                //introduce a null dependency, so only treat a real dependency
+                //value as a dependency.
+                if (depArg) {
+                    //Split the dependency name into plugin and name parts
+                    depArg = makeModuleMap(depArg, (name ? moduleMap : relModuleMap));
+                    depName = depArg.fullName;
+                    depPrefix = depArg.prefix;
+
+                    //Fix the name in depArray to be just the name, since
+                    //that is how it will be called back later.
+                    depArray[i] = depName;
+
+                    //Fast path CommonJS standard dependencies.
+                    if (depName === "require") {
+                        deps[i] = makeRequire(moduleMap);
+                    } else if (depName === "exports") {
+                        //CommonJS module spec 1.1
+                        deps[i] = defined[fullName] = {};
+                        manager.usingExports = true;
+                    } else if (depName === "module") {
+                        //CommonJS module spec 1.1
+                        manager.cjsModule = cjsMod = deps[i] = {
+                            id: name,
+                            uri: name ? context.nameToUrl(name, null, relModuleMap) : undefined,
+                            exports: defined[fullName]
+                        };
+                    } else if (depName in defined && !(depName in waiting) &&
+                               (!(fullName in needFullExec) ||
+                                (fullName in needFullExec && fullExec[depName]))) {
+                        //Module already defined, and not in a build situation
+                        //where the module is a something that needs full
+                        //execution and this dependency has not been fully
+                        //executed. See r.js's requirePatch.js for more info
+                        //on fullExec.
+                        deps[i] = defined[depName];
+                    } else {
+                        //Mark this dependency as needing full exec if
+                        //the current module needs full exec.
+                        if (fullName in needFullExec) {
+                            needFullExec[depName] = true;
+                            //Reset state so fully executed code will get
+                            //picked up correctly.
+                            delete defined[depName];
+                            urlFetched[depArg.url] = false;
+                        }
+
+                        //Either a resource that is not loaded yet, or a plugin
+                        //resource for either a plugin that has not
+                        //loaded yet.
+                        manager.depCount += 1;
+                        manager.depCallbacks[i] = makeArgCallback(manager, i);
+                        getManager(depArg, true).add(manager.depCallbacks[i]);
+                    }
+                }
+            }
+
+            //Do not bother tracking the manager if it is all done.
+            if (!manager.depCount) {
+                //All done, execute!
+                execManager(manager);
+            } else {
+                addWait(manager);
+            }
+        }
+
+        /**
+         * Convenience method to call main for a define call that was put on
+         * hold in the defQueue.
+         */
+        function callDefMain(args) {
+            main.apply(null, args);
+        }
+
+        /**
+         * jQuery 1.4.3+ supports ways to hold off calling
+         * calling jQuery ready callbacks until all scripts are loaded. Be sure
+         * to track it if the capability exists.. Also, since jQuery 1.4.3 does
+         * not register as a module, need to do some global inference checking.
+         * Even if it does register as a module, not guaranteed to be the precise
+         * name of the global. If a jQuery is tracked for this context, then go
+         * ahead and register it as a module too, if not already in process.
+         */
+        jQueryCheck = function (jqCandidate) {
+            if (!context.jQuery) {
+                var $ = jqCandidate || (typeof jQuery !== "undefined" ? jQuery : null);
+
+                if ($) {
+                    //If a specific version of jQuery is wanted, make sure to only
+                    //use this jQuery if it matches.
+                    if (config.jQuery && $.fn.jquery !== config.jQuery) {
+                        return;
+                    }
+
+                    if ("holdReady" in $ || "readyWait" in $) {
+                        context.jQuery = $;
+
+                        //Manually create a "jquery" module entry if not one already
+                        //or in process. Note this could trigger an attempt at
+                        //a second jQuery registration, but does no harm since
+                        //the first one wins, and it is the same value anyway.
+                        callDefMain(["jquery", [], function () {
+                            return jQuery;
+                        }]);
+
+                        //Ask jQuery to hold DOM ready callbacks.
+                        if (context.scriptCount) {
+                            jQueryHoldReady($, true);
+                            context.jQueryIncremented = true;
+                        }
+                    }
+                }
+            }
+        };
+
+        function findCycle(manager, traced) {
+            var fullName = manager.map.fullName,
+                depArray = manager.depArray,
+                fullyLoaded = true,
+                i, depName, depManager, result;
+
+            if (manager.isDone || !fullName || !loaded[fullName]) {
+                return result;
+            }
+
+            //Found the cycle.
+            if (traced[fullName]) {
+                return manager;
+            }
+
+            traced[fullName] = true;
+
+            //Trace through the dependencies.
+            if (depArray) {
+                for (i = 0; i < depArray.length; i++) {
+                    //Some array members may be null, like if a trailing comma
+                    //IE, so do the explicit [i] access and check if it has a value.
+                    depName = depArray[i];
+                    if (!loaded[depName] && !reservedDependencies[depName]) {
+                        fullyLoaded = false;
+                        break;
+                    }
+                    depManager = waiting[depName];
+                    if (depManager && !depManager.isDone && loaded[depName]) {
+                        result = findCycle(depManager, traced);
+                        if (result) {
+                            break;
+                        }
+                    }
+                }
+                if (!fullyLoaded) {
+                    //Discard the cycle that was found, since it cannot
+                    //be forced yet. Also clear this module from traced.
+                    result = undefined;
+                    delete traced[fullName];
+                }
+            }
+
+            return result;
+        }
+
+        function forceExec(manager, traced) {
+            var fullName = manager.map.fullName,
+                depArray = manager.depArray,
+                i, depName, depManager, prefix, prefixManager, value;
+
+
+            if (manager.isDone || !fullName || !loaded[fullName]) {
+                return undefined;
+            }
+
+            if (fullName) {
+                if (traced[fullName]) {
+                    return defined[fullName];
+                }
+
+                traced[fullName] = true;
+            }
+
+            //Trace through the dependencies.
+            if (depArray) {
+                for (i = 0; i < depArray.length; i++) {
+                    //Some array members may be null, like if a trailing comma
+                    //IE, so do the explicit [i] access and check if it has a value.
+                    depName = depArray[i];
+                    if (depName) {
+                        //First, make sure if it is a plugin resource that the
+                        //plugin is not blocked.
+                        prefix = makeModuleMap(depName).prefix;
+                        if (prefix && (prefixManager = waiting[prefix])) {
+                            forceExec(prefixManager, traced);
+                        }
+                        depManager = waiting[depName];
+                        if (depManager && !depManager.isDone && loaded[depName]) {
+                            value = forceExec(depManager, traced);
+                            manager.depCallbacks[i](value);
+                        }
+                    }
+                }
+            }
+
+            return defined[fullName];
+        }
+
+        /**
+         * Checks if all modules for a context are loaded, and if so, evaluates the
+         * new ones in right dependency order.
+         *
+         * @private
+         */
+        function checkLoaded() {
+            var waitInterval = config.waitSeconds * 1000,
+                //It is possible to disable the wait interval by using waitSeconds of 0.
+                expired = waitInterval && (context.startTime + waitInterval) < new Date().getTime(),
+                noLoads = "", hasLoadedProp = false, stillLoading = false,
+                cycleDeps = [],
+                i, prop, err, manager, cycleManager, moduleDeps;
+
+            //If there are items still in the paused queue processing wait.
+            //This is particularly important in the sync case where each paused
+            //item is processed right away but there may be more waiting.
+            if (context.pausedCount > 0) {
+                return undefined;
+            }
+
+            //Determine if priority loading is done. If so clear the priority. If
+            //not, then do not check
+            if (config.priorityWait) {
+                if (isPriorityDone()) {
+                    //Call resume, since it could have
+                    //some waiting dependencies to trace.
+                    resume();
+                } else {
+                    return undefined;
+                }
+            }
+
+            //See if anything is still in flight.
+            for (prop in loaded) {
+                if (!(prop in empty)) {
+                    hasLoadedProp = true;
+                    if (!loaded[prop]) {
+                        if (expired) {
+                            noLoads += prop + " ";
+                        } else {
+                            stillLoading = true;
+                            if (prop.indexOf('!') === -1) {
+                                //No reason to keep looking for unfinished
+                                //loading. If the only stillLoading is a
+                                //plugin resource though, keep going,
+                                //because it may be that a plugin resource
+                                //is waiting on a non-plugin cycle.
+                                cycleDeps = [];
+                                break;
+                            } else {
+                                moduleDeps = managerCallbacks[prop] && managerCallbacks[prop].moduleDeps;
+                                if (moduleDeps) {
+                                    cycleDeps.push.apply(cycleDeps, moduleDeps);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            //Check for exit conditions.
+            if (!hasLoadedProp && !context.waitCount) {
+                //If the loaded object had no items, then the rest of
+                //the work below does not need to be done.
+                return undefined;
+            }
+            if (expired && noLoads) {
+                //If wait time expired, throw error of unloaded modules.
+                err = makeError("timeout", "Load timeout for modules: " + noLoads);
+                err.requireType = "timeout";
+                err.requireModules = noLoads;
+                err.contextName = context.contextName;
+                return req.onError(err);
+            }
+
+            //If still loading but a plugin is waiting on a regular module cycle
+            //break the cycle.
+            if (stillLoading && cycleDeps.length) {
+                for (i = 0; (manager = waiting[cycleDeps[i]]); i++) {
+                    if ((cycleManager = findCycle(manager, {}))) {
+                        forceExec(cycleManager, {});
+                        break;
+                    }
+                }
+
+            }
+
+            //If still waiting on loads, and the waiting load is something
+            //other than a plugin resource, or there are still outstanding
+            //scripts, then just try back later.
+            if (!expired && (stillLoading || context.scriptCount)) {
+                //Something is still waiting to load. Wait for it, but only
+                //if a timeout is not already in effect.
+                if ((isBrowser || isWebWorker) && !checkLoadedTimeoutId) {
+                    checkLoadedTimeoutId = setTimeout(function () {
+                        checkLoadedTimeoutId = 0;
+                        checkLoaded();
+                    }, 50);
+                }
+                return undefined;
+            }
+
+            //If still have items in the waiting cue, but all modules have
+            //been loaded, then it means there are some circular dependencies
+            //that need to be broken.
+            //However, as a waiting thing is fired, then it can add items to
+            //the waiting cue, and those items should not be fired yet, so
+            //make sure to redo the checkLoaded call after breaking a single
+            //cycle, if nothing else loaded then this logic will pick it up
+            //again.
+            if (context.waitCount) {
+                //Cycle through the waitAry, and call items in sequence.
+                for (i = 0; (manager = waitAry[i]); i++) {
+                    forceExec(manager, {});
+                }
+
+                //If anything got placed in the paused queue, run it down.
+                if (context.paused.length) {
+                    resume();
+                }
+
+                //Only allow this recursion to a certain depth. Only
+                //triggered by errors in calling a module in which its
+                //modules waiting on it cannot finish loading, or some circular
+                //dependencies that then may add more dependencies.
+                //The value of 5 is a bit arbitrary. Hopefully just one extra
+                //pass, or two for the case of circular dependencies generating
+                //more work that gets resolved in the sync node case.
+                if (checkLoadedDepth < 5) {
+                    checkLoadedDepth += 1;
+                    checkLoaded();
+                }
+            }
+
+            checkLoadedDepth = 0;
+
+            //Check for DOM ready, and nothing is waiting across contexts.
+            req.checkReadyState();
+
+            return undefined;
+        }
+
+        /**
+         * Resumes tracing of dependencies and then checks if everything is loaded.
+         */
+        resume = function () {
+            var manager, map, url, i, p, args, fullName;
+
+            //Any defined modules in the global queue, intake them now.
+            context.takeGlobalQueue();
+
+            resumeDepth += 1;
+
+            if (context.scriptCount <= 0) {
+                //Synchronous envs will push the number below zero with the
+                //decrement above, be sure to set it back to zero for good measure.
+                //require() calls that also do not end up loading scripts could
+                //push the number negative too.
+                context.scriptCount = 0;
+            }
+
+            //Make sure any remaining defQueue items get properly processed.
+            while (defQueue.length) {
+                args = defQueue.shift();
+                if (args[0] === null) {
+                    return req.onError(makeError('mismatch', 'Mismatched anonymous define() module: ' + args[args.length - 1]));
+                } else {
+                    callDefMain(args);
+                }
+            }
+
+            //Skip the resume of paused dependencies
+            //if current context is in priority wait.
+            if (!config.priorityWait || isPriorityDone()) {
+                while (context.paused.length) {
+                    p = context.paused;
+                    context.pausedCount += p.length;
+                    //Reset paused list
+                    context.paused = [];
+
+                    for (i = 0; (manager = p[i]); i++) {
+                        map = manager.map;
+                        url = map.url;
+                        fullName = map.fullName;
+
+                        //If the manager is for a plugin managed resource,
+                        //ask the plugin to load it now.
+                        if (map.prefix) {
+                            callPlugin(map.prefix, manager);
+                        } else {
+                            //Regular dependency.
+                            if (!urlFetched[url] && !loaded[fullName]) {
+                                (config.requireLoad || req.load)(context, fullName, url);
+
+                                //Mark the URL as fetched, but only if it is
+                                //not an empty: URL, used by the optimizer.
+                                //In that case we need to be sure to call
+                                //load() for each module that is mapped to
+                                //empty: so that dependencies are satisfied
+                                //correctly.
+                                if (url.indexOf('empty:') !== 0) {
+                                    urlFetched[url] = true;
+                                }
+                            }
+                        }
+                    }
+
+                    //Move the start time for timeout forward.
+                    context.startTime = (new Date()).getTime();
+                    context.pausedCount -= p.length;
+                }
+            }
+
+            //Only check if loaded when resume depth is 1. It is likely that
+            //it is only greater than 1 in sync environments where a factory
+            //function also then calls the callback-style require. In those
+            //cases, the checkLoaded should not occur until the resume
+            //depth is back at the top level.
+            if (resumeDepth === 1) {
+                checkLoaded();
+            }
+
+            resumeDepth -= 1;
+
+            return undefined;
+        };
+
+        //Define the context object. Many of these fields are on here
+        //just to make debugging easier.
+        context = {
+            contextName: contextName,
+            config: config,
+            defQueue: defQueue,
+            waiting: waiting,
+            waitCount: 0,
+            specified: specified,
+            loaded: loaded,
+            urlMap: urlMap,
+            urlFetched: urlFetched,
+            scriptCount: 0,
+            defined: defined,
+            paused: [],
+            pausedCount: 0,
+            plugins: plugins,
+            needFullExec: needFullExec,
+            fake: {},
+            fullExec: fullExec,
+            managerCallbacks: managerCallbacks,
+            makeModuleMap: makeModuleMap,
+            normalize: normalize,
+            /**
+             * Set a configuration for the context.
+             * @param {Object} cfg config object to integrate.
+             */
+            configure: function (cfg) {
+                var paths, prop, packages, pkgs, packagePaths, requireWait;
+
+                //Make sure the baseUrl ends in a slash.
+                if (cfg.baseUrl) {
+                    if (cfg.baseUrl.charAt(cfg.baseUrl.length - 1) !== "/") {
+                        cfg.baseUrl += "/";
+                    }
+                }
+
+                //Save off the paths and packages since they require special processing,
+                //they are additive.
+                paths = config.paths;
+                packages = config.packages;
+                pkgs = config.pkgs;
+
+                //Mix in the config values, favoring the new values over
+                //existing ones in context.config.
+                mixin(config, cfg, true);
+
+                //Adjust paths if necessary.
+                if (cfg.paths) {
+                    for (prop in cfg.paths) {
+                        if (!(prop in empty)) {
+                            paths[prop] = cfg.paths[prop];
+                        }
+                    }
+                    config.paths = paths;
+                }
+
+                packagePaths = cfg.packagePaths;
+                if (packagePaths || cfg.packages) {
+                    //Convert packagePaths into a packages config.
+                    if (packagePaths) {
+                        for (prop in packagePaths) {
+                            if (!(prop in empty)) {
+                                configurePackageDir(pkgs, packagePaths[prop], prop);
+                            }
+                        }
+                    }
+
+                    //Adjust packages if necessary.
+                    if (cfg.packages) {
+                        configurePackageDir(pkgs, cfg.packages);
+                    }
+
+                    //Done with modifications, assing packages back to context config
+                    config.pkgs = pkgs;
+                }
+
+                //If priority loading is in effect, trigger the loads now
+                if (cfg.priority) {
+                    //Hold on to requireWait value, and reset it after done
+                    requireWait = context.requireWait;
+
+                    //Allow tracing some require calls to allow the fetching
+                    //of the priority config.
+                    context.requireWait = false;
+                    //But first, call resume to register any defined modules that may
+                    //be in a data-main built file before the priority config
+                    //call.
+                    resume();
+
+                    context.require(cfg.priority);
+
+                    //Trigger a resume right away, for the case when
+                    //the script with the priority load is done as part
+                    //of a data-main call. In that case the normal resume
+                    //call will not happen because the scriptCount will be
+                    //at 1, since the script for data-main is being processed.
+                    resume();
+
+                    //Restore previous state.
+                    context.requireWait = requireWait;
+                    config.priorityWait = cfg.priority;
+                }
+
+                //If a deps array or a config callback is specified, then call
+                //require with those args. This is useful when require is defined as a
+                //config object before require.js is loaded.
+                if (cfg.deps || cfg.callback) {
+                    context.require(cfg.deps || [], cfg.callback);
+                }
+            },
+
+            requireDefined: function (moduleName, relModuleMap) {
+                return makeModuleMap(moduleName, relModuleMap).fullName in defined;
+            },
+
+            requireSpecified: function (moduleName, relModuleMap) {
+                return makeModuleMap(moduleName, relModuleMap).fullName in specified;
+            },
+
+            require: function (deps, callback, relModuleMap) {
+                var moduleName, fullName, moduleMap;
+                if (typeof deps === "string") {
+                    if (isFunction(callback)) {
+                        //Invalid call
+                        return req.onError(makeError("requireargs", "Invalid require call"));
+                    }
+
+                    //Synchronous access to one module. If require.get is
+                    //available (as in the Node adapter), prefer that.
+                    //In this case deps is the moduleName and callback is
+                    //the relModuleMap
+                    if (req.get) {
+                        return req.get(context, deps, callback);
+                    }
+
+                    //Just return the module wanted. In this scenario, the
+                    //second arg (if passed) is just the relModuleMap.
+                    moduleName = deps;
+                    relModuleMap = callback;
+
+                    //Normalize module name, if it contains . or ..
+                    moduleMap = makeModuleMap(moduleName, relModuleMap);
+                    fullName = moduleMap.fullName;
+
+                    if (!(fullName in defined)) {
+                        return req.onError(makeError("notloaded", "Module name '" +
+                                    moduleMap.fullName +
+                                    "' has not been loaded yet for context: " +
+                                    contextName));
+                    }
+                    return defined[fullName];
+                }
+
+                //Call main but only if there are dependencies or
+                //a callback to call.
+                if (deps && deps.length || callback) {
+                    main(null, deps, callback, relModuleMap);
+                }
+
+                //If the require call does not trigger anything new to load,
+                //then resume the dependency processing.
+                if (!context.requireWait) {
+                    while (!context.scriptCount && context.paused.length) {
+                        resume();
+                    }
+                }
+                return context.require;
+            },
+
+            /**
+             * Internal method to transfer globalQueue items to this context's
+             * defQueue.
+             */
+            takeGlobalQueue: function () {
+                //Push all the globalDefQueue items into the context's defQueue
+                if (globalDefQueue.length) {
+                    //Array splice in the values since the context code has a
+                    //local var ref to defQueue, so cannot just reassign the one
+                    //on context.
+                    apsp.apply(context.defQueue,
+                               [context.defQueue.length - 1, 0].concat(globalDefQueue));
+                    globalDefQueue = [];
+                }
+            },
+
+            /**
+             * Internal method used by environment adapters to complete a load event.
+             * A load event could be a script load or just a load pass from a synchronous
+             * load call.
+             * @param {String} moduleName the name of the module to potentially complete.
+             */
+            completeLoad: function (moduleName) {
+                var args;
+
+                context.takeGlobalQueue();
+
+                while (defQueue.length) {
+                    args = defQueue.shift();
+
+                    if (args[0] === null) {
+                        args[0] = moduleName;
+                        break;
+                    } else if (args[0] === moduleName) {
+                        //Found matching define call for this script!
+                        break;
+                    } else {
+                        //Some other named define call, most likely the result
+                        //of a build layer that included many define calls.
+                        callDefMain(args);
+                        args = null;
+                    }
+                }
+                if (args) {
+                    callDefMain(args);
+                } else {
+                    //A script that does not call define(), so just simulate
+                    //the call for it. Special exception for jQuery dynamic load.
+                    callDefMain([moduleName, [],
+                                moduleName === "jquery" && typeof jQuery !== "undefined" ?
+                                function () {
+                                    return jQuery;
+                                } : null]);
+                }
+
+                //Doing this scriptCount decrement branching because sync envs
+                //need to decrement after resume, otherwise it looks like
+                //loading is complete after the first dependency is fetched.
+                //For browsers, it works fine to decrement after, but it means
+                //the checkLoaded setTimeout 50 ms cost is taken. To avoid
+                //that cost, decrement beforehand.
+                if (req.isAsync) {
+                    context.scriptCount -= 1;
+                }
+                resume();
+                if (!req.isAsync) {
+                    context.scriptCount -= 1;
+                }
+            },
+
+            /**
+             * Converts a module name + .extension into an URL path.
+             * *Requires* the use of a module name. It does not support using
+             * plain URLs like nameToUrl.
+             */
+            toUrl: function (moduleNamePlusExt, relModuleMap) {
+                var index = moduleNamePlusExt.lastIndexOf("."),
+                    ext = null;
+
+                if (index !== -1) {
+                    ext = moduleNamePlusExt.substring(index, moduleNamePlusExt.length);
+                    moduleNamePlusExt = moduleNamePlusExt.substring(0, index);
+                }
+
+                return context.nameToUrl(moduleNamePlusExt, ext, relModuleMap);
+            },
+
+            /**
+             * Converts a module name to a file path. Supports cases where
+             * moduleName may actually be just an URL.
+             */
+            nameToUrl: function (moduleName, ext, relModuleMap) {
+                var paths, pkgs, pkg, pkgPath, syms, i, parentModule, url,
+                    config = context.config;
+
+                //Normalize module name if have a base relative module name to work from.
+                moduleName = normalize(moduleName, relModuleMap && relModuleMap.fullName);
+
+                //If a colon is in the URL, it indicates a protocol is used and it is just
+                //an URL to a file, or if it starts with a slash, contains a query arg (i.e. ?)
+                //or ends with .js, then assume the user meant to use an url and not a module id.
+                //The slash is important for protocol-less URLs as well as full paths.
+                if (req.jsExtRegExp.test(moduleName)) {
+                    //Just a plain path, not module name lookup, so just return it.
+                    //Add extension if it is included. This is a bit wonky, only non-.js things pass
+                    //an extension, this method probably needs to be reworked.
+                    url = moduleName + (ext ? ext : "");
+                } else {
+                    //A module that needs to be converted to a path.
+                    paths = config.paths;
+                    pkgs = config.pkgs;
+
+                    syms = moduleName.split("/");
+                    //For each module name segment, see if there is a path
+                    //registered for it. Start with most specific name
+                    //and work up from it.
+                    for (i = syms.length; i > 0; i--) {
+                        parentModule = syms.slice(0, i).join("/");
+                        if (paths[parentModule]) {
+                            syms.splice(0, i, paths[parentModule]);
+                            break;
+                        } else if ((pkg = pkgs[parentModule])) {
+                            //If module name is just the package name, then looking
+                            //for the main module.
+                            if (moduleName === pkg.name) {
+                                pkgPath = pkg.location + '/' + pkg.main;
+                            } else {
+                                pkgPath = pkg.location;
+                            }
+                            syms.splice(0, i, pkgPath);
+                            break;
+                        }
+                    }
+
+                    //Join the path parts together, then figure out if baseUrl is needed.
+                    url = syms.join("/") + (ext || ".js");
+                    url = (url.charAt(0) === '/' || url.match(/^[\w\+\.\-]+:/) ? "" : config.baseUrl) + url;
+                }
+
+                return config.urlArgs ? url +
+                                        ((url.indexOf('?') === -1 ? '?' : '&') +
+                                         config.urlArgs) : url;
+            }
+        };
+
+        //Make these visible on the context so can be called at the very
+        //end of the file to bootstrap
+        context.jQueryCheck = jQueryCheck;
+        context.resume = resume;
+
+        return context;
+    }
+
+    /**
+     * Main entry point.
+     *
+     * If the only argument to require is a string, then the module that
+     * is represented by that string is fetched for the appropriate context.
+     *
+     * If the first argument is an array, then it will be treated as an array
+     * of dependency string names to fetch. An optional function callback can
+     * be specified to execute when all of those dependencies are available.
+     *
+     * Make a local req variable to help Caja compliance (it assumes things
+     * on a require that are not standardized), and to give a short
+     * name for minification/local scope use.
+     */
+    req = requirejs = function (deps, callback) {
+
+        //Find the right context, use default
+        var contextName = defContextName,
+            context, config;
+
+        // Determine if have config object in the call.
+        if (!isArray(deps) && typeof deps !== "string") {
+            // deps is a config object
+            config = deps;
+            if (isArray(callback)) {
+                // Adjust args if there are dependencies
+                deps = callback;
+                callback = arguments[2];
+            } else {
+                deps = [];
+            }
+        }
+
+        if (config && config.context) {
+            contextName = config.context;
+        }
+
+        context = contexts[contextName] ||
+                  (contexts[contextName] = newContext(contextName));
+
+        if (config) {
+            context.configure(config);
+        }
+
+        return context.require(deps, callback);
+    };
+
+    /**
+     * Support require.config() to make it easier to cooperate with other
+     * AMD loaders on globally agreed names.
+     */
+    req.config = function (config) {
+        return req(config);
+    };
+
+    /**
+     * Export require as a global, but only if it does not already exist.
+     */
+    if (!require) {
+        require = req;
+    }
+
+    /**
+     * Global require.toUrl(), to match global require, mostly useful
+     * for debugging/work in the global space.
+     */
+    req.toUrl = function (moduleNamePlusExt) {
+        return contexts[defContextName].toUrl(moduleNamePlusExt);
+    };
+
+    req.version = version;
+
+    //Used to filter out dependencies that are already paths.
+    req.jsExtRegExp = /^\/|:|\?|\.js$/;
+    s = req.s = {
+        contexts: contexts,
+        //Stores a list of URLs that should not get async script tag treatment.
+        skipAsync: {}
+    };
+
+    req.isAsync = req.isBrowser = isBrowser;
+    if (isBrowser) {
+        head = s.head = document.getElementsByTagName("head")[0];
+        //If BASE tag is in play, using appendChild is a problem for IE6.
+        //When that browser dies, this can be removed. Details in this jQuery bug:
+        //http://dev.jquery.com/ticket/2709
+        baseElement = document.getElementsByTagName("base")[0];
+        if (baseElement) {
+            head = s.head = baseElement.parentNode;
+        }
+    }
+
+    /**
+     * Any errors that require explicitly generates will be passed to this
+     * function. Intercept/override it if you want custom error handling.
+     * @param {Error} err the error object.
+     */
+    req.onError = function (err) {
+        throw err;
+    };
+
+    /**
+     * Does the request to load a module for the browser case.
+     * Make this a separate function to allow other environments
+     * to override it.
+     *
+     * @param {Object} context the require context to find state.
+     * @param {String} moduleName the name of the module.
+     * @param {Object} url the URL to the module.
+     */
+    req.load = function (context, moduleName, url) {
+        req.resourcesReady(false);
+
+        context.scriptCount += 1;
+        req.attach(url, context, moduleName);
+
+        //If tracking a jQuery, then make sure its ready callbacks
+        //are put on hold to prevent its ready callbacks from
+        //triggering too soon.
+        if (context.jQuery && !context.jQueryIncremented) {
+            jQueryHoldReady(context.jQuery, true);
+            context.jQueryIncremented = true;
+        }
+    };
+
+    function getInteractiveScript() {
+        var scripts, i, script;
+        if (interactiveScript && interactiveScript.readyState === 'interactive') {
+            return interactiveScript;
+        }
+
+        scripts = document.getElementsByTagName('script');
+        for (i = scripts.length - 1; i > -1 && (script = scripts[i]); i--) {
+            if (script.readyState === 'interactive') {
+                return (interactiveScript = script);
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * The function that handles definitions of modules. Differs from
+     * require() in that a string for the module should be the first argument,
+     * and the function to execute after dependencies are loaded should
+     * return a value to define the module corresponding to the first argument's
+     * name.
+     */
+    define = function (name, deps, callback) {
+        var node, context;
+
+        //Allow for anonymous functions
+        if (typeof name !== 'string') {
+            //Adjust args appropriately
+            callback = deps;
+            deps = name;
+            name = null;
+        }
+
+        //This module may not have dependencies
+        if (!isArray(deps)) {
+            callback = deps;
+            deps = [];
+        }
+
+        //If no name, and callback is a function, then figure out if it a
+        //CommonJS thing with dependencies.
+        if (!deps.length && isFunction(callback)) {
+            //Remove comments from the callback string,
+            //look for require calls, and pull them into the dependencies,
+            //but only if there are function args.
+            if (callback.length) {
+                callback
+                    .toString()
+                    .replace(commentRegExp, "")
+                    .replace(cjsRequireRegExp, function (match, dep) {
+                        deps.push(dep);
+                    });
+
+                //May be a CommonJS thing even without require calls, but still
+                //could use exports, and module. Avoid doing exports and module
+                //work though if it just needs require.
+                //REQUIRES the function to expect the CommonJS variables in the
+                //order listed below.
+                deps = (callback.length === 1 ? ["require"] : ["require", "exports", "module"]).concat(deps);
+            }
+        }
+
+        //If in IE 6-8 and hit an anonymous define() call, do the interactive
+        //work.
+        if (useInteractive) {
+            node = currentlyAddingScript || getInteractiveScript();
+            if (node) {
+                if (!name) {
+                    name = node.getAttribute("data-requiremodule");
+                }
+                context = contexts[node.getAttribute("data-requirecontext")];
+            }
+        }
+
+        //Always save off evaluating the def call until the script onload handler.
+        //This allows multiple modules to be in a file without prematurely
+        //tracing dependencies, and allows for anonymous module support,
+        //where the module name is not known until the script onload event
+        //occurs. If no context, use the global queue, and get it processed
+        //in the onscript load callback.
+        (context ? context.defQueue : globalDefQueue).push([name, deps, callback]);
+
+        return undefined;
+    };
+
+    define.amd = {
+        multiversion: true,
+        plugins: true,
+        jQuery: true
+    };
+
+    /**
+     * Executes the text. Normally just uses eval, but can be modified
+     * to use a more environment specific call.
+     * @param {String} text the text to execute/evaluate.
+     */
+    req.exec = function (text) {
+        return eval(text);
+    };
+
+    /**
+     * Executes a module callack function. Broken out as a separate function
+     * solely to allow the build system to sequence the files in the built
+     * layer in the right sequence.
+     *
+     * @private
+     */
+    req.execCb = function (name, callback, args, exports) {
+        return callback.apply(exports, args);
+    };
+
+
+    /**
+     * Adds a node to the DOM. Public function since used by the order plugin.
+     * This method should not normally be called by outside code.
+     */
+    req.addScriptToDom = function (node) {
+        //For some cache cases in IE 6-8, the script executes before the end
+        //of the appendChild execution, so to tie an anonymous define
+        //call to the module name (which is stored on the node), hold on
+        //to a reference to this node, but clear after the DOM insertion.
+        currentlyAddingScript = node;
+        if (baseElement) {
+            head.insertBefore(node, baseElement);
+        } else {
+            head.appendChild(node);
+        }
+        currentlyAddingScript = null;
+    };
+
+    /**
+     * callback for script loads, used to check status of loading.
+     *
+     * @param {Event} evt the event from the browser for the script
+     * that was loaded.
+     *
+     * @private
+     */
+    req.onScriptLoad = function (evt) {
+        //Using currentTarget instead of target for Firefox 2.0's sake. Not
+        //all old browsers will be supported, but this one was easy enough
+        //to support and still makes sense.
+        var node = evt.currentTarget || evt.srcElement, contextName, moduleName,
+            context;
+
+        if (evt.type === "load" || (node && readyRegExp.test(node.readyState))) {
+            //Reset interactive script so a script node is not held onto for
+            //to long.
+            interactiveScript = null;
+
+            //Pull out the name of the module and the context.
+            contextName = node.getAttribute("data-requirecontext");
+            moduleName = node.getAttribute("data-requiremodule");
+            context = contexts[contextName];
+
+            contexts[contextName].completeLoad(moduleName);
+
+            //Clean up script binding. Favor detachEvent because of IE9
+            //issue, see attachEvent/addEventListener comment elsewhere
+            //in this file.
+            if (node.detachEvent && !isOpera) {
+                //Probably IE. If not it will throw an error, which will be
+                //useful to know.
+                node.detachEvent("onreadystatechange", req.onScriptLoad);
+            } else {
+                node.removeEventListener("load", req.onScriptLoad, false);
+            }
+        }
+    };
+
+    /**
+     * Attaches the script represented by the URL to the current
+     * environment. Right now only supports browser loading,
+     * but can be redefined in other environments to do the right thing.
+     * @param {String} url the url of the script to attach.
+     * @param {Object} context the context that wants the script.
+     * @param {moduleName} the name of the module that is associated with the script.
+     * @param {Function} [callback] optional callback, defaults to require.onScriptLoad
+     * @param {String} [type] optional type, defaults to text/javascript
+     * @param {Function} [fetchOnlyFunction] optional function to indicate the script node
+     * should be set up to fetch the script but do not attach it to the DOM
+     * so that it can later be attached to execute it. This is a way for the
+     * order plugin to support ordered loading in IE. Once the script is fetched,
+     * but not executed, the fetchOnlyFunction will be called.
+     */
+    req.attach = function (url, context, moduleName, callback, type, fetchOnlyFunction) {
+        var node;
+        if (isBrowser) {
+            //In the browser so use a script tag
+            callback = callback || req.onScriptLoad;
+            node = context && context.config && context.config.xhtml ?
+                    document.createElementNS("http://www.w3.org/1999/xhtml", "html:script") :
+                    document.createElement("script");
+            node.type = type || (context && context.config.scriptType) ||
+                        "text/javascript";
+            node.charset = "utf-8";
+            //Use async so Gecko does not block on executing the script if something
+            //like a long-polling comet tag is being run first. Gecko likes
+            //to evaluate scripts in DOM order, even for dynamic scripts.
+            //It will fetch them async, but only evaluate the contents in DOM
+            //order, so a long-polling script tag can delay execution of scripts
+            //after it. But telling Gecko we expect async gets us the behavior
+            //we want -- execute it whenever it is finished downloading. Only
+            //Helps Firefox 3.6+
+            //Allow some URLs to not be fetched async. Mostly helps the order!
+            //plugin
+            node.async = !s.skipAsync[url];
+
+            if (context) {
+                node.setAttribute("data-requirecontext", context.contextName);
+            }
+            node.setAttribute("data-requiremodule", moduleName);
+
+            //Set up load listener. Test attachEvent first because IE9 has
+            //a subtle issue in its addEventListener and script onload firings
+            //that do not match the behavior of all other browsers with
+            //addEventListener support, which fire the onload event for a
+            //script right after the script execution. See:
+            //https://connect.microsoft.com/IE/feedback/details/648057/script-onload-event-is-not-fired-immediately-after-script-execution
+            //UNFORTUNATELY Opera implements attachEvent but does not follow the script
+            //script execution mode.
+            if (node.attachEvent &&
+                // check if node.attachEvent is artificially added by custom script or
+                // natively supported by browser
+                // read https://github.com/jrburke/requirejs/issues/187
+                // if we can NOT find [native code] then it must NOT natively supported.
+                // in IE8, node.attachEvent does not have toString()
+                // TODO: a better way to check interactive mode
+                !(node.attachEvent.toString && node.attachEvent.toString().indexOf('[native code]') < 0) &&
+                !isOpera) {
+                //Probably IE. IE (at least 6-8) do not fire
+                //script onload right after executing the script, so
+                //we cannot tie the anonymous define call to a name.
+                //However, IE reports the script as being in "interactive"
+                //readyState at the time of the define call.
+                useInteractive = true;
+
+
+                if (fetchOnlyFunction) {
+                    //Need to use old school onreadystate here since
+                    //when the event fires and the node is not attached
+                    //to the DOM, the evt.srcElement is null, so use
+                    //a closure to remember the node.
+                    node.onreadystatechange = function (evt) {
+                        //Script loaded but not executed.
+                        //Clear loaded handler, set the real one that
+                        //waits for script execution.
+                        if (node.readyState === 'loaded') {
+                            node.onreadystatechange = null;
+                            node.attachEvent("onreadystatechange", callback);
+                            fetchOnlyFunction(node);
+                        }
+                    };
+                } else {
+                    node.attachEvent("onreadystatechange", callback);
+                }
+            } else {
+                node.addEventListener("load", callback, false);
+            }
+            node.src = url;
+
+            //Fetch only means waiting to attach to DOM after loaded.
+            if (!fetchOnlyFunction) {
+                req.addScriptToDom(node);
+            }
+
+            return node;
+        } else if (isWebWorker) {
+            //In a web worker, use importScripts. This is not a very
+            //efficient use of importScripts, importScripts will block until
+            //its script is downloaded and evaluated. However, if web workers
+            //are in play, the expectation that a build has been done so that
+            //only one script needs to be loaded anyway. This may need to be
+            //reevaluated if other use cases become common.
+            importScripts(url);
+
+            //Account for anonymous modules
+            context.completeLoad(moduleName);
+        }
+        return null;
+    };
+
+    //Look for a data-main script attribute, which could also adjust the baseUrl.
+    if (isBrowser) {
+        //Figure out baseUrl. Get it from the script tag with require.js in it.
+        scripts = document.getElementsByTagName("script");
+
+        for (globalI = scripts.length - 1; globalI > -1 && (script = scripts[globalI]); globalI--) {
+            //Set the "head" where we can append children by
+            //using the script's parent.
+            if (!head) {
+                head = script.parentNode;
+            }
+
+            //Look for a data-main attribute to set main script for the page
+            //to load. If it is there, the path to data main becomes the
+            //baseUrl, if it is not already set.
+            if ((dataMain = script.getAttribute('data-main'))) {
+                if (!cfg.baseUrl) {
+                    //Pull off the directory of data-main for use as the
+                    //baseUrl.
+                    src = dataMain.split('/');
+                    mainScript = src.pop();
+                    subPath = src.length ? src.join('/')  + '/' : './';
+
+                    //Set final config.
+                    cfg.baseUrl = subPath;
+                    //Strip off any trailing .js since dataMain is now
+                    //like a module name.
+                    dataMain = mainScript.replace(jsSuffixRegExp, '');
+                }
+
+                //Put the data-main script in the files to load.
+                cfg.deps = cfg.deps ? cfg.deps.concat(dataMain) : [dataMain];
+
+                break;
+            }
+        }
+    }
+
+    //See if there is nothing waiting across contexts, and if not, trigger
+    //resourcesReady.
+    req.checkReadyState = function () {
+        var contexts = s.contexts, prop;
+        for (prop in contexts) {
+            if (!(prop in empty)) {
+                if (contexts[prop].waitCount) {
+                    return;
+                }
+            }
+        }
+        req.resourcesReady(true);
+    };
+
+    /**
+     * Internal function that is triggered whenever all scripts/resources
+     * have been loaded by the loader. Can be overridden by other, for
+     * instance the domReady plugin, which wants to know when all resources
+     * are loaded.
+     */
+    req.resourcesReady = function (isReady) {
+        var contexts, context, prop;
+
+        //First, set the public variable indicating that resources are loading.
+        req.resourcesDone = isReady;
+
+        if (req.resourcesDone) {
+            //If jQuery with DOM ready delayed, release it now.
+            contexts = s.contexts;
+            for (prop in contexts) {
+                if (!(prop in empty)) {
+                    context = contexts[prop];
+                    if (context.jQueryIncremented) {
+                        jQueryHoldReady(context.jQuery, false);
+                        context.jQueryIncremented = false;
+                    }
+                }
+            }
+        }
+    };
+
+    //FF < 3.6 readyState fix. Needed so that domReady plugin
+    //works well in that environment, since require.js is normally
+    //loaded via an HTML script tag so it will be there before window load,
+    //where the domReady plugin is more likely to be loaded after window load.
+    req.pageLoaded = function () {
+        if (document.readyState !== "complete") {
+            document.readyState = "complete";
+        }
+    };
+    if (isBrowser) {
+        if (document.addEventListener) {
+            if (!document.readyState) {
+                document.readyState = "loading";
+                window.addEventListener("load", req.pageLoaded, false);
+            }
+        }
+    }
+
+    //Set up default context. If require was a configuration object, use that as base config.
+    req(cfg);
+
+    //If modules are built into require.js, then need to make sure dependencies are
+    //traced. Use a setTimeout in the browser world, to allow all the modules to register
+    //themselves. In a non-browser env, assume that modules are not built into require.js,
+    //which seems odd to do on the server.
+    if (req.isAsync && typeof setTimeout !== "undefined") {
+        ctx = s.contexts[(cfg.context || defContextName)];
+        //Indicate that the script that includes require() is still loading,
+        //so that require()'d dependencies are not traced until the end of the
+        //file is parsed (approximated via the setTimeout call).
+        ctx.requireWait = true;
+        setTimeout(function () {
+            ctx.requireWait = false;
+
+            if (!ctx.scriptCount) {
+                ctx.resume();
+            }
+            req.checkReadyState();
+        }, 0);
+    }
+}());
 /*! skrollr 0.6.25 (2014-05-24) | Alexander Prinzhorn - https://github.com/Prinzhorn/skrollr | Free to use under terms of MIT license */
 (function(e,t,r){"use strict";function n(r){if(o=t.documentElement,a=t.body,K(),it=this,r=r||{},ut=r.constants||{},r.easing)for(var n in r.easing)U[n]=r.easing[n];yt=r.edgeStrategy||"set",ct={beforerender:r.beforerender,render:r.render,keyframe:r.keyframe},ft=r.forceHeight!==!1,ft&&(Vt=r.scale||1),mt=r.mobileDeceleration||x,dt=r.smoothScrolling!==!1,gt=r.smoothScrollingDuration||E,vt={targetTop:it.getScrollTop()},Gt=(r.mobileCheck||function(){return/Android|iPhone|iPad|iPod|BlackBerry/i.test(navigator.userAgent||navigator.vendor||e.opera)})(),Gt?(st=t.getElementById("skrollr-body"),st&&at(),X(),Dt(o,[y,S],[T])):Dt(o,[y,b],[T]),it.refresh(),St(e,"resize orientationchange",function(){var e=o.clientWidth,t=o.clientHeight;(t!==$t||e!==Mt)&&($t=t,Mt=e,_t=!0)});var i=Y();return function l(){Z(),bt=i(l)}(),it}var o,a,i={get:function(){return it},init:function(e){return it||new n(e)},VERSION:"0.6.25"},l=Object.prototype.hasOwnProperty,s=e.Math,c=e.getComputedStyle,f="touchstart",u="touchmove",m="touchcancel",p="touchend",d="skrollable",g=d+"-before",v=d+"-between",h=d+"-after",y="skrollr",T="no-"+y,b=y+"-desktop",S=y+"-mobile",k="linear",w=1e3,x=.004,E=200,A="start",F="end",C="center",D="bottom",H="___skrollable_id",I=/^(?:input|textarea|button|select)$/i,P=/^\s+|\s+$/g,N=/^data(?:-(_\w+))?(?:-?(-?\d*\.?\d+p?))?(?:-?(start|end|top|center|bottom))?(?:-?(top|center|bottom))?$/,O=/\s*(@?[\w\-\[\]]+)\s*:\s*(.+?)\s*(?:;|$)/gi,V=/^([a-z\-]+)\[(\w+)\]$/,z=/-([a-z0-9_])/g,q=function(e,t){return t.toUpperCase()},L=/[\-+]?[\d]*\.?[\d]+/g,M=/\{\?\}/g,$=/rgba?\(\s*-?\d+\s*,\s*-?\d+\s*,\s*-?\d+/g,_=/[a-z\-]+-gradient/g,B="",G="",K=function(){var e=/^(?:O|Moz|webkit|ms)|(?:-(?:o|moz|webkit|ms)-)/;if(c){var t=c(a,null);for(var n in t)if(B=n.match(e)||+n==n&&t[n].match(e))break;if(!B)return B=G="",r;B=B[0],"-"===B.slice(0,1)?(G=B,B={"-webkit-":"webkit","-moz-":"Moz","-ms-":"ms","-o-":"O"}[B]):G="-"+B.toLowerCase()+"-"}},Y=function(){var t=e.requestAnimationFrame||e[B.toLowerCase()+"RequestAnimationFrame"],r=Pt();return(Gt||!t)&&(t=function(t){var n=Pt()-r,o=s.max(0,1e3/60-n);return e.setTimeout(function(){r=Pt(),t()},o)}),t},R=function(){var t=e.cancelAnimationFrame||e[B.toLowerCase()+"CancelAnimationFrame"];return(Gt||!t)&&(t=function(t){return e.clearTimeout(t)}),t},U={begin:function(){return 0},end:function(){return 1},linear:function(e){return e},quadratic:function(e){return e*e},cubic:function(e){return e*e*e},swing:function(e){return-s.cos(e*s.PI)/2+.5},sqrt:function(e){return s.sqrt(e)},outCubic:function(e){return s.pow(e-1,3)+1},bounce:function(e){var t;if(.5083>=e)t=3;else if(.8489>=e)t=9;else if(.96208>=e)t=27;else{if(!(.99981>=e))return 1;t=91}return 1-s.abs(3*s.cos(1.028*e*t)/t)}};n.prototype.refresh=function(e){var n,o,a=!1;for(e===r?(a=!0,lt=[],Bt=0,e=t.getElementsByTagName("*")):e.length===r&&(e=[e]),n=0,o=e.length;o>n;n++){var i=e[n],l=i,s=[],c=dt,f=yt,u=!1;if(a&&H in i&&delete i[H],i.attributes){for(var m=0,p=i.attributes.length;p>m;m++){var g=i.attributes[m];if("data-anchor-target"!==g.name)if("data-smooth-scrolling"!==g.name)if("data-edge-strategy"!==g.name)if("data-emit-events"!==g.name){var v=g.name.match(N);if(null!==v){var h={props:g.value,element:i,eventType:g.name.replace(z,q)};s.push(h);var y=v[1];y&&(h.constant=y.substr(1));var T=v[2];/p$/.test(T)?(h.isPercentage=!0,h.offset=(0|T.slice(0,-1))/100):h.offset=0|T;var b=v[3],S=v[4]||b;b&&b!==A&&b!==F?(h.mode="relative",h.anchors=[b,S]):(h.mode="absolute",b===F?h.isEnd=!0:h.isPercentage||(h.offset=h.offset*Vt))}}else u=!0;else f=g.value;else c="off"!==g.value;else if(l=t.querySelector(g.value),null===l)throw'Unable to find anchor target "'+g.value+'"'}if(s.length){var k,w,x;!a&&H in i?(x=i[H],k=lt[x].styleAttr,w=lt[x].classAttr):(x=i[H]=Bt++,k=i.style.cssText,w=Ct(i)),lt[x]={element:i,styleAttr:k,classAttr:w,anchorTarget:l,keyFrames:s,smoothScrolling:c,edgeStrategy:f,emitEvents:u,lastFrameIndex:-1},Dt(i,[d],[])}}}for(Et(),n=0,o=e.length;o>n;n++){var E=lt[e[n][H]];E!==r&&(J(E),et(E))}return it},n.prototype.relativeToAbsolute=function(e,t,r){var n=o.clientHeight,a=e.getBoundingClientRect(),i=a.top,l=a.bottom-a.top;return t===D?i-=n:t===C&&(i-=n/2),r===D?i+=l:r===C&&(i+=l/2),i+=it.getScrollTop(),0|i+.5},n.prototype.animateTo=function(e,t){t=t||{};var n=Pt(),o=it.getScrollTop();return pt={startTop:o,topDiff:e-o,targetTop:e,duration:t.duration||w,startTime:n,endTime:n+(t.duration||w),easing:U[t.easing||k],done:t.done},pt.topDiff||(pt.done&&pt.done.call(it,!1),pt=r),it},n.prototype.stopAnimateTo=function(){pt&&pt.done&&pt.done.call(it,!0),pt=r},n.prototype.isAnimatingTo=function(){return!!pt},n.prototype.isMobile=function(){return Gt},n.prototype.setScrollTop=function(t,r){return ht=r===!0,Gt?Kt=s.min(s.max(t,0),Ot):e.scrollTo(0,t),it},n.prototype.getScrollTop=function(){return Gt?Kt:e.pageYOffset||o.scrollTop||a.scrollTop||0},n.prototype.getMaxScrollTop=function(){return Ot},n.prototype.on=function(e,t){return ct[e]=t,it},n.prototype.off=function(e){return delete ct[e],it},n.prototype.destroy=function(){var e=R();e(bt),wt(),Dt(o,[T],[y,b,S]);for(var t=0,n=lt.length;n>t;t++)ot(lt[t].element);o.style.overflow=a.style.overflow="",o.style.height=a.style.height="",st&&i.setStyle(st,"transform","none"),it=r,st=r,ct=r,ft=r,Ot=0,Vt=1,ut=r,mt=r,zt="down",qt=-1,Mt=0,$t=0,_t=!1,pt=r,dt=r,gt=r,vt=r,ht=r,Bt=0,yt=r,Gt=!1,Kt=0,Tt=r};var X=function(){var n,i,l,c,d,g,v,h,y,T,b,S;St(o,[f,u,m,p].join(" "),function(e){var o=e.changedTouches[0];for(c=e.target;3===c.nodeType;)c=c.parentNode;switch(d=o.clientY,g=o.clientX,T=e.timeStamp,I.test(c.tagName)||e.preventDefault(),e.type){case f:n&&n.blur(),it.stopAnimateTo(),n=c,i=v=d,l=g,y=T;break;case u:I.test(c.tagName)&&t.activeElement!==c&&e.preventDefault(),h=d-v,S=T-b,it.setScrollTop(Kt-h,!0),v=d,b=T;break;default:case m:case p:var a=i-d,k=l-g,w=k*k+a*a;if(49>w){if(!I.test(n.tagName)){n.focus();var x=t.createEvent("MouseEvents");x.initMouseEvent("click",!0,!0,e.view,1,o.screenX,o.screenY,o.clientX,o.clientY,e.ctrlKey,e.altKey,e.shiftKey,e.metaKey,0,null),n.dispatchEvent(x)}return}n=r;var E=h/S;E=s.max(s.min(E,3),-3);var A=s.abs(E/mt),F=E*A+.5*mt*A*A,C=it.getScrollTop()-F,D=0;C>Ot?(D=(Ot-C)/F,C=Ot):0>C&&(D=-C/F,C=0),A*=1-D,it.animateTo(0|C+.5,{easing:"outCubic",duration:A})}}),e.scrollTo(0,0),o.style.overflow=a.style.overflow="hidden"},j=function(){var e,t,r,n,a,i,l,c,f,u,m,p=o.clientHeight,d=At();for(c=0,f=lt.length;f>c;c++)for(e=lt[c],t=e.element,r=e.anchorTarget,n=e.keyFrames,a=0,i=n.length;i>a;a++)l=n[a],u=l.offset,m=d[l.constant]||0,l.frame=u,l.isPercentage&&(u*=p,l.frame=u),"relative"===l.mode&&(ot(t),l.frame=it.relativeToAbsolute(r,l.anchors[0],l.anchors[1])-u,ot(t,!0)),l.frame+=m,ft&&!l.isEnd&&l.frame>Ot&&(Ot=l.frame);for(Ot=s.max(Ot,Ft()),c=0,f=lt.length;f>c;c++){for(e=lt[c],n=e.keyFrames,a=0,i=n.length;i>a;a++)l=n[a],m=d[l.constant]||0,l.isEnd&&(l.frame=Ot-l.offset+m);e.keyFrames.sort(Nt)}},W=function(e,t){for(var r=0,n=lt.length;n>r;r++){var o,a,s=lt[r],c=s.element,f=s.smoothScrolling?e:t,u=s.keyFrames,m=u.length,p=u[0],y=u[u.length-1],T=p.frame>f,b=f>y.frame,S=T?p:y,k=s.emitEvents,w=s.lastFrameIndex;if(T||b){if(T&&-1===s.edge||b&&1===s.edge)continue;switch(T?(Dt(c,[g],[h,v]),k&&w>-1&&(xt(c,p.eventType,zt),s.lastFrameIndex=-1)):(Dt(c,[h],[g,v]),k&&m>w&&(xt(c,y.eventType,zt),s.lastFrameIndex=m)),s.edge=T?-1:1,s.edgeStrategy){case"reset":ot(c);continue;case"ease":f=S.frame;break;default:case"set":var x=S.props;for(o in x)l.call(x,o)&&(a=nt(x[o].value),0===o.indexOf("@")?c.setAttribute(o.substr(1),a):i.setStyle(c,o,a));continue}}else 0!==s.edge&&(Dt(c,[d,v],[g,h]),s.edge=0);for(var E=0;m-1>E;E++)if(f>=u[E].frame&&u[E+1].frame>=f){var A=u[E],F=u[E+1];for(o in A.props)if(l.call(A.props,o)){var C=(f-A.frame)/(F.frame-A.frame);C=A.props[o].easing(C),a=rt(A.props[o].value,F.props[o].value,C),a=nt(a),0===o.indexOf("@")?c.setAttribute(o.substr(1),a):i.setStyle(c,o,a)}k&&w!==E&&("down"===zt?xt(c,A.eventType,zt):xt(c,F.eventType,zt),s.lastFrameIndex=E);break}}},Z=function(){_t&&(_t=!1,Et());var e,t,n=it.getScrollTop(),o=Pt();if(pt)o>=pt.endTime?(n=pt.targetTop,e=pt.done,pt=r):(t=pt.easing((o-pt.startTime)/pt.duration),n=0|pt.startTop+t*pt.topDiff),it.setScrollTop(n,!0);else if(!ht){var a=vt.targetTop-n;a&&(vt={startTop:qt,topDiff:n-qt,targetTop:n,startTime:Lt,endTime:Lt+gt}),vt.endTime>=o&&(t=U.sqrt((o-vt.startTime)/gt),n=0|vt.startTop+t*vt.topDiff)}if(Gt&&st&&i.setStyle(st,"transform","translate(0, "+-Kt+"px) "+Tt),ht||qt!==n){zt=n>qt?"down":qt>n?"up":zt,ht=!1;var l={curTop:n,lastTop:qt,maxTop:Ot,direction:zt},s=ct.beforerender&&ct.beforerender.call(it,l);s!==!1&&(W(n,it.getScrollTop()),qt=n,ct.render&&ct.render.call(it,l)),e&&e.call(it,!1)}Lt=o},J=function(e){for(var t=0,r=e.keyFrames.length;r>t;t++){for(var n,o,a,i,l=e.keyFrames[t],s={};null!==(i=O.exec(l.props));)a=i[1],o=i[2],n=a.match(V),null!==n?(a=n[1],n=n[2]):n=k,o=o.indexOf("!")?Q(o):[o.slice(1)],s[a]={value:o,easing:U[n]};l.props=s}},Q=function(e){var t=[];return $.lastIndex=0,e=e.replace($,function(e){return e.replace(L,function(e){return 100*(e/255)+"%"})}),G&&(_.lastIndex=0,e=e.replace(_,function(e){return G+e})),e=e.replace(L,function(e){return t.push(+e),"{?}"}),t.unshift(e),t},et=function(e){var t,r,n={};for(t=0,r=e.keyFrames.length;r>t;t++)tt(e.keyFrames[t],n);for(n={},t=e.keyFrames.length-1;t>=0;t--)tt(e.keyFrames[t],n)},tt=function(e,t){var r;for(r in t)l.call(e.props,r)||(e.props[r]=t[r]);for(r in e.props)t[r]=e.props[r]},rt=function(e,t,r){var n,o=e.length;if(o!==t.length)throw"Can't interpolate between \""+e[0]+'" and "'+t[0]+'"';var a=[e[0]];for(n=1;o>n;n++)a[n]=e[n]+(t[n]-e[n])*r;return a},nt=function(e){var t=1;return M.lastIndex=0,e[0].replace(M,function(){return e[t++]})},ot=function(e,t){e=[].concat(e);for(var r,n,o=0,a=e.length;a>o;o++)n=e[o],r=lt[n[H]],r&&(t?(n.style.cssText=r.dirtyStyleAttr,Dt(n,r.dirtyClassAttr)):(r.dirtyStyleAttr=n.style.cssText,r.dirtyClassAttr=Ct(n),n.style.cssText=r.styleAttr,Dt(n,r.classAttr)))},at=function(){Tt="translateZ(0)",i.setStyle(st,"transform",Tt);var e=c(st),t=e.getPropertyValue("transform"),r=e.getPropertyValue(G+"transform"),n=t&&"none"!==t||r&&"none"!==r;n||(Tt="")};i.setStyle=function(e,t,r){var n=e.style;if(t=t.replace(z,q).replace("-",""),"zIndex"===t)n[t]=isNaN(r)?r:""+(0|r);else if("float"===t)n.styleFloat=n.cssFloat=r;else try{B&&(n[B+t.slice(0,1).toUpperCase()+t.slice(1)]=r),n[t]=r}catch(o){}};var it,lt,st,ct,ft,ut,mt,pt,dt,gt,vt,ht,yt,Tt,bt,St=i.addEvent=function(t,r,n){var o=function(t){return t=t||e.event,t.target||(t.target=t.srcElement),t.preventDefault||(t.preventDefault=function(){t.returnValue=!1,t.defaultPrevented=!0}),n.call(this,t)};r=r.split(" ");for(var a,i=0,l=r.length;l>i;i++)a=r[i],t.addEventListener?t.addEventListener(a,n,!1):t.attachEvent("on"+a,o),Yt.push({element:t,name:a,listener:n})},kt=i.removeEvent=function(e,t,r){t=t.split(" ");for(var n=0,o=t.length;o>n;n++)e.removeEventListener?e.removeEventListener(t[n],r,!1):e.detachEvent("on"+t[n],r)},wt=function(){for(var e,t=0,r=Yt.length;r>t;t++)e=Yt[t],kt(e.element,e.name,e.listener);Yt=[]},xt=function(e,t,r){ct.keyframe&&ct.keyframe.call(it,e,t,r)},Et=function(){var e=it.getScrollTop();Ot=0,ft&&!Gt&&(a.style.height=""),j(),ft&&!Gt&&(a.style.height=Ot+o.clientHeight+"px"),Gt?it.setScrollTop(s.min(it.getScrollTop(),Ot)):it.setScrollTop(e,!0),ht=!0},At=function(){var e,t,r=o.clientHeight,n={};for(e in ut)t=ut[e],"function"==typeof t?t=t.call(it):/p$/.test(t)&&(t=t.slice(0,-1)/100*r),n[e]=t;return n},Ft=function(){var e=st&&st.offsetHeight||0,t=s.max(e,a.scrollHeight,a.offsetHeight,o.scrollHeight,o.offsetHeight,o.clientHeight);return t-o.clientHeight},Ct=function(t){var r="className";return e.SVGElement&&t instanceof e.SVGElement&&(t=t[r],r="baseVal"),t[r]},Dt=function(t,n,o){var a="className";if(e.SVGElement&&t instanceof e.SVGElement&&(t=t[a],a="baseVal"),o===r)return t[a]=n,r;for(var i=t[a],l=0,s=o.length;s>l;l++)i=It(i).replace(It(o[l])," ");i=Ht(i);for(var c=0,f=n.length;f>c;c++)-1===It(i).indexOf(It(n[c]))&&(i+=" "+n[c]);t[a]=Ht(i)},Ht=function(e){return e.replace(P,"")},It=function(e){return" "+e+" "},Pt=Date.now||function(){return+new Date},Nt=function(e,t){return e.frame-t.frame},Ot=0,Vt=1,zt="down",qt=-1,Lt=Pt(),Mt=0,$t=0,_t=!1,Bt=0,Gt=!1,Kt=0,Yt=[];"function"==typeof define&&define.amd?define("skrollr",function(){return i}):"undefined"!=typeof module&&module.exports?module.exports=i:e.skrollr=i})(window,document);
-(function() {
+/*!
+* @license SoundJS
+* Visit http://createjs.com/ for documentation, updates and examples.
+*
+* Copyright (c) 2011-2013 gskinner.com, inc.
+*
+* Distributed under the terms of the MIT license.
+* http://www.opensource.org/licenses/mit-license.html
+*
+* This notice shall be included in all copies or substantial portions of the Software.
+*/
+
+/**!
+ * SoundJS FlashPlugin also includes swfobject (http://code.google.com/p/swfobject/)
+ */
+
+this.createjs=this.createjs||{},function(){var a=createjs.SoundJS=createjs.SoundJS||{};a.version="0.5.2",a.buildDate="Thu, 12 Dec 2013 23:33:37 GMT"}(),this.createjs=this.createjs||{},function(){"use strict";var a=function(){},b=a.prototype;a.initialize=function(a){a.addEventListener=b.addEventListener,a.on=b.on,a.removeEventListener=a.off=b.removeEventListener,a.removeAllEventListeners=b.removeAllEventListeners,a.hasEventListener=b.hasEventListener,a.dispatchEvent=b.dispatchEvent,a._dispatchEvent=b._dispatchEvent,a.willTrigger=b.willTrigger},b._listeners=null,b._captureListeners=null,b.initialize=function(){},b.addEventListener=function(a,b,c){var d;d=c?this._captureListeners=this._captureListeners||{}:this._listeners=this._listeners||{};var e=d[a];return e&&this.removeEventListener(a,b,c),e=d[a],e?e.push(b):d[a]=[b],b},b.on=function(a,b,c,d,e,f){return b.handleEvent&&(c=c||b,b=b.handleEvent),c=c||this,this.addEventListener(a,function(a){b.call(c,a,e),d&&a.remove()},f)},b.removeEventListener=function(a,b,c){var d=c?this._captureListeners:this._listeners;if(d){var e=d[a];if(e)for(var f=0,g=e.length;g>f;f++)if(e[f]==b){1==g?delete d[a]:e.splice(f,1);break}}},b.off=b.removeEventListener,b.removeAllEventListeners=function(a){a?(this._listeners&&delete this._listeners[a],this._captureListeners&&delete this._captureListeners[a]):this._listeners=this._captureListeners=null},b.dispatchEvent=function(a,b){if("string"==typeof a){var c=this._listeners;if(!c||!c[a])return!1;a=new createjs.Event(a)}if(a.target=b||this,a.bubbles&&this.parent){for(var d=this,e=[d];d.parent;)e.push(d=d.parent);var f,g=e.length;for(f=g-1;f>=0&&!a.propagationStopped;f--)e[f]._dispatchEvent(a,1+(0==f));for(f=1;g>f&&!a.propagationStopped;f++)e[f]._dispatchEvent(a,3)}else this._dispatchEvent(a,2);return a.defaultPrevented},b.hasEventListener=function(a){var b=this._listeners,c=this._captureListeners;return!!(b&&b[a]||c&&c[a])},b.willTrigger=function(a){for(var b=this;b;){if(b.hasEventListener(a))return!0;b=b.parent}return!1},b.toString=function(){return"[EventDispatcher]"},b._dispatchEvent=function(a,b){var c,d=1==b?this._captureListeners:this._listeners;if(a&&d){var e=d[a.type];if(!e||!(c=e.length))return;a.currentTarget=this,a.eventPhase=b,a.removed=!1,e=e.slice();for(var f=0;c>f&&!a.immediatePropagationStopped;f++){var g=e[f];g.handleEvent?g.handleEvent(a):g(a),a.removed&&(this.off(a.type,g,1==b),a.removed=!1)}}},createjs.EventDispatcher=a}(),this.createjs=this.createjs||{},function(){"use strict";var a=function(a,b,c){this.initialize(a,b,c)},b=a.prototype;b.type=null,b.target=null,b.currentTarget=null,b.eventPhase=0,b.bubbles=!1,b.cancelable=!1,b.timeStamp=0,b.defaultPrevented=!1,b.propagationStopped=!1,b.immediatePropagationStopped=!1,b.removed=!1,b.initialize=function(a,b,c){this.type=a,this.bubbles=b,this.cancelable=c,this.timeStamp=(new Date).getTime()},b.preventDefault=function(){this.defaultPrevented=!0},b.stopPropagation=function(){this.propagationStopped=!0},b.stopImmediatePropagation=function(){this.immediatePropagationStopped=this.propagationStopped=!0},b.remove=function(){this.removed=!0},b.clone=function(){return new a(this.type,this.bubbles,this.cancelable)},b.toString=function(){return"[Event (type="+this.type+")]"},createjs.Event=a}(),this.createjs=this.createjs||{},function(){"use strict";createjs.indexOf=function(a,b){for(var c=0,d=a.length;d>c;c++)if(b===a[c])return c;return-1}}(),this.createjs=this.createjs||{},function(){"use strict";createjs.proxy=function(a,b){var c=Array.prototype.slice.call(arguments,2);return function(){return a.apply(b,Array.prototype.slice.call(arguments,0).concat(c))}}}(),this.createjs=this.createjs||{},function(){"use strict";function a(){throw"Sound cannot be instantiated"}function b(a,b){this.init(a,b)}function c(){this.isDefault=!0,this.addEventListener=this.removeEventListener=this.removeAllEventListeners=this.dispatchEvent=this.hasEventListener=this._listeners=this._interrupt=this._playFailed=this.pause=this.resume=this.play=this._beginPlaying=this._cleanUp=this.stop=this.setMasterVolume=this.setVolume=this.mute=this.setMute=this.getMute=this.setPan=this.getPosition=this.setPosition=this.playFailed=function(){return!1},this.getVolume=this.getPan=this.getDuration=function(){return 0},this.playState=a.PLAY_FAILED,this.toString=function(){return"[Sound Default Sound Instance]"}}function d(){}var e=a;e.DELIMITER="|",e.INTERRUPT_ANY="any",e.INTERRUPT_EARLY="early",e.INTERRUPT_LATE="late",e.INTERRUPT_NONE="none",e.PLAY_INITED="playInited",e.PLAY_SUCCEEDED="playSucceeded",e.PLAY_INTERRUPTED="playInterrupted",e.PLAY_FINISHED="playFinished",e.PLAY_FAILED="playFailed",e.SUPPORTED_EXTENSIONS=["mp3","ogg","mpeg","wav","m4a","mp4","aiff","wma","mid"],e.EXTENSION_MAP={m4a:"mp4"},e.FILE_PATTERN=/^(?:(\w+:)\/{2}(\w+(?:\.\w+)*\/?))?([/.]*?(?:[^?]+)?\/)?((?:[^/?]+)\.(\w+))(?:\?(\S+)?)?$/,e.defaultInterruptBehavior=e.INTERRUPT_NONE,e.alternateExtensions=[],e._lastID=0,e.activePlugin=null,e._pluginsRegistered=!1,e._masterVolume=1,e._masterMute=!1,e._instances=[],e._idHash={},e._preloadHash={},e._defaultSoundInstance=null,e.addEventListener=null,e.removeEventListener=null,e.removeAllEventListeners=null,e.dispatchEvent=null,e.hasEventListener=null,e._listeners=null,createjs.EventDispatcher.initialize(e),e._sendFileLoadEvent=function(a){if(e._preloadHash[a])for(var b=0,c=e._preloadHash[a].length;c>b;b++){var d=e._preloadHash[a][b];if(e._preloadHash[a][b]=!0,e.hasEventListener("fileload")){var f=new createjs.Event("fileload");f.src=d.src,f.id=d.id,f.data=d.data,e.dispatchEvent(f)}}},e.getPreloadHandlers=function(){return{callback:createjs.proxy(e.initLoad,e),types:["sound"],extensions:e.SUPPORTED_EXTENSIONS}},e.registerPlugin=function(a){try{console.log("createjs.Sound.registerPlugin has been deprecated. Please use registerPlugins.")}catch(b){}return e._registerPlugin(a)},e._registerPlugin=function(a){return e._pluginsRegistered=!0,null==a?!1:a.isSupported()?(e.activePlugin=new a,!0):!1},e.registerPlugins=function(a){for(var b=0,c=a.length;c>b;b++){var d=a[b];if(e._registerPlugin(d))return!0}return!1},e.initializeDefaultPlugins=function(){return null!=e.activePlugin?!0:e._pluginsRegistered?!1:e.registerPlugins([createjs.WebAudioPlugin,createjs.HTMLAudioPlugin])?!0:!1},e.isReady=function(){return null!=e.activePlugin},e.getCapabilities=function(){return null==e.activePlugin?null:e.activePlugin._capabilities},e.getCapability=function(a){return null==e.activePlugin?null:e.activePlugin._capabilities[a]},e.initLoad=function(a,b,c,d,f){a=a.replace(f,"");var g=e.registerSound(a,c,d,!1,f);return null==g?!1:g},e.registerSound=function(a,c,d,f,g){if(!e.initializeDefaultPlugins())return!1;if(a instanceof Object&&(g=c,c=a.id,d=a.data,a=a.src),e.alternateExtensions.length)var h=e._parsePath2(a,"sound",c,d);else var h=e._parsePath(a,"sound",c,d);if(null==h)return!1;null!=g&&(a=g+a,h.src=g+h.src),null!=c&&(e._idHash[c]=h.src);var i=null;null!=d&&(isNaN(d.channels)?isNaN(d)||(i=parseInt(d)):i=parseInt(d.channels));var j=e.activePlugin.register(h.src,i);if(null!=j&&(null!=j.numChannels&&(i=j.numChannels),b.create(h.src,i),null!=d&&isNaN(d)?d.channels=h.data.channels=i||b.maxPerChannel():d=h.data=i||b.maxPerChannel(),null!=j.tag?h.tag=j.tag:j.src&&(h.src=j.src),null!=j.completeHandler&&(h.completeHandler=j.completeHandler),j.type&&(h.type=j.type)),0!=f)if(e._preloadHash[h.src]||(e._preloadHash[h.src]=[]),e._preloadHash[h.src].push({src:a,id:c,data:d}),1==e._preloadHash[h.src].length)e.activePlugin.preload(h.src,j);else if(1==e._preloadHash[h.src][0])return!0;return h},e.registerManifest=function(a,b){for(var c=[],d=0,e=a.length;e>d;d++)c[d]=createjs.Sound.registerSound(a[d].src,a[d].id,a[d].data,a[d].preload,b);return c},e.removeSound=function(a,c){if(null==e.activePlugin)return!1;if(a instanceof Object&&(a=a.src),a=e._getSrcById(a),e.alternateExtensions.length)var d=e._parsePath2(a);else var d=e._parsePath(a);if(null==d)return!1;null!=c&&(d.src=c+d.src),a=d.src;for(var f in e._idHash)e._idHash[f]==a&&delete e._idHash[f];return b.removeSrc(a),delete e._preloadHash[a],e.activePlugin.removeSound(a),!0},e.removeManifest=function(a,b){for(var c=[],d=0,e=a.length;e>d;d++)c[d]=createjs.Sound.removeSound(a[d].src,b);return c},e.removeAllSounds=function(){e._idHash={},e._preloadHash={},b.removeAll(),e.activePlugin.removeAllSounds()},e.loadComplete=function(a){if(e.alternateExtensions.length)var b=e._parsePath2(a,"sound");else var b=e._parsePath(a,"sound");return a=b?e._getSrcById(b.src):e._getSrcById(a),1==e._preloadHash[a][0]},e._parsePath=function(a,b,c,d){"string"!=typeof a&&(a=a.toString());var f=a.split(e.DELIMITER);if(f.length>1)try{console.log('createjs.Sound.DELIMITER "|" loading approach has been deprecated. Please use the new alternateExtensions property.')}catch(g){}for(var h={type:b||"sound",id:c,data:d},i=e.getCapabilities(),j=0,k=f.length;k>j;j++){var l=f[j],m=l.match(e.FILE_PATTERN);if(null==m)return!1;var n=m[4],o=m[5];if(i[o]&&createjs.indexOf(e.SUPPORTED_EXTENSIONS,o)>-1)return h.name=n,h.src=l,h.extension=o,h}return null},e._parsePath2=function(a,b,c,d){"string"!=typeof a&&(a=a.toString());var f=a.match(e.FILE_PATTERN);if(null==f)return!1;for(var g=f[4],h=f[5],i=e.getCapabilities(),j=0;!i[h];)if(h=e.alternateExtensions[j++],j>e.alternateExtensions.length)return null;a=a.replace("."+f[5],"."+h);var k={type:b||"sound",id:c,data:d};return k.name=g,k.src=a,k.extension=h,k},e.play=function(a,b,c,d,f,g,h){var i=e.createInstance(a),j=e._playInstance(i,b,c,d,f,g,h);return j||i.playFailed(),i},e.createInstance=function(c){if(!e.initializeDefaultPlugins())return e._defaultSoundInstance;if(c=e._getSrcById(c),e.alternateExtensions.length)var d=e._parsePath2(c,"sound");else var d=e._parsePath(c,"sound");var f=null;return null!=d&&null!=d.src?(b.create(d.src),f=e.activePlugin.create(d.src)):f=a._defaultSoundInstance,f.uniqueId=e._lastID++,f},e.setVolume=function(a){if(null==Number(a))return!1;if(a=Math.max(0,Math.min(1,a)),e._masterVolume=a,!this.activePlugin||!this.activePlugin.setVolume||!this.activePlugin.setVolume(a))for(var b=this._instances,c=0,d=b.length;d>c;c++)b[c].setMasterVolume(a)},e.getVolume=function(){return e._masterVolume},e.setMute=function(a){if(null==a||void 0==a)return!1;if(this._masterMute=a,!this.activePlugin||!this.activePlugin.setMute||!this.activePlugin.setMute(a))for(var b=this._instances,c=0,d=b.length;d>c;c++)b[c].setMasterMute(a);return!0},e.getMute=function(){return this._masterMute},e.stop=function(){for(var a=this._instances,b=a.length;b--;)a[b].stop()},e._playInstance=function(a,b,c,d,f,g,h){if(b instanceof Object&&(c=b.delay,d=b.offset,f=b.loop,g=b.volume,h=b.pan,b=b.interrupt),b=b||e.defaultInterruptBehavior,null==c&&(c=0),null==d&&(d=a.getPosition()),null==f&&(f=0),null==g&&(g=a.volume),null==h&&(h=a.pan),0==c){var i=e._beginPlaying(a,b,d,f,g,h);if(!i)return!1}else{var j=setTimeout(function(){e._beginPlaying(a,b,d,f,g,h)},c);a._delayTimeoutId=j}return this._instances.push(a),!0},e._beginPlaying=function(a,c,d,e,f,g){if(!b.add(a,c))return!1;var h=a._beginPlaying(d,e,f,g);if(!h){var i=createjs.indexOf(this._instances,a);return i>-1&&this._instances.splice(i,1),!1}return!0},e._getSrcById=function(a){return null==e._idHash||null==e._idHash[a]?a:e._idHash[a]},e._playFinished=function(a){b.remove(a);var c=createjs.indexOf(this._instances,a);c>-1&&this._instances.splice(c,1)},createjs.Sound=a,b.channels={},b.create=function(a,c){var d=b.get(a);return null==d?(b.channels[a]=new b(a,c),!0):!1},b.removeSrc=function(a){var c=b.get(a);return null==c?!1:(c.removeAll(),delete b.channels[a],!0)},b.removeAll=function(){for(var a in b.channels)b.channels[a].removeAll();b.channels={}},b.add=function(a,c){var d=b.get(a.src);return null==d?!1:d.add(a,c)},b.remove=function(a){var c=b.get(a.src);return null==c?!1:(c.remove(a),!0)},b.maxPerChannel=function(){return f.maxDefault},b.get=function(a){return b.channels[a]};var f=b.prototype;f.src=null,f.max=null,f.maxDefault=100,f.length=0,f.init=function(a,b){this.src=a,this.max=b||this.maxDefault,-1==this.max&&(this.max=this.maxDefault),this._instances=[]},f.get=function(a){return this._instances[a]},f.add=function(a,b){return this.getSlot(b,a)?(this._instances.push(a),this.length++,!0):!1},f.remove=function(a){var b=createjs.indexOf(this._instances,a);return-1==b?!1:(this._instances.splice(b,1),this.length--,!0)},f.removeAll=function(){for(var a=this.length-1;a>=0;a--)this._instances[a].stop()},f.getSlot=function(b){for(var c,d,e=0,f=this.max;f>e;e++){if(c=this.get(e),null==c)return!0;(b!=a.INTERRUPT_NONE||c.playState==a.PLAY_FINISHED)&&(0!=e?c.playState==a.PLAY_FINISHED||c.playState==a.PLAY_INTERRUPTED||c.playState==a.PLAY_FAILED?d=c:(b==a.INTERRUPT_EARLY&&c.getPosition()<d.getPosition()||b==a.INTERRUPT_LATE&&c.getPosition()>d.getPosition())&&(d=c):d=c)}return null!=d?(d._interrupt(),this.remove(d),!0):!1},f.toString=function(){return"[Sound SoundChannel]"},a._defaultSoundInstance=new c,d.init=function(){var a=window.navigator.userAgent;d.isFirefox=a.indexOf("Firefox")>-1,d.isOpera=null!=window.opera,d.isChrome=a.indexOf("Chrome")>-1,d.isIOS=a.indexOf("iPod")>-1||a.indexOf("iPhone")>-1||a.indexOf("iPad")>-1,d.isAndroid=a.indexOf("Android")>-1,d.isBlackberry=a.indexOf("Blackberry")>-1},d.init(),createjs.Sound.BrowserDetect=d}(),this.createjs=this.createjs||{},function(){"use strict";function a(){this._init()}var b=a;b._capabilities=null,b.isSupported=function(){var a=createjs.Sound.BrowserDetect.isIOS||createjs.Sound.BrowserDetect.isAndroid||createjs.Sound.BrowserDetect.isBlackberry;return"file:"!=location.protocol||a||this._isFileXHRSupported()?(b._generateCapabilities(),null==b.context?!1:!0):!1},b._isFileXHRSupported=function(){var a=!0,b=new XMLHttpRequest;try{b.open("GET","fail.fail",!1)}catch(c){return a=!1}b.onerror=function(){a=!1},b.onload=function(){a=404==this.status||200==this.status||0==this.status&&""!=this.response};try{b.send()}catch(c){a=!1}return a},b._generateCapabilities=function(){if(null==b._capabilities){var a=document.createElement("audio");if(null==a.canPlayType)return null;if(window.webkitAudioContext)b.context=new webkitAudioContext;else{if(!window.AudioContext)return null;b.context=new AudioContext}b._compatibilitySetUp(),b.playEmptySound(),b._capabilities={panning:!0,volume:!0,tracks:-1};for(var c=createjs.Sound.SUPPORTED_EXTENSIONS,d=createjs.Sound.EXTENSION_MAP,e=0,f=c.length;f>e;e++){var g=c[e],h=d[g]||g;b._capabilities[g]="no"!=a.canPlayType("audio/"+g)&&""!=a.canPlayType("audio/"+g)||"no"!=a.canPlayType("audio/"+h)&&""!=a.canPlayType("audio/"+h)}b.context.destination.numberOfChannels<2&&(b._capabilities.panning=!1),b.dynamicsCompressorNode=b.context.createDynamicsCompressor(),b.dynamicsCompressorNode.connect(b.context.destination),b.gainNode=b.context.createGain(),b.gainNode.connect(b.dynamicsCompressorNode)}},b._compatibilitySetUp=function(){if(!b.context.createGain){b.context.createGain=b.context.createGainNode;var a=b.context.createBufferSource();a.__proto__.start=a.__proto__.noteGrainOn,a.__proto__.stop=a.__proto__.noteOff,this._panningModel=0}},b.playEmptySound=function(){var a=this.context.createBuffer(1,1,22050),b=this.context.createBufferSource();b.buffer=a,b.connect(this.context.destination),b.start(0,0,0)};var c=a.prototype;c._capabilities=null,c._volume=1,c.context=null,c._panningModel="equalpower",c.dynamicsCompressorNode=null,c.gainNode=null,c._arrayBuffers=null,c._init=function(){this._capabilities=b._capabilities,this._arrayBuffers={},this.context=b.context,this.gainNode=b.gainNode,this.dynamicsCompressorNode=b.dynamicsCompressorNode},c.register=function(a){this._arrayBuffers[a]=!0;var b=new createjs.WebAudioPlugin.Loader(a,this);return{tag:b}},c.isPreloadStarted=function(a){return null!=this._arrayBuffers[a]},c.isPreloadComplete=function(a){return!(null==this._arrayBuffers[a]||1==this._arrayBuffers[a])},c.removeSound=function(a){delete this._arrayBuffers[a]},c.removeAllSounds=function(){this._arrayBuffers={}},c.addPreloadResults=function(a,b){this._arrayBuffers[a]=b},c._handlePreloadComplete=function(){createjs.Sound._sendFileLoadEvent(this.src)},c.preload=function(a){this._arrayBuffers[a]=!0;var b=new createjs.WebAudioPlugin.Loader(a,this);b.onload=this._handlePreloadComplete,b.load()},c.create=function(a){return this.isPreloadStarted(a)||this.preload(a),new createjs.WebAudioPlugin.SoundInstance(a,this)},c.setVolume=function(a){return this._volume=a,this._updateVolume(),!0},c._updateVolume=function(){var a=createjs.Sound._masterMute?0:this._volume;a!=this.gainNode.gain.value&&(this.gainNode.gain.value=a)},c.getVolume=function(){return this._volume},c.setMute=function(){return this._updateVolume(),!0},c.toString=function(){return"[WebAudioPlugin]"},createjs.WebAudioPlugin=a}(),function(){"use strict";function a(a,b){this._init(a,b)}var b=a.prototype=new createjs.EventDispatcher;b.src=null,b.uniqueId=-1,b.playState=null,b._owner=null,b._offset=0,b._delay=0,b._volume=1;try{Object.defineProperty(b,"volume",{get:function(){return this._volume},set:function(a){return null==Number(a)?!1:(a=Math.max(0,Math.min(1,a)),this._volume=a,this._updateVolume(),void 0)}})}catch(c){}b._pan=0;try{Object.defineProperty(b,"pan",{get:function(){return this._pan},set:function(a){return this._owner._capabilities.panning&&null!=Number(a)?(a=Math.max(-1,Math.min(1,a)),this._pan=a,this.panNode.setPosition(a,0,-.5),void 0):!1}})}catch(c){}b._duration=0,b._remainingLoops=0,b._delayTimeoutId=null,b._soundCompleteTimeout=null,b.gainNode=null,b.panNode=null,b.sourceNode=null,b._sourceNodeNext=null,b._muted=!1,b._paused=!1,b._startTime=0,b._endedHandler=null,b._sendEvent=function(a){var b=new createjs.Event(a);this.dispatchEvent(b)},b._init=function(a,b){this._owner=b,this.src=a,this.gainNode=this._owner.context.createGain(),this.panNode=this._owner.context.createPanner(),this.panNode.panningModel=this._owner._panningModel,this.panNode.connect(this.gainNode),this._owner.isPreloadComplete(this.src)&&(this._duration=1e3*this._owner._arrayBuffers[this.src].duration),this._endedHandler=createjs.proxy(this._handleSoundComplete,this)},b._cleanUp=function(){this.sourceNode&&this.playState==createjs.Sound.PLAY_SUCCEEDED&&(this.sourceNode=this._cleanUpAudioNode(this.sourceNode),this._sourceNodeNext=this._cleanUpAudioNode(this._sourceNodeNext)),0!=this.gainNode.numberOfOutputs&&this.gainNode.disconnect(0),clearTimeout(this._delayTimeoutId),clearTimeout(this._soundCompleteTimeout),this._startTime=0,null!=window.createjs&&createjs.Sound._playFinished(this)},b._cleanUpAudioNode=function(a){return a&&(a.stop(0),a.disconnect(this.panNode),a=null),a},b._interrupt=function(){this._cleanUp(),this.playState=createjs.Sound.PLAY_INTERRUPTED,this._paused=!1,this._sendEvent("interrupted")},b._handleSoundReady=function(){if(null!=window.createjs){if(1e3*this._offset>this.getDuration())return this.playFailed(),void 0;this._offset<0&&(this._offset=0),this.playState=createjs.Sound.PLAY_SUCCEEDED,this._paused=!1,this.gainNode.connect(this._owner.gainNode);var a=this._owner._arrayBuffers[this.src].duration;this.sourceNode=this._createAndPlayAudioNode(this._owner.context.currentTime-a,this._offset),this._duration=1e3*a,this._startTime=this.sourceNode.startTime-this._offset,this._soundCompleteTimeout=setTimeout(this._endedHandler,1e3*(a-this._offset)),0!=this._remainingLoops&&(this._sourceNodeNext=this._createAndPlayAudioNode(this._startTime,0))}},b._createAndPlayAudioNode=function(a,b){var c=this._owner.context.createBufferSource();return c.buffer=this._owner._arrayBuffers[this.src],c.connect(this.panNode),this._owner.context.currentTime,c.startTime=a+c.buffer.duration,c.start(c.startTime,b,c.buffer.duration-b),c},b.play=function(a,b,c,d,e,f){this._cleanUp(),createjs.Sound._playInstance(this,a,b,c,d,e,f)},b._beginPlaying=function(a,b,c,d){return null!=window.createjs&&this.src?(this._offset=a/1e3,this._remainingLoops=b,this.volume=c,this.pan=d,this._owner.isPreloadComplete(this.src)?(this._handleSoundReady(null),this._sendEvent("succeeded"),1):(this.playFailed(),void 0)):void 0},b.pause=function(){return this._paused||this.playState!=createjs.Sound.PLAY_SUCCEEDED?!1:(this._paused=!0,this._offset=this._owner.context.currentTime-this._startTime,this._cleanUpAudioNode(this.sourceNode),this._cleanUpAudioNode(this._sourceNodeNext),0!=this.gainNode.numberOfOutputs&&this.gainNode.disconnect(),clearTimeout(this._delayTimeoutId),clearTimeout(this._soundCompleteTimeout),!0)},b.resume=function(){return this._paused?(this._handleSoundReady(null),!0):!1},b.stop=function(){return this._cleanUp(),this.playState=createjs.Sound.PLAY_FINISHED,this._offset=0,!0},b.setVolume=function(a){return this.volume=a,!0},b._updateVolume=function(){var a=this._muted?0:this._volume;return a!=this.gainNode.gain.value?(this.gainNode.gain.value=a,!0):!1},b.getVolume=function(){return this.volume},b.setMute=function(a){return null==a||void 0==a?!1:(this._muted=a,this._updateVolume(),!0)},b.getMute=function(){return this._muted},b.setPan=function(a){return this.pan=a,this.pan!=a?!1:void 0},b.getPan=function(){return this.pan},b.getPosition=function(){if(this._paused||null==this.sourceNode)var a=this._offset;else var a=this._owner.context.currentTime-this._startTime;return 1e3*a},b.setPosition=function(a){return this._offset=a/1e3,this.sourceNode&&this.playState==createjs.Sound.PLAY_SUCCEEDED&&(this._cleanUpAudioNode(this.sourceNode),this._cleanUpAudioNode(this._sourceNodeNext),clearTimeout(this._soundCompleteTimeout)),this._paused||this.playState!=createjs.Sound.PLAY_SUCCEEDED||this._handleSoundReady(null),!0},b.getDuration=function(){return this._duration},b._handleSoundComplete=function(){return this._offset=0,0!=this._remainingLoops?(this._remainingLoops--,this._sourceNodeNext?(this._cleanUpAudioNode(this.sourceNode),this.sourceNode=this._sourceNodeNext,this._startTime=this.sourceNode.startTime,this._sourceNodeNext=this._createAndPlayAudioNode(this._startTime,0),this._soundCompleteTimeout=setTimeout(this._endedHandler,this._duration)):this._handleSoundReady(null),this._sendEvent("loop"),void 0):(null!=window.createjs&&(this._cleanUp(),this.playState=createjs.Sound.PLAY_FINISHED,this._sendEvent("complete")),void 0)},b.playFailed=function(){null!=window.createjs&&(this._cleanUp(),this.playState=createjs.Sound.PLAY_FAILED,this._sendEvent("failed"))},b.toString=function(){return"[WebAudioPlugin SoundInstance]"},createjs.WebAudioPlugin.SoundInstance=a}(),function(){"use strict";function a(a,b){this._init(a,b)}var b=a.prototype;b.request=null,b.owner=null,b.progress=-1,b.src=null,b.originalSrc=null,b.result=null,b.onload=null,b.onprogress=null,b.onError=null,b._init=function(a,b){this.src=a,this.originalSrc=a,this.owner=b},b.load=function(a){null!=a&&(this.src=a),this.request=new XMLHttpRequest,this.request.open("GET",this.src,!0),this.request.responseType="arraybuffer",this.request.onload=createjs.proxy(this.handleLoad,this),this.request.onError=createjs.proxy(this.handleError,this),this.request.onprogress=createjs.proxy(this.handleProgress,this),this.request.send()},b.handleProgress=function(a,b){this.progress=a/b,null!=this.onprogress&&this.onprogress({loaded:a,total:b,progress:this.progress})},b.handleLoad=function(){this.owner.context.decodeAudioData(this.request.response,createjs.proxy(this.handleAudioDecoded,this),createjs.proxy(this.handleError,this))},b.handleAudioDecoded=function(a){this.progress=1,this.result=a,this.src=this.originalSrc,this.owner.addPreloadResults(this.src,this.result),this.onload&&this.onload()},b.handleError=function(a){this.owner.removeSound(this.src),this.onerror&&this.onerror(a)},b.toString=function(){return"[WebAudioPlugin Loader]"},createjs.WebAudioPlugin.Loader=a}(),this.createjs=this.createjs||{},function(){"use strict";function a(){this._init()}var b=a;b.MAX_INSTANCES=30,b._AUDIO_READY="canplaythrough",b._AUDIO_ENDED="ended",b._AUDIO_SEEKED="seeked",b._AUDIO_STALLED="stalled",b._capabilities=null,b.enableIOS=!1,b.isSupported=function(){if(createjs.Sound.BrowserDetect.isIOS&&!b.enableIOS)return!1;b._generateCapabilities();var a=b.tag;return null==a||null==b._capabilities?!1:!0},b._generateCapabilities=function(){if(null==b._capabilities){var a=b.tag=document.createElement("audio");if(null==a.canPlayType)return null;b._capabilities={panning:!0,volume:!0,tracks:-1};for(var c=createjs.Sound.SUPPORTED_EXTENSIONS,d=createjs.Sound.EXTENSION_MAP,e=0,f=c.length;f>e;e++){var g=c[e],h=d[g]||g;b._capabilities[g]="no"!=a.canPlayType("audio/"+g)&&""!=a.canPlayType("audio/"+g)||"no"!=a.canPlayType("audio/"+h)&&""!=a.canPlayType("audio/"+h)}}};var c=a.prototype;c._capabilities=null,c._audioSources=null,c.defaultNumChannels=2,c.loadedHandler=null,c._init=function(){this._capabilities=b._capabilities,this._audioSources={}},c.register=function(a,b){this._audioSources[a]=!0;for(var c=createjs.HTMLAudioPlugin.TagPool.get(a),d=null,e=b||this.defaultNumChannels,f=0;e>f;f++)d=this._createTag(a),c.add(d);if(d.id=a,this.loadedHandler=createjs.proxy(this._handleTagLoad,this),d.addEventListener&&d.addEventListener("canplaythrough",this.loadedHandler),null==d.onreadystatechange)d.onreadystatechange=this.loadedHandler;else{var g=d.onreadystatechange;d.onreadystatechange=function(){g(),this.loadedHandler()}}return{tag:d,numChannels:e}},c._handleTagLoad=function(a){a.target.removeEventListener&&a.target.removeEventListener("canplaythrough",this.loadedHandler),a.target.onreadystatechange=null,a.target.src!=a.target.id&&createjs.HTMLAudioPlugin.TagPool.checkSrc(a.target.id)},c._createTag=function(a){var b=document.createElement("audio");return b.autoplay=!1,b.preload="none",b.src=a,b},c.removeSound=function(a){delete this._audioSources[a],createjs.HTMLAudioPlugin.TagPool.remove(a)},c.removeAllSounds=function(){this._audioSources={},createjs.HTMLAudioPlugin.TagPool.removeAll()},c.create=function(a){if(!this.isPreloadStarted(a)){var b=createjs.HTMLAudioPlugin.TagPool.get(a),c=this._createTag(a);c.id=a,b.add(c),this.preload(a,{tag:c})}return new createjs.HTMLAudioPlugin.SoundInstance(a,this)},c.isPreloadStarted=function(a){return null!=this._audioSources[a]},c.preload=function(a,b){this._audioSources[a]=!0,new createjs.HTMLAudioPlugin.Loader(a,b.tag)},c.toString=function(){return"[HTMLAudioPlugin]"},createjs.HTMLAudioPlugin=a}(),function(){"use strict";function a(a,b){this._init(a,b)}var b=a.prototype=new createjs.EventDispatcher;b.src=null,b.uniqueId=-1,b.playState=null,b._owner=null,b.loaded=!1,b._offset=0,b._delay=0,b._volume=1;try{Object.defineProperty(b,"volume",{get:function(){return this._volume},set:function(a){null!=Number(a)&&(a=Math.max(0,Math.min(1,a)),this._volume=a,this._updateVolume())}})}catch(c){}b.pan=0,b._duration=0,b._remainingLoops=0,b._delayTimeoutId=null,b.tag=null,b._muted=!1,b._paused=!1,b._endedHandler=null,b._readyHandler=null,b._stalledHandler=null,b.loopHandler=null,b._init=function(a,b){this.src=a,this._owner=b,this._endedHandler=createjs.proxy(this._handleSoundComplete,this),this._readyHandler=createjs.proxy(this._handleSoundReady,this),this._stalledHandler=createjs.proxy(this._handleSoundStalled,this),this.loopHandler=createjs.proxy(this.handleSoundLoop,this)},b._sendEvent=function(a){var b=new createjs.Event(a);this.dispatchEvent(b)},b._cleanUp=function(){var a=this.tag;if(null!=a){a.pause(),a.removeEventListener(createjs.HTMLAudioPlugin._AUDIO_ENDED,this._endedHandler,!1),a.removeEventListener(createjs.HTMLAudioPlugin._AUDIO_READY,this._readyHandler,!1),a.removeEventListener(createjs.HTMLAudioPlugin._AUDIO_SEEKED,this.loopHandler,!1);try{a.currentTime=0}catch(b){}createjs.HTMLAudioPlugin.TagPool.setInstance(this.src,a),this.tag=null}clearTimeout(this._delayTimeoutId),null!=window.createjs&&createjs.Sound._playFinished(this)},b._interrupt=function(){null!=this.tag&&(this.playState=createjs.Sound.PLAY_INTERRUPTED,this._cleanUp(),this._paused=!1,this._sendEvent("interrupted"))},b.play=function(a,b,c,d,e,f){this._cleanUp(),createjs.Sound._playInstance(this,a,b,c,d,e,f)},b._beginPlaying=function(a,b,c,d){if(null==window.createjs)return-1;var e=this.tag=createjs.HTMLAudioPlugin.TagPool.getInstance(this.src);return null==e?(this.playFailed(),-1):(e.addEventListener(createjs.HTMLAudioPlugin._AUDIO_ENDED,this._endedHandler,!1),this._offset=a,this.volume=c,this.pan=d,this._updateVolume(),this._remainingLoops=b,4!==e.readyState?(e.addEventListener(createjs.HTMLAudioPlugin._AUDIO_READY,this._readyHandler,!1),e.addEventListener(createjs.HTMLAudioPlugin._AUDIO_STALLED,this._stalledHandler,!1),e.preload="auto",e.load()):this._handleSoundReady(null),this._sendEvent("succeeded"),1)},b._handleSoundStalled=function(){this._cleanUp(),this._sendEvent("failed")},b._handleSoundReady=function(){if(null!=window.createjs){if(this._duration=1e3*this.tag.duration,this.playState=createjs.Sound.PLAY_SUCCEEDED,this._paused=!1,this.tag.removeEventListener(createjs.HTMLAudioPlugin._AUDIO_READY,this._readyHandler,!1),this._offset>=this.getDuration())return this.playFailed(),void 0;this._offset>0&&(this.tag.currentTime=.001*this._offset),-1==this._remainingLoops&&(this.tag.loop=!0),0!=this._remainingLoops&&(this.tag.addEventListener(createjs.HTMLAudioPlugin._AUDIO_SEEKED,this.loopHandler,!1),this.tag.loop=!0),this.tag.play()}},b.pause=function(){return this._paused||this.playState!=createjs.Sound.PLAY_SUCCEEDED||null==this.tag?!1:(this._paused=!0,this.tag.pause(),clearTimeout(this._delayTimeoutId),!0)},b.resume=function(){return this._paused&&null!=this.tag?(this._paused=!1,this.tag.play(),!0):!1},b.stop=function(){return this._offset=0,this.pause(),this.playState=createjs.Sound.PLAY_FINISHED,this._cleanUp(),!0},b.setMasterVolume=function(){return this._updateVolume(),!0},b.setVolume=function(a){return this.volume=a,!0},b._updateVolume=function(){if(null!=this.tag){var a=this._muted||createjs.Sound._masterMute?0:this._volume*createjs.Sound._masterVolume;return a!=this.tag.volume&&(this.tag.volume=a),!0}return!1},b.getVolume=function(){return this.volume},b.setMasterMute=function(){return this._updateVolume(),!0},b.setMute=function(a){return null==a||void 0==a?!1:(this._muted=a,this._updateVolume(),!0)},b.getMute=function(){return this._muted},b.setPan=function(){return!1},b.getPan=function(){return 0},b.getPosition=function(){return null==this.tag?this._offset:1e3*this.tag.currentTime},b.setPosition=function(a){if(null==this.tag)this._offset=a;else{this.tag.removeEventListener(createjs.HTMLAudioPlugin._AUDIO_SEEKED,this.loopHandler,!1);try{this.tag.currentTime=.001*a}catch(b){return!1}this.tag.addEventListener(createjs.HTMLAudioPlugin._AUDIO_SEEKED,this.loopHandler,!1)}return!0},b.getDuration=function(){return this._duration},b._handleSoundComplete=function(){this._offset=0,null!=window.createjs&&(this.playState=createjs.Sound.PLAY_FINISHED,this._cleanUp(),this._sendEvent("complete"))},b.handleSoundLoop=function(){this._offset=0,this._remainingLoops--,0==this._remainingLoops&&(this.tag.loop=!1,this.tag.removeEventListener(createjs.HTMLAudioPlugin._AUDIO_SEEKED,this.loopHandler,!1)),this._sendEvent("loop")},b.playFailed=function(){null!=window.createjs&&(this.playState=createjs.Sound.PLAY_FAILED,this._cleanUp(),this._sendEvent("failed"))},b.toString=function(){return"[HTMLAudioPlugin SoundInstance]"},createjs.HTMLAudioPlugin.SoundInstance=a}(),function(){"use strict";function a(a,b){this._init(a,b)}var b=a.prototype;b.src=null,b.tag=null,b.preloadTimer=null,b.loadedHandler=null,b._init=function(a,b){if(this.src=a,this.tag=b,this.preloadTimer=setInterval(createjs.proxy(this.preloadTick,this),200),this.loadedHandler=createjs.proxy(this.sendLoadedEvent,this),this.tag.addEventListener&&this.tag.addEventListener("canplaythrough",this.loadedHandler),null==this.tag.onreadystatechange)this.tag.onreadystatechange=createjs.proxy(this.sendLoadedEvent,this);else{var c=this.tag.onreadystatechange;this.tag.onreadystatechange=function(){c(),this.tag.onreadystatechange=createjs.proxy(this.sendLoadedEvent,this)}
+}this.tag.preload="auto",this.tag.load()},b.preloadTick=function(){var a=this.tag.buffered,b=this.tag.duration;a.length>0&&a.end(0)>=b-1&&this.handleTagLoaded()},b.handleTagLoaded=function(){clearInterval(this.preloadTimer)},b.sendLoadedEvent=function(){this.tag.removeEventListener&&this.tag.removeEventListener("canplaythrough",this.loadedHandler),this.tag.onreadystatechange=null,createjs.Sound._sendFileLoadEvent(this.src)},b.toString=function(){return"[HTMLAudioPlugin Loader]"},createjs.HTMLAudioPlugin.Loader=a}(),function(){"use strict";function a(a){this._init(a)}var b=a;b.tags={},b.get=function(c){var d=b.tags[c];return null==d&&(d=b.tags[c]=new a(c)),d},b.remove=function(a){var c=b.tags[a];return null==c?!1:(c.removeAll(),delete b.tags[a],!0)},b.removeAll=function(){for(var a in b.tags)b.tags[a].removeAll();b.tags={}},b.getInstance=function(a){var c=b.tags[a];return null==c?null:c.get()},b.setInstance=function(a,c){var d=b.tags[a];return null==d?null:d.set(c)},b.checkSrc=function(a){var c=b.tags[a];return null==c?null:(c.checkSrcChange(),void 0)};var c=a.prototype;c.src=null,c.length=0,c.available=0,c.tags=null,c._init=function(a){this.src=a,this.tags=[]},c.add=function(a){this.tags.push(a),this.length++,this.available++},c.removeAll=function(){for(;this.length--;)delete this.tags[this.length];this.src=null,this.tags.length=0},c.get=function(){if(0==this.tags.length)return null;this.available=this.tags.length;var a=this.tags.pop();return null==a.parentNode&&document.body.appendChild(a),a},c.set=function(a){var b=createjs.indexOf(this.tags,a);-1==b&&this.tags.push(a),this.available=this.tags.length},c.checkSrcChange=function(){for(var a=this.tags.length-1,b=this.tags[a].src;a--;)this.tags[a].src=b},c.toString=function(){return"[HTMLAudioPlugin TagPool]"},createjs.HTMLAudioPlugin.TagPool=a}();
+define([
+	'skrollr',
+	'components.fade',
+	'components.360',
+	'components.video',
+	'components.easy',
+	'components.pan',
+	'components.carousel'
+
+], function(skrollr, ComponentFade, ComponentReel, ComponentVideo, ComponentEasy, ComponentPan, ComponentCarousel) {
+
+
+	var instancesPool = [];
+
+
+	var Modules = {
+
+		'image-fade': {
+
+			init: function(a, b) {
+				var obj = new ComponentFade(a, b);
+				obj.preload();
+				instancesPool[a.id] = obj;
+			},
+
+			remove: function(a, b) {
+				if (instancesPool[a.id]) {
+					instancesPool[a.id].dispose();
+					instancesPool[a.id].preloadAbort();
+					delete instancesPool[a.id];
+				}
+
+			}
+
+		},
+
+		'image-360': {
+
+			init: function(a, b) {
+				var obj = new ComponentReel(a, b);
+				obj.preload();
+				instancesPool[a.id] = obj;
+			},
+			remove: function(a, b) {
+				if (instancesPool[a.id]) {
+					instancesPool[a.id].dispose();
+					instancesPool[a.id].preloadAbort();
+					delete instancesPool[a.id];
+				}
+
+			}
+		},
+
+		'video-clip': {
+
+			init: function(a, b) {
+				var obj = new ComponentVideo(a, b);
+				obj.preload();
+				instancesPool[a.id] = obj;
+			},
+			remove: function(a, b) {
+				if (instancesPool[a.id]) {
+					instancesPool[a.id].dispose();
+					instancesPool[a.id].preloadAbort();
+					delete instancesPool[a.id];
+				}
+
+			}
+		},
+
+		'image-easy': {
+
+			init: function(a, b) {
+				var obj = new ComponentEasy(a, b);
+				obj.preload();
+				instancesPool[a.id] = obj;
+
+			},
+			remove: function(a, b) {
+				if (instancesPool[a.id]) {
+					instancesPool[a.id].dispose();
+					instancesPool[a.id].preloadAbort();
+					delete instancesPool[a.id];
+				}
+
+			}
+
+		},
+
+		'image-pan': {
+
+			init: function(a, b) {
+				var obj = new ComponentPan(a, b);
+				obj.preload();
+				instancesPool[a.id] = obj;
+
+			},
+			remove: function(a, b) {
+				if (instancesPool[a.id]) {
+					instancesPool[a.id].dispose();
+					instancesPool[a.id].preloadAbort();
+					delete instancesPool[a.id];
+				}
+
+			}
+
+		},
+
+		'carousel': {
+
+			init: function(a, b) {
+				if (!instancesPool[a.id]) {
+					var obj = new ComponentCarousel(a, b);
+					obj.preload();
+					instancesPool[a.id] = obj;
+				}
+
+			},
+			remove: function(a, b) {
+				if (instancesPool[a.id]) {
+					instancesPool[a.id].dispose();
+					instancesPool[a.id].preloadAbort();
+					delete instancesPool[a.id];
+				}
+
+			}
+
+		}
+
+	};
+
+
+
+	// append behaviours
+	$(".box").attr("data-emit-events", "data-emit-events");
+	$(".box").attr("data-top-bottom", "").attr("data-bottom-top", "");
+
+
+	var App = {
+
+
+		getLogger: function(active) {
+
+			var muteConsole;
+			if (active) {
+				muteConsole = window.console || {};
+			} else {
+				muteConsole = {};
+			}
+
+			var method;
+			var noop = function() {};
+			var methods = ['assert', 'clear', 'count', 'debug', 'dir', 'dirxml', 'error', 'exception', 'group', 'groupCollapsed', 'groupEnd', 'info', 'log', 'markTimeline', 'profile', 'profileEnd', 'table', 'time', 'timeEnd', 'timeStamp', 'trace', 'warn'];
+			var length = methods.length;
+
+			while (length--) {
+				method = methods[length];
+
+				// Only stub undefined methods.
+				if (!muteConsole[method]) {
+					muteConsole[method] = noop;
+				}
+			}
+
+			return muteConsole;
+
+		},
+
+
+		initialize: function() {
+
+			skrollr.init({
+				forceHeight: true,
+				keyframe: function(element, name, direction) {
+					//console.log(name, direction);
+
+					var elm = Modules[element.getAttribute('obj-type')];
+					var cfg = (element.getAttribute('obj-config'));
+
+					// parse to json object
+					cfg = $.parseJSON(cfg);
+
+					//element.className='box skrollable '+direction;
+
+					if (direction === 'down') {
+						switch (name) {
+
+							case 'dataTopBottom':
+
+								elm.remove(element, cfg);
+								break;
+
+
+							case 'dataBottomTop':
+
+								elm.init(element, cfg);
+								break;
+						}
+					} else {
+
+						switch (name) {
+
+							case 'dataTopBottom':
+
+								elm.init(element, cfg);
+
+								break;
+
+
+							case 'dataBottomTop':
+
+								elm.remove(element, cfg);
+								break;
+
+						}
+
+					}
+
+				}
+
+			});
+		}
+	};
+
+
+	return App;
+
+});
+define(['jquery','mixins.preloader','components.sound','reel'], function($,MixinPreloader,ComponentSound){
 
 
 	var Component = function(element, options) {
@@ -20357,7 +22661,7 @@ if ( typeof define === "function" && define.amd && define.amd.jQuery ) {
 
 	// MIXIN
 	
-	$.extend(Component.prototype, window.MixinPreloader);
+	$.extend(Component.prototype, MixinPreloader);
 
 	//extend prototype
 
@@ -20401,10 +22705,10 @@ if ( typeof define === "function" && define.amd && define.amd.jQuery ) {
 
 	});
 
-	window.ComponentReel = Component;
+	return Component;
 
-}());
-(function() {
+});
+define(['jquery','mixins.preloader','components.sound'], function($,MixinPreloader,ComponentSound){
 
 
 	var Component = function(element, options) {
@@ -20429,7 +22733,7 @@ if ( typeof define === "function" && define.amd && define.amd.jQuery ) {
 
 	// MIXIN
 
-	$.extend(Component.prototype, window.MixinPreloader);
+	$.extend(Component.prototype, MixinPreloader);
 
 	//extend prototype
 
@@ -20464,7 +22768,7 @@ if ( typeof define === "function" && define.amd && define.amd.jQuery ) {
 
 			
 
-			console.error(this.elementId + ': Carousel initialize');
+			console.debug(this.elementId + ': Carousel initialize');
 
 			var firstElement = $(this.items.get(0));
 
@@ -20630,7 +22934,7 @@ if ( typeof define === "function" && define.amd && define.amd.jQuery ) {
 
 
 		initSound: function() {
-			this.sound = new window.ComponentSound();
+			this.sound = new ComponentSound();
 			if (this.options.sound) {
 				this.sound.registerSoundFullPath(this.options.sound);
 			}
@@ -20671,12 +22975,11 @@ if ( typeof define === "function" && define.amd && define.amd.jQuery ) {
 
 	});
 
-	window.ComponentCarousel = Component;
+	return Component;
 
-}());
-(function() {
-
-	// component Easy do nothing it's just for completeness of the api
+});
+define(['jquery','mixins.preloader','components.sound'], function($,MixinPreloader,ComponentSound){
+	
 
 	var Component = function(element, options) {
 		this.options = options;
@@ -20685,7 +22988,7 @@ if ( typeof define === "function" && define.amd && define.amd.jQuery ) {
 
 	// MIXIN
 	
-	$.extend(Component.prototype, window.MixinPreloader);
+	$.extend(Component.prototype, MixinPreloader);
 
 	//extend prototype
 
@@ -20706,10 +23009,10 @@ if ( typeof define === "function" && define.amd && define.amd.jQuery ) {
 
 	});
 
-	window.ComponentEasy = Component;
+	return Component;
 
-}());
-(function() {
+});
+define(['jquery', 'mixins.preloader', 'components.sound'], function($, MixinPreloader, ComponentSound) {
 
 
 	var Component = function(element, options) {
@@ -20717,12 +23020,12 @@ if ( typeof define === "function" && define.amd && define.amd.jQuery ) {
 		this.$el = $(element);
 
 		// Default options for the fade plugin
-	
+
 		this.defaults = {
 			loop: true,
 			delay: 0,
 			duration: 2,
-			sound:null
+			sound: null
 		};
 
 		// merge default options with
@@ -20731,8 +23034,8 @@ if ( typeof define === "function" && define.amd && define.amd.jQuery ) {
 	};
 
 	// MIXIN
-	
-	$.extend(Component.prototype, window.MixinPreloader);
+
+	$.extend(Component.prototype, MixinPreloader);
 
 	//extend prototype	
 
@@ -20746,42 +23049,63 @@ if ( typeof define === "function" && define.amd && define.amd.jQuery ) {
 
 			this.plugin = this.$el.find('.component');
 
-			if(!this.plugin){
+			if (!this.plugin) {
 				return;
 			}
 
-			
-			console.debug('ComponentFade initialize');
+
+			console.debug('ComponentFade initialize', this.options.datasrc.split(","));
 
 			this.initSound();
 
 
+
+			this.pt_Img = this.options.datapt;
+			this.Img_ar = this.options.datasrc.split(",");
+
+
+
 			// get the front and back image
-			this.front = this.$el.find('.front').show();
-			this.back = this.$el.find('.back').show();
+			this.front = $("<img>"); //this.$el.find('.front').show();
+			this.front.attr('src', this.pt_Img + this.Img_ar[0]);
 
-			// set the image size explicitly
-			this.front.attr("width", this.front.width());
-			this.front.attr("height", this.front.height());
 
-			// set the size of the container MANTAIN VERTICAL SPACING
-			this.plugin.css("width", this.front.width());
-			this.plugin.css("height", this.front.height());
+			this.back = $("<img>"); //this.$el.find('.front').show();
+			this.back.attr('src', this.pt_Img + this.Img_ar[1]);
+
+
+			this.wrapper_ = $("<div/>").addClass('force-h');
+			this.cnt_ = $("<div/>").addClass('component min-h');
+
 
 
 			// set the FRONT AND BACK elements as absolute
 			this.front.css("position", "absolute");
 			this.front.css("top", 0);
 			this.front.css("left", 0);
-			this.front.css("height", this.plugin.height());
-			this.front.css("width", this.plugin.width());
+
 
 
 			this.back.css("position", "absolute");
+
 			this.back.css("top", 0);
 			this.back.css("left", 0);
-			this.back.css("height", this.plugin.height());
-			this.back.css("width", this.plugin.width());
+
+
+			this.cnt_.append(this.front);
+			this.cnt_.append(this.back);
+			this.wrapper_.append(this.cnt_);
+
+			this.$el.prepend(this.wrapper_);
+
+			this.$el.addClass('is_loaded');
+
+
+			this.wrapper_.next('img').hide();
+
+			console.log('--->', this.wrapper_);
+
+
 
 			//if interactive is set disable loop
 			if (this.options.interactive) {
@@ -20809,10 +23133,10 @@ if ( typeof define === "function" && define.amd && define.amd.jQuery ) {
 
 
 		// the user click
-		clickComponent : function(){
+		clickComponent: function() {
 			console.debug('clickComponent');
 
-			if(this.transitioning){
+			if (this.transitioning) {
 				return;
 			}
 
@@ -20888,22 +23212,22 @@ if ( typeof define === "function" && define.amd && define.amd.jQuery ) {
 
 
 		stopLooping: function() {
-			if(this.options){
+			if (this.options) {
 				this.options.loop = false;
 			}
 		},
 
-		initSound : function(){
+		initSound: function() {
 			console.debug('initSound', this.options.sound);
-			this.sound = new window.ComponentSound();
-			if(this.options.sound){
+			this.sound = new ComponentSound();
+			if (this.options.sound) {
 				this.sound.registerSoundFullPath(this.options.sound);
 			}
 		},
 
 
-		disposeSound : function(){
-			if(this.sound){
+		disposeSound: function() {
+			if (this.sound) {
 				this.sound.removeAllSounds();
 				delete this.sound;
 			}
@@ -20913,10 +23237,12 @@ if ( typeof define === "function" && define.amd && define.amd.jQuery ) {
 			this.disposeSound();
 			this.$el.off();
 			this.stopLooping();
-			if (!this.frontVisible) {
+			this.wrapper_.next('img').show();
+			this.wrapper_.remove();
+			/*if (!this.frontVisible) {
 				this.showFront();
 				this.back.hide();
-			}
+			}*/
 
 		}
 
@@ -20924,11 +23250,12 @@ if ( typeof define === "function" && define.amd && define.amd.jQuery ) {
 
 	});
 
-	window.ComponentFade = Component;
+	return Component;
 
 
-}());
-(function() {
+});
+define(['jquery','mixins.preloader','components.sound'], function($,MixinPreloader,ComponentSound){
+
 
 	var Component = function(element, options) {
 		console.debug('constructor', arguments);
@@ -20938,7 +23265,7 @@ if ( typeof define === "function" && define.amd && define.amd.jQuery ) {
 
 	// MIXIN
 
-	$.extend(Component.prototype, window.MixinPreloader);
+	$.extend(Component.prototype, MixinPreloader);
 
 	//extend prototype	
 
@@ -20960,10 +23287,10 @@ if ( typeof define === "function" && define.amd && define.amd.jQuery ) {
 	});
 
 
-	window.ComponentMenu = Component;
+	return Component;
 
-}());
-(function() {
+});
+define(['jquery','mixins.preloader','components.sound','panzoom'], function($,MixinPreloader,ComponentSound){
 
 
 	var Component = function(element, options) {
@@ -20985,7 +23312,7 @@ if ( typeof define === "function" && define.amd && define.amd.jQuery ) {
 
 	// MIXIN
 	
-	$.extend(Component.prototype, window.MixinPreloader);
+	$.extend(Component.prototype, MixinPreloader);
 
 	//extend prototype	
 
@@ -21071,7 +23398,7 @@ if ( typeof define === "function" && define.amd && define.amd.jQuery ) {
 		},
 
 		initSound : function(){
-			this.sound = new window.ComponentSound();
+			this.sound = new ComponentSound();
 			if(this.options.sound){
 				this.sound.registerSoundFullPath(this.options.sound);
 			}
@@ -21104,251 +23431,10 @@ if ( typeof define === "function" && define.amd && define.amd.jQuery ) {
 
 	});
 
-	window.ComponentPan = Component;
+	return Component;
 
-}());
-	var instancesPool = [];
-
-
-	var Modules = {
-
-		'image-fade': {
-
-			preload: function(a, b) {
-				var obj = new window.ComponentFade(a, b);
-				obj.preload();
-				instancesPool[a.id] = obj;
-			},
-			init: function(a, b) {
-				if (instancesPool[a.id]) {
-					instancesPool[a.id].initialize();
-				}
-
-			},
-			remove: function(a, b) {
-				if (instancesPool[a.id]) {
-					instancesPool[a.id].dispose();
-					instancesPool[a.id].preloadAbort();
-					delete instancesPool[a.id];
-				}
-
-			}
-
-		},
-
-		'image-360': {
-
-			preload: function(a, b) {
-				var obj = new window.ComponentReel(a, b);
-				obj.preload();
-				instancesPool[a.id] = obj;
-			},
-			init: function(a, b) {
-				if (instancesPool[a.id]) {
-					instancesPool[a.id].initialize();
-				}
-
-			},
-			remove: function(a, b) {
-				if (instancesPool[a.id]) {
-					instancesPool[a.id].dispose();
-					instancesPool[a.id].preloadAbort();
-					delete instancesPool[a.id];
-				}
-
-			}
-		},
-
-		'video-clip': {
-
-			preload: function(a, b) {
-				var obj = new window.ComponentVideo(a, b);
-				obj.preload();
-				instancesPool[a.id] = obj;
-			},
-			init: function(a, b) {
-				if (instancesPool[a.id]) {
-					instancesPool[a.id].initialize();
-				}
-
-			},
-			remove: function(a, b) {
-				if (instancesPool[a.id]) {
-					instancesPool[a.id].dispose();
-					instancesPool[a.id].preloadAbort();
-					delete instancesPool[a.id];
-				}
-
-			}
-		},
-
-		'image-easy': {
-
-			preload: function(a, b) {
-				var obj = new window.ComponentEasy(a, b);
-				obj.preload();
-				instancesPool[a.id] = obj;
-
-			},
-			init: function(a, b) {
-				if (instancesPool[a.id]) {
-					instancesPool[a.id].initialize();
-				}
-
-			},
-			remove: function(a, b) {
-				if (instancesPool[a.id]) {
-					instancesPool[a.id].dispose();
-					instancesPool[a.id].preloadAbort();
-					delete instancesPool[a.id];
-				}
-
-			}
-
-		},
-
-		'image-pan': {
-
-			preload: function(a, b) {
-				var obj = new window.ComponentPan(a, b);
-				obj.preload();
-				instancesPool[a.id] = obj;
-
-			},
-
-			init: function(a, b) {
-				if (instancesPool[a.id]) {
-					instancesPool[a.id].initialize();
-				}
-
-			},
-
-			remove: function(a, b) {
-				if (instancesPool[a.id]) {
-					instancesPool[a.id].dispose();
-					instancesPool[a.id].preloadAbort();
-					delete instancesPool[a.id];
-				}
-
-			}
-
-		},
-
-		'carousel': {
-
-			preload: function(a, b) {
-				if (!instancesPool[a.id]) {
-					var obj = new window.ComponentCarousel(a, b);
-					obj.preload();
-					instancesPool[a.id] = obj;
-				}
-
-			},
-
-			init: function(a, b) {
-				if (instancesPool[a.id]) {
-					instancesPool[a.id].initialize();
-				}
-
-			},
-
-			remove: function(a, b) {
-				if (instancesPool[a.id]) {
-					instancesPool[a.id].dispose();
-					instancesPool[a.id].preloadAbort();
-					delete instancesPool[a.id];
-				}
-
-			}
-
-		}
-
-	};
-
-	// append behaviours
-	$(".box").attr("data-emit-events", "data-emit-events");
-	//$(".box").attr("data-top-bottom", "").attr("data-100-bottom", "").attr("data-bottom-top", "").attr("data-bottom", "");
-	$(".box").attr("data-top-bottom", "").attr("data-bottom-top", "");
-	
-	skrollr.init({
-		forceHeight: true,
-		keyframe: function(element, name, direction) {
-console.log( name, direction );
-
-			var elm = Modules[element.getAttribute('obj-type')];
-			var cfg = (element.getAttribute('obj-config'));
-
-			// parse to json object
-			cfg = $.parseJSON(cfg);
-
-			//element.className='box skrollable '+direction;
-
-			if (direction === 'down') {
-				switch (name) {
-					
-					case 'dataTopBottom':
-					console.log('REMOVE',element.id);
-						elm.remove(element, cfg);
-						break;
-						
-						
-					case 'dataBottomTop':
-					
-					console.log('INIT',element.id);
-					
-						elm.preload(element, cfg);
-						elm.init(element, cfg);
-						break;	
-					
-					/*
-					case 'dataTopBottom':
-						elm.remove(element, cfg);
-						break;
-					case 'dataBottomTop':
-					case 'dataBottom':
-						elm.preload(element, cfg);
-						break;
-					default:
-						elm.init(element, cfg);
-						break;*/
-				}
-			} else {
-				
-				switch (name) {
-					
-					case 'dataTopBottom':
-					console.log('INIT',element.id);
-					
-						elm.preload(element, cfg);
-						elm.init(element, cfg);
-						
-						break;
-						
-						
-					case 'dataBottomTop':
-					
-					console.log('REMOVE',element.id);
-					
-					elm.remove(element, cfg);
-						break;	
-					
-					/*case 'data100Bottom':
-						elm.remove(element, cfg);
-						break;
-					case 'dataBottomTop':
-					case 'dataBottom':
-						elm.preload(element, cfg);
-						break;
-					default:
-						elm.init(element, cfg);
-						break;*/
-				}
-
-			}
-
-		}
-	});
-(function() {
+});
+define(['jquery'], function($){
 
 
 	var DEFAULT_SOUND_ID = 'click';
@@ -21443,10 +23529,11 @@ console.log( name, direction );
 
 	});
 
-	window.ComponentSound = Component;
+	return Component;
 
-}());
-(function() {
+});
+define(['jquery','mixins.preloader','components.sound'], function($,MixinPreloader,ComponentSound){
+
 
 	var Component = function(element, options) {
 
@@ -21467,7 +23554,7 @@ console.log( name, direction );
 
 	// MIXIN
 
-	$.extend(Component.prototype, window.MixinPreloader);
+	$.extend(Component.prototype, MixinPreloader);
 
 	//extend prototype
 
@@ -21548,7 +23635,7 @@ console.log( name, direction );
 		},
 
 		initSound: function() {
-			this.sound = new window.ComponentSound();
+			this.sound = new ComponentSound();
 			if (this.options.sound) {
 				this.sound.registerSoundFullPath(this.options.sound);
 			}
@@ -21596,15 +23683,40 @@ console.log( name, direction );
 	});
 
 
-	window.ComponentVideo = Component;
+	return Component;
 
-}());
-(function() {
+});
+// The require config file
+require.config({
+	paths: {
+		jquery: 'vendor/jquery-1.9.1',
+		skrollr: 'vendor/skrollr.min',
+		tweenmax: 'vendor/TweenMax',
+		reel: 'vendor/jquery.reel',
+		panzoom: 'vendor/jquery.panzoom'
+	}/*,
+	shim: {
+		tweenmax: {
+			exports: 'TweenMax'
+		}
+	}*/
 
+});
+
+
+
+
+require([
+	'app',
+	'tweenmax'
+], function(App) {
+	console.error("MAIN", arguments);
+	App.initialize();
+});
+define(['jquery'], function($){
 
 	var MixinPreloader = {
 
-		preloaded: false,
 
 		preloadAjaxPool: [],
 
@@ -21620,10 +23732,23 @@ console.log( name, direction );
 				return;
 			}
 
-			// for each element
-			this.$el.find('*').each($.proxy(this.eachImage, this));
+			if(this.$el.find('img').length === 0){
+				this.initialize();
+				return;
+			}
 
-			this.preloaded = true;
+			// for each element
+			this.$el.find('img').each($.proxy(this.eachImage, this));
+
+			// var firstImageElement= this.$el.find('img').first();
+
+			/*
+			if(!this.preloadElement(firstImageElement)){
+				this.initialize();
+				return;
+			}
+			*/
+
 
 		},
 
@@ -21638,17 +23763,13 @@ console.log( name, direction );
 
 
 		preloadElement: function(item) {
-			console.debug('preloadElement', item);
-
 
 			var self = this;
-
-			console.debug('load Ajax', item.attr("data-src"));
 
 			var theXHR;
 
 			if (item.attr("data-src")) {
-
+				console.warn('preloadElement', item);
 				$.ajax({
 					url: item.attr("data-src"),
 					beforeSend: function(xhr) {
@@ -21663,33 +23784,41 @@ console.log( name, direction );
 						self.loadedElement(item);
 					}
 				});
+				return true;
 			}
 
-
+			return false;
 
 		},
 
 		// once one element is loaded
 		loadedElement: function(item) {
-			console.error('loadedElement', item);
-			item.attr("src", item.attr("data-src"));
-			item.attr("data-src", null);
+			console.warn("loadedElement");
+
+			if(item.attr("data-src")){
+				item.attr("src", item.attr("data-src"));
+				item.attr("data-src", null);
+			}
+
+
+			// ONCE THE FIRST ELEMENT IS LOADED cal linitialize
+			this.initialize();
 		},
 
 
 		preloadAbort: function() {
-			console.error("preloadAbort BEFORE", this.preloadAjaxPool.length);
+			//console.warn("preloadAbort BEFORE", this.preloadAjaxPool.length);
 			var self = this;
 			$.each(this.preloadAjaxPool, function(i, xhr) {
 				xhr.abort();
 				self.preloadRemoveXhr(xhr);
 			});
-			console.error("preloadAbort AFTER", this.preloadAjaxPool.length);
+			//console.error("preloadAbort AFTER", this.preloadAjaxPool.length);
 		},
 
 
 		preloadAddXhr: function(xhr, item) {
-			console.debug('preloadAddXhr', xhr);
+			//console.debug('preloadAddXhr', xhr);
 			this.preloadAjaxPool = $.grep(this.preloadAjaxPool, function(value) {
 				return value != xhr;
 			});
@@ -21700,16 +23829,11 @@ console.log( name, direction );
 			this.preloadAjaxPool = $.grep(this.preloadAjaxPool, function(value) {
 				return value != xhr;
 			});
-		},
-
-		stopPreload: function() {
-			console.debug('stopPreload', arguments);
 		}
-
 
 	};
 
 
-	window.MixinPreloader = MixinPreloader;
+	return MixinPreloader;
 
-}());
+});

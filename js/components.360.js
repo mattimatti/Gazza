@@ -65,4 +65,4 @@ define(['jquery','mixins.preloader','components.sound','reel'], function($,Mixin
 
 	return Component;
 
-})
+});

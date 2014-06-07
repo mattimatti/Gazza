@@ -95,4 +95,4 @@ define(['jquery'], function($){
 
 	return Component;
 
-})
+});
