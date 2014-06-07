@@ -10,15 +10,15 @@
 			interactive: false,
 			controls: false,
 			preload: 'none',
-			sound:null
+			sound: null
 		};
 
 		// merge default options with
 		this.options = $.extend(this.defaults, options);
-	}
+	};
 
 	// MIXIN
-	
+
 	$.extend(Component.prototype, window.MixinPreloader);
 
 	//extend prototype
@@ -30,10 +30,10 @@
 		initialize: function() {
 
 			//var $video = this.$el.find('video');
-		
-			this.video =this.options.id //this.$el.find('.video-js').get(0);
 
-console.debug('video initialize',this.options.id);
+			this.video = this.options.id; //this.$el.find('.video-js').get(0);
+
+			console.debug('video initialize', this.options.id);
 
 			if (!this.options.id) {
 				return;
@@ -42,7 +42,7 @@ console.debug('video initialize',this.options.id);
 
 
 			//
-			
+
 
 			// if interactive set autoplay at false
 			if (this.options.interactive) {
@@ -52,29 +52,26 @@ console.debug('video initialize',this.options.id);
 
 			//instance the videojs object
 			this.plugin = videojs(this.options.id, this.options).ready($.proxy(this.checkInteract, this));
-			
-			
-			
+
 
 
 			// make the video interactive on click
-		
 
 
 
 		},
-		
-		checkInteract:function(){
-				if (this.options.interactive) {
-					this.$el.on("click", $.proxy(this.toggleVideoPlayback, this));
-					this.$el.addClass('interactive');
-					//this.initSound();
-					console.log('VID')
-				} else {
-					this.plugin.play();
-				}
-			
-			},
+
+		checkInteract: function() {
+			if (this.options.interactive) {
+				this.$el.on("click", $.proxy(this.toggleVideoPlayback, this));
+				this.$el.addClass('interactive');
+				//this.initSound();
+				console.log('VID');
+			} else {
+				this.plugin.play();
+			}
+
+		},
 
 
 		toggleVideoPlayback: function() {
@@ -102,16 +99,16 @@ console.debug('video initialize',this.options.id);
 
 		},
 
-		initSound : function(){
+		initSound: function() {
 			this.sound = new window.ComponentSound();
-			if(this.options.sound){
+			if (this.options.sound) {
 				this.sound.registerSoundFullPath(this.options.sound);
 			}
 		},
 
 
-		disposeSound : function(){
-			if(this.sound){
+		disposeSound: function() {
+			if (this.sound) {
 				this.sound.removeAllSounds();
 				delete this.sound;
 			}
@@ -121,26 +118,26 @@ console.debug('video initialize',this.options.id);
 
 			if (this.plugin) {
 				this.disposeSound();
-				
-				console.log('--->',this.plugin);
-				
-				try{
+
+				console.log('--->', this.plugin);
+
+				try {
 					this.plugin.pause();
-				this.plugin.currentTime(0);
-				this.plugin.controlBar.hide();
-				this.plugin.controls(false);
-				this.$el.off();
-					
-					}catch(e){
-						
-						
-						}
-			  
-				
-				
+					this.plugin.currentTime(0);
+					this.plugin.controlBar.hide();
+					this.plugin.controls(false);
+					this.$el.off();
+
+				} catch (e) {
+
+
+				}
+
+
+
 				//this.plugin.dispose();
 			}
-			
+
 			delete this.$el;
 			delete this.plugin;
 

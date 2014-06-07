@@ -20,7 +20,10 @@
 			}
 
 			// for each element
-			this.$el.find('*').each($.proxy(this.eachImage, this));
+			this.$el.find('img').each($.proxy(this.eachImage, this));
+
+			// only the first image
+			//this.preloadElement(this.$el.find('img').first());
 
 			this.preloaded = true;
 
@@ -42,7 +45,7 @@
 
 			var self = this;
 
-			console.debug('load Ajax', item.attr("data-src"));
+			//console.debug('load Ajax', item.attr("data-src"));
 
 			var theXHR;
 
@@ -70,25 +73,25 @@
 
 		// once one element is loaded
 		loadedElement: function(item) {
-			console.error('loadedElement', item);
+			console.error("loadedElement", item.attr("data-src"));
 			item.attr("src", item.attr("data-src"));
 			item.attr("data-src", null);
 		},
 
 
 		preloadAbort: function() {
-			console.error("preloadAbort BEFORE", this.preloadAjaxPool.length);
+			//console.error("preloadAbort BEFORE", this.preloadAjaxPool.length);
 			var self = this;
 			$.each(this.preloadAjaxPool, function(i, xhr) {
 				xhr.abort();
 				self.preloadRemoveXhr(xhr);
 			});
-			console.error("preloadAbort AFTER", this.preloadAjaxPool.length);
+			//console.error("preloadAbort AFTER", this.preloadAjaxPool.length);
 		},
 
 
 		preloadAddXhr: function(xhr, item) {
-			console.debug('preloadAddXhr', xhr);
+			//console.debug('preloadAddXhr', xhr);
 			this.preloadAjaxPool = $.grep(this.preloadAjaxPool, function(value) {
 				return value != xhr;
 			});
@@ -99,12 +102,7 @@
 			this.preloadAjaxPool = $.grep(this.preloadAjaxPool, function(value) {
 				return value != xhr;
 			});
-		},
-
-		stopPreload: function() {
-			console.debug('stopPreload', arguments);
 		}
-
 
 	};
 

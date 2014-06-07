@@ -1,0 +1,20 @@
+"type" : "cover_full",
+"imgs":{ 
+			land:	  {	
+            			"small" : "<!--#echo var="info_path" -->01_copertina/assets/imgs/s_l.jpg",
+						"medium": "<!--#echo var="info_path" -->01_copertina/assets/imgs/m_l.jpg",
+						"large": "<!--#echo var="info_path" -->01_copertina/assets/imgs/l_l.jpg"
+                    },
+                    
+            
+            port :  {
+            			"small" : "<!--#echo var="info_path" -->01_copertina/assets/imgs/s_p.jpg",
+						"medium": "<!--#echo var="info_path" -->01_copertina/assets/imgs/m_p.jpg",
+						"large": "<!--#echo var="info_path" -->01_copertina/assets/imgs/l_p.jpg"
+                    }
+                    
+        	 }
+             
+             
+
+

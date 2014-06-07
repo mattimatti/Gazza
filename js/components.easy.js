@@ -5,7 +5,7 @@
 	var Component = function(element, options) {
 		this.options = options;
 		this.$el = $(element);
-	}
+	};
 
 	// MIXIN
 	

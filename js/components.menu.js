@@ -4,10 +4,10 @@
 		console.debug('constructor', arguments);
 		this.options = options;
 		this.$el = element;
-	}
+	};
 
 	// MIXIN
-	
+
 	$.extend(Component.prototype, window.MixinPreloader);
 
 	//extend prototype	

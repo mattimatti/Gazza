@@ -11,7 +11,7 @@
 
 		this.defaults = {
 			loop: true,
-			delay: .5,
+			delay: 0.5,
 			duration: 1,
 			sound: null
 		};
@@ -58,7 +58,7 @@
 
 			
 
-			console.error(this.elementId + ': Carousel initialize');
+			console.debug(this.elementId + ': Carousel initialize');
 
 			var firstElement = $(this.items.get(0));
 
