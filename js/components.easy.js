@@ -18,7 +18,7 @@
 
 
 		initialize: function() {
-			console.clear();
+			
 			console.debug('ComponentEasy initialize');
 		},
 

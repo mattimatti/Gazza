@@ -41,7 +41,7 @@
 				return;
 			}
 
-			console.clear();
+			
 			console.debug('initialize', arguments);
 
 			this.initSound();

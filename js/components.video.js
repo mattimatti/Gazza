@@ -29,18 +29,20 @@
 
 		initialize: function() {
 
-			var $video = this.$el.find('video');
+			//var $video = this.$el.find('video');
+		
+			this.video =this.options.id //this.$el.find('.video-js').get(0);
 
-			this.video = this.$el.find('video').get(0);
+console.debug('video initialize',this.options.id);
 
-			if (!this.video) {
+			if (!this.options.id) {
 				return;
 			}
 
 
 
-			console.clear();
-			console.debug('video initialize');
+			//
+			
 
 			// if interactive set autoplay at false
 			if (this.options.interactive) {
@@ -49,21 +51,30 @@
 
 
 			//instance the videojs object
-			this.plugin = videojs(this.video, this.options);
+			this.plugin = videojs(this.options.id, this.options).ready($.proxy(this.checkInteract, this));
+			
+			
+			
 
 
 			// make the video interactive on click
-			if (this.options.interactive) {
-				this.$el.on("click", $.proxy(this.toggleVideoPlayback, this));
-				this.$el.addClass('interactive');
-				this.initSound();
-			} else {
-				this.plugin.play();
-			}
+		
 
 
 
 		},
+		
+		checkInteract:function(){
+				if (this.options.interactive) {
+					this.$el.on("click", $.proxy(this.toggleVideoPlayback, this));
+					this.$el.addClass('interactive');
+					//this.initSound();
+					console.log('VID')
+				} else {
+					this.plugin.play();
+				}
+			
+			},
 
 
 		toggleVideoPlayback: function() {
@@ -110,12 +121,26 @@
 
 			if (this.plugin) {
 				this.disposeSound();
-				this.plugin.pause();
+				
+				//console.log('--->',this.plugin)
+				
+				try{
+					this.plugin.pause();
 				this.plugin.currentTime(0);
 				this.plugin.controlBar.hide();
 				this.plugin.controls(false);
+				this.$el.off();
+					
+					}catch(e){
+						
+						
+						}
+			  
+				
+				
+				//this.plugin.dispose();
 			}
-			this.$el.off();
+			
 			delete this.$el;
 			delete this.plugin;
 

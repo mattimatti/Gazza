@@ -56,7 +56,7 @@
 				return;
 			}
 
-			console.clear();
+			
 
 			console.error(this.elementId + ': Carousel initialize');
 

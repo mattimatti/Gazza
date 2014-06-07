@@ -148,13 +148,13 @@
 
 	// append behaviours
 	$(".box").attr("data-emit-events", "data-emit-events");
-	$(".box").attr("data-top-bottom", "").attr("data-100-bottom", "").attr("data-bottom-top", "").attr("data-bottom", "");
+	//$(".box").attr("data-top-bottom", "").attr("data-100-bottom", "").attr("data-bottom-top", "").attr("data-bottom", "");
+	$(".box").attr("data-top-bottom", "").attr("data-bottom-top", "");
 	
 	skrollr.init({
 		forceHeight: true,
 		keyframe: function(element, name, direction) {
-
-			//console.log(element.id, name, direction );
+console.log( name, direction );
 
 			var elm = Modules[element.getAttribute('obj-type')];
 			var cfg = (element.getAttribute('obj-config'));
@@ -166,6 +166,22 @@
 
 			if (direction === 'down') {
 				switch (name) {
+					
+					case 'dataTopBottom':
+					console.log('REMOVE',element.id);
+						elm.remove(element, cfg);
+						break;
+						
+						
+					case 'dataBottomTop':
+					
+					console.log('INIT',element.id);
+					
+						elm.preload(element, cfg);
+						elm.init(element, cfg);
+						break;	
+					
+					/*
 					case 'dataTopBottom':
 						elm.remove(element, cfg);
 						break;
@@ -175,11 +191,29 @@
 						break;
 					default:
 						elm.init(element, cfg);
-						break;
+						break;*/
 				}
 			} else {
+				
 				switch (name) {
-					case 'data100Bottom':
+					
+					case 'dataTopBottom':
+					console.log('INIT',element.id);
+					
+						elm.preload(element, cfg);
+						elm.init(element, cfg);
+						
+						break;
+						
+						
+					case 'dataBottomTop':
+					
+					console.log('REMOVE',element.id);
+					
+					elm.remove(element, cfg);
+						break;	
+					
+					/*case 'data100Bottom':
 						elm.remove(element, cfg);
 						break;
 					case 'dataBottomTop':
@@ -188,7 +222,7 @@
 						break;
 					default:
 						elm.init(element, cfg);
-						break;
+						break;*/
 				}
 
 			}

@@ -39,7 +39,7 @@
 				return;
 			}
 
-			console.clear();
+			
 			console.debug('ComponentFade initialize');
 
 			this.initSound();
