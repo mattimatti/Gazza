@@ -1,5 +1,4 @@
-(function() {
-
+define(['jquery','mixins.preloader','components.sound'], function($,MixinPreloader,ComponentSound){
 
 	var Component = function(element, options) {
 		this.$el = $(element);
@@ -23,7 +22,7 @@
 
 	// MIXIN
 
-	$.extend(Component.prototype, window.MixinPreloader);
+	$.extend(Component.prototype, MixinPreloader);
 
 	//extend prototype
 
@@ -224,7 +223,7 @@
 
 
 		initSound: function() {
-			this.sound = new window.ComponentSound();
+			this.sound = new ComponentSound();
 			if (this.options.sound) {
 				this.sound.registerSoundFullPath(this.options.sound);
 			}
@@ -265,6 +264,6 @@
 
 	});
 
-	window.ComponentCarousel = Component;
+	return Component;
 
-}());
+})

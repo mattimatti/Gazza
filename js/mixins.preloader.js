@@ -1,9 +1,8 @@
-(function() {
+define(['jquery'], function($){
 
 
 	var MixinPreloader = {
 
-		preloaded: false,
 
 		preloadAjaxPool: [],
 
@@ -19,13 +18,21 @@
 				return;
 			}
 
+			if(this.$el.find('img').length ==0){
+				this.initialize();
+				return;
+			}
+
 			// for each element
 			this.$el.find('img').each($.proxy(this.eachImage, this));
 
-			// only the first image
-			//this.preloadElement(this.$el.find('img').first());
+			// var firstImageElement= this.$el.find('img').first();
 
-			this.preloaded = true;
+			// if(!this.preloadElement(firstImageElement)){
+			// 	this.initialize();
+			// 	return;
+			// }
+
 
 		},
 
@@ -40,17 +47,13 @@
 
 
 		preloadElement: function(item) {
-			console.debug('preloadElement', item);
-
 
 			var self = this;
-
-			//console.debug('load Ajax', item.attr("data-src"));
 
 			var theXHR;
 
 			if (item.attr("data-src")) {
-
+				console.warn('preloadElement', item);
 				$.ajax({
 					url: item.attr("data-src"),
 					beforeSend: function(xhr) {
@@ -65,22 +68,30 @@
 						self.loadedElement(item);
 					}
 				});
+				return true;
 			}
 
-
+			return false;
 
 		},
 
 		// once one element is loaded
 		loadedElement: function(item) {
-			console.error("loadedElement", item.attr("data-src"));
-			item.attr("src", item.attr("data-src"));
-			item.attr("data-src", null);
+			console.warn("loadedElement");
+
+			if(item.attr("data-src")){
+				item.attr("src", item.attr("data-src"));
+				item.attr("data-src", null);
+			}
+
+
+			// ONCE THE FIRST ELEMENT IS LOADED cal linitialize
+			this.initialize();
 		},
 
 
 		preloadAbort: function() {
-			//console.error("preloadAbort BEFORE", this.preloadAjaxPool.length);
+			//console.warn("preloadAbort BEFORE", this.preloadAjaxPool.length);
 			var self = this;
 			$.each(this.preloadAjaxPool, function(i, xhr) {
 				xhr.abort();
@@ -107,6 +118,6 @@
 	};
 
 
-	window.MixinPreloader = MixinPreloader;
+	return MixinPreloader;
 
-}());
+});

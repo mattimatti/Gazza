@@ -1,5 +1,4 @@
-(function() {
-
+define(['jquery','mixins.preloader','components.sound'], function($,MixinPreloader,ComponentSound){
 	// component Easy do nothing it's just for completeness of the api
 
 	var Component = function(element, options) {
@@ -9,7 +8,7 @@
 
 	// MIXIN
 	
-	$.extend(Component.prototype, window.MixinPreloader);
+	$.extend(Component.prototype, MixinPreloader);
 
 	//extend prototype
 
@@ -30,6 +29,6 @@
 
 	});
 
-	window.ComponentEasy = Component;
+	return Component;
 
-}());
+})

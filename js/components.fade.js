@@ -1,4 +1,4 @@
-(function() {
+define(['jquery','mixins.preloader','components.sound'], function($,MixinPreloader,ComponentSound){
 
 
 	var Component = function(element, options) {
@@ -11,7 +11,8 @@
 			loop: true,
 			delay: 0,
 			duration: 2,
-			sound:null
+			sound:null,
+			datasrc:''
 		};
 
 		// merge default options with
@@ -21,7 +22,7 @@
 
 	// MIXIN
 	
-	$.extend(Component.prototype, window.MixinPreloader);
+	$.extend(Component.prototype, MixinPreloader);
 
 	//extend prototype	
 
@@ -47,7 +48,7 @@
 			
 			
 			if (!this.$el.hasClass('is_loaded')){
-			
+
 			
 			this.pt_Img=this.options.datapt;
 			this.Img_ar=this.options.datasrc.split(",");
@@ -205,7 +206,7 @@
 
 		initSound : function(){
 			console.debug('initSound', this.options.sound);
-			this.sound = new window.ComponentSound();
+			this.sound = new ComponentSound();
 			if(this.options.sound){
 				this.sound.registerSoundFullPath(this.options.sound);
 			}
@@ -234,7 +235,6 @@
 
 	});
 
-	window.ComponentFade = Component;
+	return Component;
 
-
-}());
+})

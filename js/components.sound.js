@@ -1,4 +1,4 @@
-(function() {
+define(['jquery'], function($){
 
 
 	var DEFAULT_SOUND_ID = 'click';
@@ -93,6 +93,6 @@
 
 	});
 
-	window.ComponentSound = Component;
+	return Component;
 
-}());
+})

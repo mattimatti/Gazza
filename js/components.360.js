@@ -1,4 +1,4 @@
-(function() {
+define(['jquery','mixins.preloader','components.sound','reel'], function($,MixinPreloader,ComponentSound){
 
 
 	var Component = function(element, options) {
@@ -19,7 +19,7 @@
 
 	// MIXIN
 	
-	$.extend(Component.prototype, window.MixinPreloader);
+	$.extend(Component.prototype, MixinPreloader);
 
 	//extend prototype
 
@@ -63,6 +63,6 @@
 
 	});
 
-	window.ComponentReel = Component;
+	return Component;
 
-}());
+})

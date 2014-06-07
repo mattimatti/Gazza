@@ -1,4 +1,4 @@
-(function() {
+define(['jquery','mixins.preloader','components.sound'], function($,MixinPreloader,ComponentSound){
 
 	var Component = function(element, options) {
 
@@ -19,7 +19,7 @@
 
 	// MIXIN
 
-	$.extend(Component.prototype, window.MixinPreloader);
+	$.extend(Component.prototype, MixinPreloader);
 
 	//extend prototype
 
@@ -100,7 +100,7 @@
 		},
 
 		initSound: function() {
-			this.sound = new window.ComponentSound();
+			this.sound = new ComponentSound();
 			if (this.options.sound) {
 				this.sound.registerSoundFullPath(this.options.sound);
 			}
@@ -148,6 +148,6 @@
 	});
 
 
-	window.ComponentVideo = Component;
+	return Component;
 
-}());
+})
