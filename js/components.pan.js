@@ -5,6 +5,7 @@ define(['jquery','mixins.preloader','components.sound','panzoom'], function($,Mi
 
 		this.$el = $(element);
 
+		this.elementId = this.$el.attr('id');
 
 		// Default options for the plugin
 		this.defaults = {
@@ -42,7 +43,7 @@ define(['jquery','mixins.preloader','components.sound','panzoom'], function($,Mi
 			}
 
 			
-			console.debug('initialize', arguments);
+			console.info(this.elementId + ' ComponentPan initialize');
 
 			this.initSound();
 
@@ -123,6 +124,8 @@ define(['jquery','mixins.preloader','components.sound','panzoom'], function($,Mi
 		dispose: function() {
 
 			this.disposeSound();
+
+			console.info(this.elementId + ' ComponentPan dispose');
 
 			if (this.plugin) {
 				this.plugin.panzoom('reset');

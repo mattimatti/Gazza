@@ -12,7 +12,8 @@ define(['jquery','mixins.preloader','components.sound','videojs'], function($,Mi
 			controls: false,
 			preload: 'none',
 			sound: null,
-			techOrder: ["html5", "flash"]
+			/*techOrder: ["html5", "flash"]*/
+			techOrder: ["flash"]
 		};
 
 		// merge default options with
@@ -39,7 +40,7 @@ define(['jquery','mixins.preloader','components.sound','videojs'], function($,Mi
 				return;
 			}
 
-			console.debug('video initialize', this.options.id);
+			console.info(this.options.id + ' ComponentVideo initialize');
 
 
 			// if interactive set autoplay at false
@@ -51,6 +52,7 @@ define(['jquery','mixins.preloader','components.sound','videojs'], function($,Mi
 
 			// add custom location of the 
 			videojs.options.flash.swf = "./images/video-js.swf";
+			//videojs.options.flash.swf = "http://vjs.zencdn.net/4.2/video-js.swf "
 
 
 
@@ -60,7 +62,7 @@ define(['jquery','mixins.preloader','components.sound','videojs'], function($,Mi
 			this.plugin = videojs(this.options.id, this.options).ready(function(){
 
 				self.plugin = this;
-				
+
 				self.checkInteract();
 
 			});
@@ -125,6 +127,9 @@ define(['jquery','mixins.preloader','components.sound','videojs'], function($,Mi
 		},
 
 		dispose: function() {
+
+
+			console.info(this.options.id + ' ComponentVideo dispose');
 
 			if (this.plugin) {
 

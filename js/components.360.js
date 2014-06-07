@@ -5,11 +5,14 @@ define(['jquery', 'mixins.preloader', 'components.sound', 'reel'], function($, M
 
 		this.$el = $(element);
 
+		this.elementId = this.$el.attr('id');
+
 		// Default options for the reel plugin
 		this.defaults = {
 			images: null,
 			cursor: 'default', // define the cursor
-			draggable: false
+			draggable: false,
+			interactive: false
 		};
 
 		// merge default options with
@@ -28,10 +31,16 @@ define(['jquery', 'mixins.preloader', 'components.sound', 'reel'], function($, M
 		initialize: function() {
 
 
+			console.info(this.elementId + ': 360 initialize');
+
+
 			if (this.options.interactive) {
 				this.options.cursor = 'pointer';
 				this.options.draggable = true;
 			}
+
+			// remove custom option
+			delete this.options.interactive;
 
 			this.plugin = this.$el.find('.component');
 
@@ -41,7 +50,7 @@ define(['jquery', 'mixins.preloader', 'components.sound', 'reel'], function($, M
 
 
 			console.debug('instance reel with options', this.options);
-			
+
 			// setup the plugin
 			this.plugin.reel(this.options);
 		},
@@ -50,13 +59,11 @@ define(['jquery', 'mixins.preloader', 'components.sound', 'reel'], function($, M
 
 		dispose: function() {
 
+			console.info(this.elementId + ': 360 dispose');
+
 			if (this.plugin) {
 				this.plugin.unreel();
 			}
-
-			delete this.plugin;
-			delete this.$el;
-			delete this.options;
 
 		}
 

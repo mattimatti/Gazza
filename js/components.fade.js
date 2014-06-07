@@ -5,6 +5,8 @@ define(['jquery', 'mixins.preloader', 'components.sound'], function($, MixinPrel
 
 		this.$el = $(element);
 
+		this.elementId = this.$el.attr('id');
+
 		// Default options for the fade plugin
 
 		this.defaults = {
@@ -30,7 +32,7 @@ define(['jquery', 'mixins.preloader', 'components.sound'], function($, MixinPrel
 
 		transitioning: false,
 
-		frontVisible: true,
+		frontVisible: false,
 
 		initialize: function() {
 
@@ -41,7 +43,7 @@ define(['jquery', 'mixins.preloader', 'components.sound'], function($, MixinPrel
 			}
 
 
-			console.debug('ComponentFade initialize', this.options.datasrc.split(","));
+			console.info(this.elementId + ' ComponentFade initialize');
 
 			this.initSound();
 
@@ -133,7 +135,7 @@ define(['jquery', 'mixins.preloader', 'components.sound'], function($, MixinPrel
 		toggleImage: function() {
 			// TODO: maybe tweenmax is excessive for this behaviour..
 
-			console.debug('toggleImage', this.frontVisible);
+			console.error('toggleImage', this.frontVisible);
 
 			if (this.frontVisible) {
 				this.showBack();
@@ -150,7 +152,11 @@ define(['jquery', 'mixins.preloader', 'components.sound'], function($, MixinPrel
 			TweenMax.killTweensOf(this.front);
 			TweenMax.killTweensOf(this.back);
 
+			console.error('showBack');
+
 			self.transitioning = true;
+
+
 			TweenMax.to(this.front, this.options.duration, {
 				alpha: 0
 			});
@@ -172,10 +178,14 @@ define(['jquery', 'mixins.preloader', 'components.sound'], function($, MixinPrel
 
 			var self = this;
 
-			this.transitioning = true;
+
 
 			TweenMax.killTweensOf(this.front);
 			TweenMax.killTweensOf(this.back);
+
+			console.error('showFront');
+
+			this.transitioning = true;
 
 			TweenMax.to(this.front, this.options.duration, {
 				alpha: 1
@@ -219,16 +229,28 @@ define(['jquery', 'mixins.preloader', 'components.sound'], function($, MixinPrel
 		},
 
 		dispose: function() {
+
+
+			console.info(this.elementId + ' ComponentFade dispose');
+
 			this.disposeSound();
 			
 			this.stopLooping();
-			if (this.wrapper_) {
+
+			if (this.wrapper_.length > 0 ) {
 				this.wrapper_.off();
 				this.wrapper_.next('img').show();
+				this.wrapper_.empty();
 				this.wrapper_.remove();
+				delete this.wrapper_;
+				if(this.wrapper_){
+					console.error('still has wrapper!');
+				}
 			}
 
 			delete this.$el;
+
+			console.debug(this);
 
 		}
 

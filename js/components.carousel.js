@@ -1,4 +1,4 @@
-define(['jquery','mixins.preloader','components.sound'], function($,MixinPreloader,ComponentSound){
+define(['jquery', 'mixins.preloader', 'components.sound'], function($, MixinPreloader, ComponentSound) {
 
 
 	var Component = function(element, options) {
@@ -40,14 +40,18 @@ define(['jquery','mixins.preloader','components.sound'], function($,MixinPreload
 		initialize: function() {
 
 
-
-			this.initSound();
-
 			this.plugin = this.$el.find('.component');
+
+
+			if(!this.plugin){
+				console.error("component not found");
+				return;
+			}
 
 			this.items = this.$el.find('.item');
 
 			this.itemsCount = this.items.length;
+
 			console.debug('this.itemsCount', this.itemsCount);
 
 			// if no items no carousel
@@ -56,9 +60,10 @@ define(['jquery','mixins.preloader','components.sound'], function($,MixinPreload
 				return;
 			}
 
-			
 
-			console.debug(this.elementId + ': Carousel initialize');
+			this.initSound();
+
+			console.info(this.elementId + ': Carousel initialize');
 
 			var firstElement = $(this.items.get(0));
 
@@ -116,11 +121,12 @@ define(['jquery','mixins.preloader','components.sound'], function($,MixinPreload
 				element.css("top", 0);
 				element.css("left", 0);
 				element.css("zIndex", self.items.length - 1 - index);
-				element.css("height", self.plugin.height());
-				element.css("width", self.plugin.width());
 
-
-				console.debug('index', index, element.css('zIndex'));
+				// check if plugin exists
+				if(self.plugin){
+					element.css("height", self.plugin.height());
+					element.css("width", self.plugin.width());
+				}
 			});
 
 
@@ -224,6 +230,7 @@ define(['jquery','mixins.preloader','components.sound'], function($,MixinPreload
 
 
 		initSound: function() {
+			console.error(this.sound);
 			this.sound = new ComponentSound();
 			if (this.options.sound) {
 				this.sound.registerSoundFullPath(this.options.sound);
@@ -240,13 +247,17 @@ define(['jquery','mixins.preloader','components.sound'], function($,MixinPreload
 
 
 		dispose: function() {
+
+
+			console.info(this.elementId + ': Carousel dispose');
 			
+			try {
 
-			if (this.plugin) {
-
-				console.error(this.elementId + ': Carousel dispose');
+				this.disposeSound();
 
 				this.$el.off();
+
+				this.$el.removeClass('interactive');
 
 				this.stopLooping();
 				this.disposeTransitions();
@@ -255,10 +266,14 @@ define(['jquery','mixins.preloader','components.sound'], function($,MixinPreload
 
 				this.imageIndex = -1;
 				this.transitioning = false;
+
+			} catch (ex) {
+				console.error(this.elementId + ': Error in Carousel dispose');
+				console.error(ex);
 			}
 
-			delete this.$el;
-			delete this.options;
+
+
 		}
 
 

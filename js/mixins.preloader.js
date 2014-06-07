@@ -5,6 +5,12 @@ define(['jquery'], function($){
 
 		preloadAjaxPool: [],
 
+
+		preloading: false,
+
+
+		preloadCount : 0,
+
 		preload: function() {
 
 			if (!this.$el) {
@@ -12,34 +18,30 @@ define(['jquery'], function($){
 				return;
 			}
 
-			if (this.preloaded) {
-				this.initialize();
+			if (this.preloading ) {
+				console.warn('is preloading no preload');
 				return;
 			}
 
-			if(this.$el.find('img').length === 0){
+			this.preloadCount = this.$el.find("img[data-src]").length;
+
+			console.debug('this.preloadCount' , this.preloadCount);
+
+			// if no images to preload
+			if(this.preloadCount== 0){
 				this.initialize();
 				return;
 			}
 
 			// for each element
-			this.$el.find('img').each($.proxy(this.eachImage, this));
-
-			// var firstImageElement= this.$el.find('img').first();
-
-			/*
-			if(!this.preloadElement(firstImageElement)){
-				this.initialize();
-				return;
-			}
-			*/
-
+			this.$el.find('img[data-src]').each($.proxy(this.eachImage, this));
 
 		},
 
 
 		// iterate all elements
 		eachImage: function(index, element) {
+
 			var item = $(element);
 			if (item.attr("data-src") && item.attr("data-src") !== '') {
 				this.preloadElement(item);
@@ -49,12 +51,16 @@ define(['jquery'], function($){
 
 		preloadElement: function(item) {
 
+			this.preloading = true;
+
 			var self = this;
 
 			var theXHR;
 
 			if (item.attr("data-src")) {
-				console.warn('preloadElement', item);
+				
+				console.warn('preloadElement', item.attr("data-src"));
+
 				$.ajax({
 					url: item.attr("data-src"),
 					beforeSend: function(xhr) {
@@ -80,14 +86,28 @@ define(['jquery'], function($){
 		loadedElement: function(item) {
 			console.warn("loadedElement");
 
+
+			// if has data source apply as source and remove attribute from element
+
 			if(item.attr("data-src")){
 				item.attr("src", item.attr("data-src"));
 				item.attr("data-src", null);
 			}
 
 
+			this.preloadCount --;
+
 			// ONCE THE FIRST ELEMENT IS LOADED cal linitialize
-			this.initialize();
+			if(this.preloadCount <= 0){
+				console.warn('all preloaded call initialize');
+				this.preloading = false;
+
+				if($.isFunction(this.initialize)){
+					this.initialize();
+				}
+				
+			}
+			
 		},
 
 

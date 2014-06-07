@@ -19,13 +19,12 @@ while (length--) {
 }
 
 
+//urlArgs: "bust=" + Math.random(),
 
 
 // The require config file
 require.config({
 	
-
-	urlArgs: "bust=" + Math.random(),
 
 	paths: {
 		jquery: 'vendor/jquery-1.9.1',
@@ -33,7 +32,7 @@ require.config({
 		tweenmax: 'vendor/TweenMax',
 		reel: 'vendor/jquery.reel',
 		panzoom: 'vendor/jquery.panzoom',
-		videojs: 'vendor/video-js-4.1.0/video'
+		videojs: 'vendor/video-js-4.1.0/video.dev'
 	}
 
 });
