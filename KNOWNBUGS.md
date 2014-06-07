@@ -1,0 +1,1 @@
+Jquery panzoom no funziona bene in ie8

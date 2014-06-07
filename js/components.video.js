@@ -53,9 +53,17 @@ define(['jquery','mixins.preloader','components.sound','videojs'], function($,Mi
 			videojs.options.flash.swf = "./images/video-js.swf";
 
 
+
+			var self = this;
 			//instance the videojs object
 			// when ready add interactivity
-			this.plugin = videojs(this.options.id, this.options).ready($.proxy(this.checkInteract, this));
+			this.plugin = videojs(this.options.id, this.options).ready(function(){
+
+				self.plugin = this;
+				
+				self.checkInteract();
+
+			});
 
 
 		},
@@ -76,14 +84,12 @@ define(['jquery','mixins.preloader','components.sound','videojs'], function($,Mi
 		toggleVideoPlayback: function() {
 
 			if (!this.plugin) {
-				console.error("clicking a video not inited");
+				throw new Error("clicking a video not inited");
+				return;
 			}
 
 			this.initSound();
 			this.sound.playSound('click');
-
-			// put it in try catch.. if the video is not playing fires an error..
-			// HTML5 full of Bullshit .
 
 			var isPaused = true;
 			try {
@@ -91,6 +97,7 @@ define(['jquery','mixins.preloader','components.sound','videojs'], function($,Mi
 			} catch (e) {}
 
 			console.debug("toggleVideoPlayback", this.plugin, this.plugin.paused());
+
 			if (!isPaused) {
 				this.plugin.pause();
 			} else {

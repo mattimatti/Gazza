@@ -139,34 +139,6 @@ define([
 	var App = {
 
 
-		getLogger: function(active) {
-
-			var muteConsole;
-			if (active) {
-				muteConsole = window.console || {};
-			} else {
-				muteConsole = {};
-			}
-
-			var method;
-			var noop = function() {};
-			var methods = ['assert', 'clear', 'count', 'debug', 'dir', 'dirxml', 'error', 'exception', 'group', 'groupCollapsed', 'groupEnd', 'info', 'log', 'markTimeline', 'profile', 'profileEnd', 'table', 'time', 'timeEnd', 'timeStamp', 'trace', 'warn'];
-			var length = methods.length;
-
-			while (length--) {
-				method = methods[length];
-
-				// Only stub undefined methods.
-				if (!muteConsole[method]) {
-					muteConsole[method] = noop;
-				}
-			}
-
-			return muteConsole;
-
-		},
-
-
 		initialize: function() {
 
 			skrollr.init({
