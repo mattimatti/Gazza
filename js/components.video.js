@@ -12,8 +12,7 @@ define(['jquery','mixins.preloader','mixins.sound','videojs'], function($,MixinP
 			controls: false,
 			preload: 'none',
 			sound: null,
-			/*techOrder: ["html5", "flash"]*/
-			techOrder: ["flash"]
+			techOrder: ["html5", "flash"]
 		};
 
 		// merge default options with
@@ -53,7 +52,6 @@ define(['jquery','mixins.preloader','mixins.sound','videojs'], function($,MixinP
 
 			// add custom location of the 
 			videojs.options.flash.swf = "./images/video-js.swf";
-			//videojs.options.flash.swf = "http://vjs.zencdn.net/4.2/video-js.swf "
 
 
 
@@ -91,8 +89,6 @@ define(['jquery','mixins.preloader','mixins.sound','videojs'], function($,MixinP
 				return;
 			}
 
-			this.initSound();
-			this.sound.playSound('click');
 
 			var isPaused = true;
 			try {
