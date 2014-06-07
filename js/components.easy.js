@@ -23,6 +23,8 @@ define(['jquery','mixins.preloader','components.sound'], function($,MixinPreload
 
 
 		dispose: function() {
+			delete this.$el;
+			delete this.options;
 		}
 
 

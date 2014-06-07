@@ -1,4 +1,4 @@
-define(['jquery','mixins.preloader','components.sound','reel'], function($,MixinPreloader,ComponentSound){
+define(['jquery', 'mixins.preloader', 'components.sound', 'reel'], function($, MixinPreloader, ComponentSound) {
 
 
 	var Component = function(element, options) {
@@ -9,7 +9,7 @@ define(['jquery','mixins.preloader','components.sound','reel'], function($,Mixin
 		this.defaults = {
 			images: null,
 			cursor: 'default', // define the cursor
-			draggable:false
+			draggable: false
 		};
 
 		// merge default options with
@@ -18,7 +18,7 @@ define(['jquery','mixins.preloader','components.sound','reel'], function($,Mixin
 	};
 
 	// MIXIN
-	
+
 	$.extend(Component.prototype, MixinPreloader);
 
 	//extend prototype
@@ -28,7 +28,7 @@ define(['jquery','mixins.preloader','components.sound','reel'], function($,Mixin
 		initialize: function() {
 
 
-			if(this.options.interactive){
+			if (this.options.interactive) {
 				this.options.cursor = 'pointer';
 				this.options.draggable = true;
 			}
@@ -41,22 +41,23 @@ define(['jquery','mixins.preloader','components.sound','reel'], function($,Mixin
 
 
 			console.debug('instance reel with options', this.options);
+			
 			// setup the plugin
 			this.plugin.reel(this.options);
 		},
 
 
 
-		
-		
-
-
 		dispose: function() {
 
-			if(this.plugin){
+			if (this.plugin) {
 				this.plugin.unreel();
 			}
-			
+
+			delete this.plugin;
+			delete this.$el;
+			delete this.options;
+
 		}
 
 

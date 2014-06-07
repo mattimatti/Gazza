@@ -257,8 +257,8 @@ define(['jquery','mixins.preloader','components.sound'], function($,MixinPreload
 				this.transitioning = false;
 			}
 
-
-
+			delete this.$el;
+			delete this.options;
 		}
 
 

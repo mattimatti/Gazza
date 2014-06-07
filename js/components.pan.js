@@ -133,6 +133,8 @@ define(['jquery','mixins.preloader','components.sound','panzoom'], function($,Mi
 				this.plugin.panzoom("destroy");
 				this.plugin.unwrap();
 			}
+
+			delete this.$el;
 		}
 
 

@@ -228,6 +228,8 @@ define(['jquery', 'mixins.preloader', 'components.sound'], function($, MixinPrel
 				this.wrapper_.remove();
 			}
 
+			delete this.$el;
+
 		}
 
 

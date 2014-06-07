@@ -11,7 +11,8 @@ define(['jquery','mixins.preloader','components.sound','videojs'], function($,Mi
 			interactive: false,
 			controls: false,
 			preload: 'none',
-			sound: null
+			sound: null,
+			techOrder: ["html5", "flash"]
 		};
 
 		// merge default options with
@@ -30,52 +31,50 @@ define(['jquery','mixins.preloader','components.sound','videojs'], function($,Mi
 
 		initialize: function() {
 
-			//var $video = this.$el.find('video');
 
 			this.video = this.options.id; //this.$el.find('.video-js').get(0);
 
-			console.debug('video initialize', this.options.id);
-
+			// if the video has no id return 
 			if (!this.options.id) {
 				return;
 			}
 
-
-
-			//
+			console.debug('video initialize', this.options.id);
 
 
 			// if interactive set autoplay at false
+
 			if (this.options.interactive) {
 				this.options.autoplay = false;
 			}
 
 
+			// add custom location of the 
+			videojs.options.flash.swf = "./images/video-js.swf";
+
+
 			//instance the videojs object
+			// when ready add interactivity
 			this.plugin = videojs(this.options.id, this.options).ready($.proxy(this.checkInteract, this));
-
-
-
-			// make the video interactive on click
-
 
 
 		},
 
+		// video click interactivity
 		checkInteract: function() {
+
 			if (this.options.interactive) {
 				this.$el.on("click", $.proxy(this.toggleVideoPlayback, this));
 				this.$el.addClass('interactive');
-				//this.initSound();
-				console.log('VID');
 			} else {
 				this.plugin.play();
 			}
 
 		},
 
-
+		// toggle the video playstate
 		toggleVideoPlayback: function() {
+
 			if (!this.plugin) {
 				console.error("clicking a video not inited");
 			}
@@ -100,14 +99,17 @@ define(['jquery','mixins.preloader','components.sound','videojs'], function($,Mi
 
 		},
 
+		// video has no sound
 		initSound: function() {
+
 			this.sound = new ComponentSound();
+
 			if (this.options.sound) {
 				this.sound.registerSoundFullPath(this.options.sound);
 			}
 		},
 
-
+		// remove sound
 		disposeSound: function() {
 			if (this.sound) {
 				this.sound.removeAllSounds();
@@ -118,9 +120,8 @@ define(['jquery','mixins.preloader','components.sound','videojs'], function($,Mi
 		dispose: function() {
 
 			if (this.plugin) {
-				this.disposeSound();
 
-				console.log('--->', this.plugin);
+				this.disposeSound();
 
 				try {
 					
@@ -134,15 +135,13 @@ define(['jquery','mixins.preloader','components.sound','videojs'], function($,Mi
 					}
 
 				} catch (e) {
-
-
+					console.error('errors disposing video component');
+					console.error(e);
 				}
 
-
-
-				//this.plugin.dispose();
 			}
 
+			// rimuoviamo
 			delete this.$el;
 			delete this.plugin;
 
