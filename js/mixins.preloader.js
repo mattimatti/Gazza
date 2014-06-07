@@ -5,7 +5,7 @@
 
 		preloaded: false,
 
-		preloadAjaxPool : [],
+		preloadAjaxPool: [],
 
 		preload: function() {
 
@@ -46,52 +46,58 @@
 
 			var theXHR;
 
-			$.ajax({
-				url:item.attr("data-src"),
-				beforeSend: function(xhr) {
-					theXHR = xhr;
-					self.preloadAddXhr(xhr);
-				},
-				error: function(xhr, textStatus, errorThrown) {
-					self.preloadRemoveXhr(xhr);
-				},
-				success: function(data, textStatus) {
-					self.preloadRemoveXhr(theXHR);
-					item.attr("src", item.attr("data-src"));
-					
-				}
-			});
+			if (item.attr("data-src")) {
+
+				$.ajax({
+					url: item.attr("data-src"),
+					beforeSend: function(xhr) {
+						theXHR = xhr;
+						self.preloadAddXhr(xhr);
+					},
+					error: function(xhr, textStatus, errorThrown) {
+						self.preloadRemoveXhr(xhr);
+					},
+					success: function(data, textStatus) {
+						self.preloadRemoveXhr(theXHR);
+						self.loadedElement(item);
+					}
+				});
+			}
+
+
 
 		},
 
 		// once one element is loaded
-		loadedElement: function(){
-			console.error('loadedElement', arguments);
+		loadedElement: function(item) {
+			console.error('loadedElement', item);
+			item.attr("src", item.attr("data-src"));
+			item.attr("data-src", null);
 		},
 
 
-		preloadAbort: function(){
-			console.error("preloadAbort BEFORE",this.preloadAjaxPool.length);
+		preloadAbort: function() {
+			console.error("preloadAbort BEFORE", this.preloadAjaxPool.length);
 			var self = this;
-			$.each(this.preloadAjaxPool, function(i,xhr){
+			$.each(this.preloadAjaxPool, function(i, xhr) {
 				xhr.abort();
 				self.preloadRemoveXhr(xhr);
 			});
-			console.error("preloadAbort AFTER",this.preloadAjaxPool.length);
+			console.error("preloadAbort AFTER", this.preloadAjaxPool.length);
 		},
 
 
-		preloadAddXhr: function(xhr, item){
+		preloadAddXhr: function(xhr, item) {
 			console.debug('preloadAddXhr', xhr);
 			this.preloadAjaxPool = $.grep(this.preloadAjaxPool, function(value) {
-  				return value != xhr;
+				return value != xhr;
 			});
 		},
 
-		preloadRemoveXhr: function(xhr){
+		preloadRemoveXhr: function(xhr) {
 			//console.debug('preloadRemoveXhr', xhr);
 			this.preloadAjaxPool = $.grep(this.preloadAjaxPool, function(value) {
-  				return value != xhr;
+				return value != xhr;
 			});
 		},
 
