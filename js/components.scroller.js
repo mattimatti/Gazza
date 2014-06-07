@@ -1,10 +1,5 @@
 	var instancesPool = [];
 
-	var preloadAssets = function() {
-
-
-	}
-
 
 	var Modules = {
 
@@ -24,7 +19,10 @@
 			remove: function(a, b) {
 				if (instancesPool[a.id]) {
 					instancesPool[a.id].dispose();
+					instancesPool[a.id].preloadAbort();
+					delete instancesPool[a.id];
 				}
+
 			}
 
 		},
@@ -45,7 +43,10 @@
 			remove: function(a, b) {
 				if (instancesPool[a.id]) {
 					instancesPool[a.id].dispose();
+					instancesPool[a.id].preloadAbort();
+					delete instancesPool[a.id];
 				}
+
 			}
 		},
 
@@ -65,7 +66,10 @@
 			remove: function(a, b) {
 				if (instancesPool[a.id]) {
 					instancesPool[a.id].dispose();
+					instancesPool[a.id].preloadAbort();
+					delete instancesPool[a.id];
 				}
+
 			}
 		},
 
@@ -86,7 +90,10 @@
 			remove: function(a, b) {
 				if (instancesPool[a.id]) {
 					instancesPool[a.id].dispose();
+					instancesPool[a.id].preloadAbort();
+					delete instancesPool[a.id];
 				}
+
 			}
 
 		},
@@ -110,6 +117,8 @@
 			remove: function(a, b) {
 				if (instancesPool[a.id]) {
 					instancesPool[a.id].dispose();
+					instancesPool[a.id].preloadAbort();
+					delete instancesPool[a.id];
 				}
 
 			}
@@ -137,6 +146,7 @@
 			remove: function(a, b) {
 				if (instancesPool[a.id]) {
 					instancesPool[a.id].dispose();
+					instancesPool[a.id].preloadAbort();
 					delete instancesPool[a.id];
 				}
 
