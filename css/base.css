@@ -1,3 +1,18 @@
+
+html.no-js .box img.component.responsive {
+	
+	/*display:none*/
+	
+	}
+
+
+html.no-js .component {
+	
+	display:none
+	
+	}
+
+
 body {
 	font-family: Georgia, serif!important;
 	margin: 0;

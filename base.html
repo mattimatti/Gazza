@@ -1,12 +1,18 @@
 <!DOCTYPE html>
-<html>
+<html class="no-js">
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
     <title>Anchors</title>
+    
+
     <link href="css/base.css" rel="stylesheet" type="text/css" />
-    <link rel="stylesheet" href="js/vendor/video-js-4.1.0/video-js.css"/>
-    <link rel="stylesheet" href="css/video-js.css"/>
+  
+
+    <script src="js/vendor/modernizr/modernizr.js"></script>
+
+
+
     <style>
     .overlay{
     /*can't make it work properly*/
@@ -28,6 +34,8 @@
       cursor: pointer;
     }
 
+
+
     </style>
   </head>
   <body>
@@ -36,143 +44,260 @@
    
 
 <div class="anno" id=anno_1930>
-  <h1>1930</h1>
-  <h2>Gli oggetti che hanno fatto la storia del calcio</h2>
 
 
-  <!-- carousel interactive -->
+        <h1>1930</h1>
+        <h2>Gli oggetti che hanno fatto la storia del calcio</h2>
 
 
-  <div class="box"   id="1950_08x"   obj-type='carousel'  obj-config='{"duration":0.5,"interactive":true,"sound": "./modules/1950/assets/video/pagina.ogv" }'>
-        <div class="component responsive"> 
-        <img class="responsive item" src="./images/blank.jpg" data-src="./modules/1950/assets/imgs/rivista1.jpg" /> 
-        <img class="responsive item hide" src="./images/blank.jpg" data-src="./modules/1950/assets/imgs/rivista2.jpg" /> 
-        <img class="responsive item hide" src="./images/blank.jpg" data-src="./modules/1950/assets/imgs/rivista3.jpg" />  
-        <img class="responsive item hide" src="./images/blank.jpg" data-src="./modules/1950/assets/imgs/rivista4.jpg" /> 
-        <img class="responsive item hide" src="./images/blank.jpg" data-src="./modules/1950/assets/imgs/rivista5.jpg" /> 
+        <!-- carousel interactive -->
+
+
+        <div class="box"   id="1950_08x"   obj-type='carousel'  obj-config='{"duration":0.5,"interactive":true,"sound": "./modules/1950/assets/video/pagina.ogv" }'>
+              <div class="component responsive"> 
+                  
+
+                  <img class="responsive item" src="./images/blank.jpg" data-src="./modules/1950/assets/imgs/rivista1.jpg" /> 
+
+
+                  <img class="responsive item hide" src="./images/blank.jpg" data-src="./modules/1950/assets/imgs/rivista2.jpg" /> 
+                  <img class="responsive item hide" src="./images/blank.jpg" data-src="./modules/1950/assets/imgs/rivista3.jpg" />  
+                  <img class="responsive item hide" src="./images/blank.jpg" data-src="./modules/1950/assets/imgs/rivista4.jpg" /> 
+                  <img class="responsive item hide" src="./images/blank.jpg" data-src="./modules/1950/assets/imgs/rivista5.jpg" /> 
+              </div>
+
+
+              <noscript>
+                <img class="responsive" src="./modules/1950/assets/imgs/rivista1.jpg" />
+              </noscript>
+
+              <h3><span class="blinker" ><span class="blink_1" ></span><span class="blink_2" ></span><span class="blink_3" ></span></span><strong>carousel interactive</strong><br/><br/></h3>
+
         </div>
-  </div>
 
 
-  <!-- carousel automatico -->
+        <!-- End carousel interactive -->
 
 
-  <div class="box"   id="1950_08xx"   obj-type='carousel'  obj-config='{"duration":0.5 }'>
-        <div class="component responsive"> 
-        <img class="responsive item" src="./images/blank.jpg" data-src="./modules/1950/assets/imgs/cioccolato1.jpg" /> 
-        <img class="responsive item hide" src="./images/blank.jpg" data-src="./modules/1950/assets/imgs/cioccolato2.jpg" /> 
-        <img class="responsive item hide" src="./images/blank.jpg" data-src="./modules/1950/assets/imgs/cioccolato3.jpg" />  
-        <img class="responsive item hide" src="./images/blank.jpg" data-src="./modules/1950/assets/imgs/cioccolato4.jpg" /> 
+
+
+
+        <!-- carousel automatico -->
+
+
+        <div class="box"   id="1950_08xx"   obj-type='carousel'  obj-config='{"duration":0.5 }'>
+              
+
+              <div class="component responsive"> 
+                  <img class="responsive item" src="./images/blank.jpg" data-src="./modules/1950/assets/imgs/cioccolato1.jpg" /> 
+                  <img class="responsive item hide" src="./images/blank.jpg" data-src="./modules/1950/assets/imgs/cioccolato2.jpg" /> 
+                  <img class="responsive item hide" src="./images/blank.jpg" data-src="./modules/1950/assets/imgs/cioccolato3.jpg" />  
+                  <img class="responsive item hide" src="./images/blank.jpg" data-src="./modules/1950/assets/imgs/cioccolato4.jpg" /> 
+              </div>
+
+
+              <noscript>
+                <img class="responsive" src="./modules/1950/assets/imgs/cioccolato1.jpg" />
+              </noscript>
+
+              <h3><span class="blinker" ><span class="blink_1" ></span><span class="blink_2" ></span><span class="blink_3" ></span></span><strong>carousel automatico</strong><br/><br/></h3>
+
         </div>
-  </div>
+
+
+         <!-- End carousel automatico -->
 
 
 
-  <!-- 360 -->
+
+
+        <!-- 360 -->
 
 
 
-  <div class="box"   id='1930_01'   obj-type='image-360'  obj-config='{ "images":"./modules/1930/assets/imgs/pallone#.jpg|1..11|1","frames":11,"autosize":true,"responsive":true,"speed":0,"cursor":"pointer","interactive":true}'> <img class="component responsive" src="./images/blank.jpg"   data-src="./modules/1930/assets/imgs/pallone1.jpg" />
-    <noscript>
-    <img class="component responsive" src="./modules/1930/assets/imgs/pallone1.jpg" />
-    </noscript>
-    <h3><span class="blinker" ><span class="blink_1" ></span><span class="blink_2" ></span><span class="blink_3" ></span></span><strong>Primo gol.</strong> Il pallone del primo gol nella storia del Mondiale. Quello segnato dal francese Laurent in Francia-Messico 4-1. La partita si gioc&#242; a Montevideo, il primo torneo fu disputato da tredici squadre.</h3>
-  </div>
-  
-  
-  <!-- Pan con HQ -->
-  
-  
-    <div class="box"   id='1930_02'   obj-type='image-pan'  obj-config='{"hqSrc":"./modules/1930/assets/imgs/zoomposter30.jpg"}'>
-    
-    <img class="component responsive" src="./images/blank.jpg" data-src="./modules/1930/assets/imgs/poster.jpg" /> 
-    <noscript>
-    <img class="component responsive" src="./modules/1930/assets/imgs/poster.jpg" />
-     </noscript>
-    <h3><span class="blinker" ><span class="blink_1" ></span><span class="blink_2" ></span><span class="blink_3" ></span></span><strong> Celebrativo. </strong>Il disegno originale del manifesto celebrativo della prima edizione. Il quadro si trovava allo stadio Centenario di Montevideo.</h3>
-  </div>
-  
+        <div class="box"   id='1930_01'   obj-type='image-360'  obj-config='{ "images":"./modules/1930/assets/imgs/pallone#.jpg|1..11|1","frames":11,"autosize":true,"responsive":true,"speed":0,"cursor":"pointer","interactive":true}'> 
+
+          <img class="component responsive" src="./images/blank.jpg"   data-src="./modules/1930/assets/imgs/pallone1.jpg" />
+
+          <noscript>
+            <img class="responsive" src="./modules/1930/assets/imgs/pallone1.jpg" />
+          </noscript>
+
+          <h3><span class="blinker" ><span class="blink_1" ></span><span class="blink_2" ></span><span class="blink_3" ></span></span><strong>360</strong><br/><br/></h3>
+
+        </div>
 
 
-  <!-- Pan senza HQ  maxZoom: 2 -->
-  
-  
-    <div class="box"   id='1930_02'   obj-type='image-pan'  obj-config='{"maxZoom":2}'>
-    
-    <img class="component responsive" src="./images/blank.jpg" data-src="./modules/1930/assets/imgs/poster.jpg" /> 
-    <noscript>
-    <img class="component responsive" src="./modules/1930/assets/imgs/poster.jpg" />
-     </noscript>
-    <h3><span class="blinker" ><span class="blink_1" ></span><span class="blink_2" ></span><span class="blink_3" ></span></span><strong> Celebrativo. </strong>Il disegno originale del manifesto celebrativo della prima edizione. Il quadro si trovava allo stadio Centenario di Montevideo.</h3>
-  </div>
+        <!-- End 360 -->
+        
+
+
+
+
+
+
+        
+        <!-- Pan con HQ -->
+        
+        
+          <div class="box"   id='1930_02'   obj-type='image-pan'  obj-config='{"hqSrc":"./modules/1930/assets/imgs/zoomposter30.jpg"}'>
+          
+          <img class="component responsive" src="./images/blank.jpg" data-src="./modules/1930/assets/imgs/poster.jpg" /> 
+          
+          <noscript>
+              <img class="responsive" src="./modules/1930/assets/imgs/poster.jpg" />
+           </noscript>
+
+
+          <h3><span class="blinker" ><span class="blink_1" ></span><span class="blink_2" ></span><span class="blink_3" ></span></span><strong>Pan con HQ</strong><br/><br/></h3>
+
+        </div>
+
+
+         <!-- End Pan con HQ -->
+        
+
+
+
+
+
+
+
+        <!-- Pan senza HQ  maxZoom: 2 -->
+        
+        
+          <div class="box"   id='1930_02'   obj-type='image-pan'  obj-config='{"maxZoom":2}'>
+          
+          <img class="component responsive" src="./images/blank.jpg" data-src="./modules/1930/assets/imgs/poster.jpg" /> 
+          
+          <noscript>
+              <img class="responsive" src="./modules/1930/assets/imgs/poster.jpg" />
+           </noscript>
+          
+
+          <h3><span class="blinker" ><span class="blink_1" ></span><span class="blink_2" ></span><span class="blink_3" ></span></span><strong>Pan senza HQ  maxZoom: 2</strong><br/><br/></h3>
+        </div>
+
+
+        <!-- End Pan senza HQ  maxZoom: 2 -->
+
+
+
+
+
 
 
  
-  </div>
-    
-  
-     <!-- FINE ANNO -->
-     
-     
-    
-    
-    <div id="anno_1934" > 
-      
+  </div><!-- FINE ANNO -->
+  <div class="anno" id=anno_1934>
+
+
+
+        <h1>1934</h1>
+        <h2>Gli oggetti che hanno fatto la storia del calcio</h2>
+
+
+
+          <!-- Easy -->
+
+
+        <div class="box"   id='1934_01'   obj-type='image-easy'  obj-config='{"kiave1":1,"kiave2":2}'> 
+        
+          <img class="component responsive" src="./images/blank.jpg" data-src="./modules/1934/assets/imgs/fotovittoria.jpg" /> 
+          
+          <noscript>
+              <img class="responsive" src="./modules/1934/assets/imgs/fotovittoria.jpg" />
+          </noscript>
+           
+          <h3><span class="blinker" ><span class="blink_1" ></span><span class="blink_2" ></span><span class="blink_3" ></span></span><strong>Easy</strong><br/><br/></h3>
+
+        </div>
+
+        <!-- End Easy -->
+
+
+       
+        <!-- Fade Interactive-->
+        
+        
+        
+          <div class="box"   id='1934_04'   obj-type='image-fade'  obj-config='{"interactive":true,"datapt":"./modules/1934/assets/imgs/","datasrc":"moneta1.jpg,moneta2.jpg"}'>
+
+             <img class="component responsive" src="./images/blank.jpg" data-src="./modules/1934/assets/imgs/moneta1.jpg" /> 
+          
+            <noscript>
+              <img class="responsive" src="./modules/1934/assets/imgs/moneta1.jpg" />
+            </noscript>
+          
+          
+              <h3><span class="blinker" ><span class="blink_1" ></span><span class="blink_2" ></span><span class="blink_3" ></span></span><strong>Fade Interactive</strong><br/><br/></h3>
+          </div>
+        
+        
+          <!-- End Fade -->
+
+
+
+           <!-- Fade Interactive-->
+        
+        
+        
+          <div class="box"   id='1934_04auto'   obj-type='image-fade'  obj-config='{"datapt":"./modules/1934/assets/imgs/","datasrc":"moneta1.jpg,moneta2.jpg"}'>
+
+             <img class="component responsive" src="./images/blank.jpg" data-src="./modules/1934/assets/imgs/moneta1.jpg" /> 
+          
+            <noscript>
+              <img class="responsive" src="./modules/1934/assets/imgs/moneta1.jpg" />
+            </noscript>
+          
+          
+              <h3><span class="blinker" ><span class="blink_1" ></span><span class="blink_2" ></span><span class="blink_3" ></span></span><strong>Fade Automatico</strong><br/><br/></h3>
+          </div>
+        
+        
+          <!-- End Fade -->
 
 
 
 
-
-<div class="anno" id=anno_1934>
-  <h1>1934</h1>
-  <h2>Gli oggetti che hanno fatto la storia del calcio</h2>
+          <!-- Video Interactive-->
 
 
-
-    <!-- Easy -->
-
-
-  <div class="box"   id='1934_01'   obj-type='image-easy'  obj-config='{"kiave1":1,"kiave2":2}'> 
-  
-   <img class="component responsive" src="./images/blank.jpg" data-src="./modules/1934/assets/imgs/fotovittoria.jpg" /> 
-    <noscript>
-    <img class="component responsive" src="./modules/1934/assets/imgs/fotovittoria.jpg" />
-     </noscript>
-     
-    <h3><strong>Trionfo azzurro.</strong> La foto originale scattata al fischio finale della vittoria italiana: gli azzurri portano in trionfo il commissario tecnico Vittorio Pozzo.</h3>
-  </div>
+         <div class="box"   id='1950_01'   obj-type='video-clip'  obj-config='{"interactive":true,"id":"clip_01"}'>
+            
+            <div class='videoWrapper'>
 
 
-  <!-- Easy -->
-  
-  
-  
-    <div class="box"   id='1934_04'   obj-type='image-fade'  obj-config='{"interactive":true,"datapt":"./modules/1934/assets/imgs/","datasrc":"moneta1.jpg,moneta2.jpg"}'>
+              <video  id= 'clip_01' preload="none"  width="400" height='300'  class="responsive"   poster="./modules/1950/assets/video/poster.jpg" >
+                <source src="./modules/1950/assets/video/obdulio.mp4" type="video/mp4">
+                <source src="./modules/1950/assets/video/obdulio.webm" type="video/webm">
+                <source src="./modules/1950/assets/video/obdulio.ogv" type="video/ogg">
+              </video>
 
-       <img class="component responsive" src="./images/blank.jpg" data-src="./modules/1934/assets/imgs/moneta1.jpg" /> 
-    
-      <noscript>
-        <img class="component responsive" src="./modules/1934/assets/imgs/moneta1.jpg" />
-      </noscript>
-    
-    
-        <h3><span class="blinker" ><span class="blink_1" ></span><span class="blink_2" ></span><span class="blink_3" ></span></span><strong>Balilla.</strong> La medaglia di partecipazione al torneo,  appartenuta allo stesso Meazza (e personalizzata con il suo nome). Bozzetto dello scultore toscano Dante Manetti.</h3>
-    </div>
-  
-  
+
+            </div>
+
+
+            <h3><span class="blinker" ><span class="blink_1" ></span><span class="blink_2" ></span><span class="blink_3" ></span></span><strong>Video Interactive</strong><br/><br/></h3>
+           
+          </div>
+
+
+        <!-- End Video Interactive-->
+
+
+
  
-  </div>
-    
-    
+        </div><!-- FINE ANNO -->
       
-     
-     
+
   
     </div> <!-- END CONTENT -->
   </div><!-- END SKROLLR BODY -->
 
   
   <script src="http://code.createjs.com/soundjs-0.5.2.min.js"></script>
+  
   
   <script data-main="js/main" src="js/vendor/require.js"></script>
 

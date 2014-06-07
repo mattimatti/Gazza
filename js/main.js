@@ -5,7 +5,8 @@ require.config({
 		skrollr: 'vendor/skrollr.min',
 		tweenmax: 'vendor/TweenMax',
 		reel: 'vendor/jquery.reel',
-		panzoom: 'vendor/jquery.panzoom'
+		panzoom: 'vendor/jquery.panzoom',
+		videojs: 'vendor/video-js-4.1.0/video'
 	}
 
 });

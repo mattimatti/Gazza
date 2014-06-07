@@ -11,7 +11,8 @@ define(['jquery', 'mixins.preloader', 'components.sound'], function($, MixinPrel
 			loop: true,
 			delay: 0,
 			duration: 2,
-			sound: null
+			sound: null,
+			datasrc:""
 		};
 
 		// merge default options with
@@ -52,11 +53,11 @@ define(['jquery', 'mixins.preloader', 'components.sound'], function($, MixinPrel
 
 
 			// get the front and back image
-			this.front = $("<img>"); //this.$el.find('.front').show();
+			this.front = $("<img>"); 
 			this.front.attr('src', this.pt_Img + this.Img_ar[0]);
 
 
-			this.back = $("<img>"); //this.$el.find('.front').show();
+			this.back = $("<img>"); 
 			this.back.attr('src', this.pt_Img + this.Img_ar[1]);
 
 
@@ -89,9 +90,6 @@ define(['jquery', 'mixins.preloader', 'components.sound'], function($, MixinPrel
 
 			this.wrapper_.next('img').hide();
 
-			console.log('--->', this.wrapper_);
-
-
 
 			//if interactive is set disable loop
 			if (this.options.interactive) {
@@ -100,8 +98,10 @@ define(['jquery', 'mixins.preloader', 'components.sound'], function($, MixinPrel
 
 			// if no loop enable click
 			if (this.options.interactive) {
+				
 				// slow down the animation duration
 				this.options.duration /= 2;
+
 				// assign click event
 				this.plugin.on('click', $.proxy(this.clickComponent, this));
 				this.plugin.addClass('interactive');
@@ -204,9 +204,10 @@ define(['jquery', 'mixins.preloader', 'components.sound'], function($, MixinPrel
 		},
 
 		initSound: function() {
-			console.debug('initSound', this.options.sound);
+			
 			this.sound = new ComponentSound();
 			if (this.options.sound) {
+				console.debug('initSound registerSoundFullPath', this.options.sound);
 				this.sound.registerSoundFullPath(this.options.sound);
 			}
 		},
@@ -223,12 +224,10 @@ define(['jquery', 'mixins.preloader', 'components.sound'], function($, MixinPrel
 			this.disposeSound();
 			this.$el.off();
 			this.stopLooping();
-			this.wrapper_.next('img').show();
-			this.wrapper_.remove();
-			/*if (!this.frontVisible) {
-				this.showFront();
-				this.back.hide();
-			}*/
+			if (this.wrapper) {
+				this.wrapper_.next('img').show();
+				this.wrapper_.remove();
+			}
 
 		}
 

@@ -1,4 +1,4 @@
-define(['jquery','mixins.preloader','components.sound'], function($,MixinPreloader,ComponentSound){
+define(['jquery','mixins.preloader','components.sound','videojs'], function($,MixinPreloader,ComponentSound){
 
 
 	var Component = function(element, options) {
