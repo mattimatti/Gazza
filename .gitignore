@@ -1,5 +1,4 @@
 modules/**
-modules/**
 node_modules/*
 .*
 GruntFile.js
