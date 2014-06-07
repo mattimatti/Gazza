@@ -122,7 +122,7 @@ console.debug('video initialize',this.options.id);
 			if (this.plugin) {
 				this.disposeSound();
 				
-				//console.log('--->',this.plugin)
+				console.log('--->',this.plugin);
 				
 				try{
 					this.plugin.pause();
