@@ -107,21 +107,6 @@ define(['jquery','mixins.preloader','mixins.sound','panzoom'], function($,MixinP
 			
 		},
 
-		initSound : function(){
-			this.sound = new ComponentSound();
-			if(this.options.sound){
-				this.sound.registerSoundFullPath(this.options.sound);
-			}
-		},
-
-
-		disposeSound : function(){
-			if(this.sound){
-				this.sound.removeAllSounds();
-				delete this.sound;
-			}
-		},
-
 		dispose: function() {
 
 			this.disposeSound();

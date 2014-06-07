@@ -9,7 +9,7 @@ var noop = function() {};
 var methods = ['assert', 'clear', 'count', 'debug', 'dir', 'dirxml', 'error', 'exception', 'group', 'groupCollapsed', 'groupEnd', 'info', 'log', 'markTimeline', 'profile', 'profileEnd', 'table', 'time', 'timeEnd', 'timeStamp', 'trace', 'warn'];
 var mlength = methods.length;
 
-while (lmength--) {
+while (mlength--) {
 	method = methods[mlength];
 
 	// Only stub undefined methods.

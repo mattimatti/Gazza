@@ -1,4 +1,4 @@
-define(['jquery','mixins.preloader','components.sound'], function($,MixinPreloader,ComponentSound){
+define(['jquery','mixins.preloader','mixins.sound'], function($,MixinPreloader,MixinSound){
 
 
 	var Component = function(element, options) {
@@ -9,6 +9,7 @@ define(['jquery','mixins.preloader','components.sound'], function($,MixinPreload
 
 	// MIXIN
 
+	$.extend(Component.prototype, MixinPreloader);
 	$.extend(Component.prototype, MixinPreloader);
 
 	//extend prototype	
