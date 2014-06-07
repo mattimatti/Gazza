@@ -20,7 +20,7 @@
 
 			this.$el.find('*').each(function(index, element) {
 				var item = $(element);
-				if(item.attr("data-src")){
+				if(item.attr("data-src") && item.attr("data-src") !== ''){
 					item.attr("src" , item.attr("data-src"));
 				}
 			});
