@@ -7,10 +7,10 @@ window.console = window.console || {};
 var method;
 var noop = function() {};
 var methods = ['assert', 'clear', 'count', 'debug', 'dir', 'dirxml', 'error', 'exception', 'group', 'groupCollapsed', 'groupEnd', 'info', 'log', 'markTimeline', 'profile', 'profileEnd', 'table', 'time', 'timeEnd', 'timeStamp', 'trace', 'warn'];
-var length = methods.length;
+var mlength = methods.length;
 
-while (length--) {
-	method = methods[length];
+while (lmength--) {
+	method = methods[mlength];
 
 	// Only stub undefined methods.
 	if (!window.console[method]) {

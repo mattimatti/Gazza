@@ -1,4 +1,4 @@
-define(['jquery', 'mixins.preloader', 'components.sound'], function($, MixinPreloader, ComponentSound) {
+define(['jquery', 'mixins.preloader', 'mixin.sound'], function($, MixinPreloader, MixinSound) {
 
 
 	var Component = function(element, options) {
@@ -25,6 +25,7 @@ define(['jquery', 'mixins.preloader', 'components.sound'], function($, MixinPrel
 	// MIXIN
 
 	$.extend(Component.prototype, MixinPreloader);
+	$.extend(Component.prototype, MixinSound);
 
 	//extend prototype	
 
@@ -211,22 +212,6 @@ define(['jquery', 'mixins.preloader', 'components.sound'], function($, MixinPrel
 			}
 		},
 
-		initSound: function() {
-			
-			this.sound = new ComponentSound();
-			if (this.options.sound) {
-				console.debug('initSound registerSoundFullPath', this.options.sound);
-				this.sound.registerSoundFullPath(this.options.sound);
-			}
-		},
-
-
-		disposeSound: function() {
-			if (this.sound) {
-				this.sound.removeAllSounds();
-				delete this.sound;
-			}
-		},
 
 		dispose: function() {
 

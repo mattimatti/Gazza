@@ -1,4 +1,4 @@
-define(['jquery','mixins.preloader','components.sound','videojs'], function($,MixinPreloader,ComponentSound){
+define(['jquery','mixins.preloader','mixins.sound','videojs'], function($,MixinPreloader,MixinSound){
 
 
 	var Component = function(element, options) {
@@ -23,6 +23,7 @@ define(['jquery','mixins.preloader','components.sound','videojs'], function($,Mi
 	// MIXIN
 
 	$.extend(Component.prototype, MixinPreloader);
+	$.extend(Component.prototype, MixinSound);
 
 	//extend prototype
 
@@ -86,7 +87,7 @@ define(['jquery','mixins.preloader','components.sound','videojs'], function($,Mi
 		toggleVideoPlayback: function() {
 
 			if (!this.plugin) {
-				throw new Error("clicking a video not inited");
+				console.error("clicking a video not inited");
 				return;
 			}
 
@@ -106,24 +107,6 @@ define(['jquery','mixins.preloader','components.sound','videojs'], function($,Mi
 				this.plugin.play();
 			}
 
-		},
-
-		// video has no sound
-		initSound: function() {
-
-			this.sound = new ComponentSound();
-
-			if (this.options.sound) {
-				this.sound.registerSoundFullPath(this.options.sound);
-			}
-		},
-
-		// remove sound
-		disposeSound: function() {
-			if (this.sound) {
-				this.sound.removeAllSounds();
-				delete this.sound;
-			}
 		},
 
 		dispose: function() {

@@ -28,7 +28,7 @@ define(['jquery'], function($){
 			console.debug('this.preloadCount' , this.preloadCount);
 
 			// if no images to preload
-			if(this.preloadCount== 0){
+			if(this.preloadCount === 0){
 				this.initialize();
 				return;
 			}
