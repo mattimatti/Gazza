@@ -53,12 +53,10 @@ define(['jquery', 'mixins.preloader', 'components.sound'], function($, MixinPrel
 
 
 			// get the front and back image
-			this.front = $("<img>"); 
-			this.front.attr('src', this.pt_Img + this.Img_ar[0]);
+			this.front = $("<img>").attr('src', this.pt_Img + this.Img_ar[0]);
 
 
-			this.back = $("<img>"); 
-			this.back.attr('src', this.pt_Img + this.Img_ar[1]);
+			this.back = $("<img>").attr('src', this.pt_Img + this.Img_ar[1]);
 
 
 			this.wrapper_ = $("<div/>").addClass('force-h');
@@ -103,8 +101,8 @@ define(['jquery', 'mixins.preloader', 'components.sound'], function($, MixinPrel
 				this.options.duration /= 2;
 
 				// assign click event
-				this.plugin.on('click', $.proxy(this.clickComponent, this));
-				this.plugin.addClass('interactive');
+				this.wrapper_.on('click', $.proxy(this.clickComponent, this));
+				this.wrapper_.addClass('interactive');
 
 				this.initSound();
 			}
@@ -222,9 +220,10 @@ define(['jquery', 'mixins.preloader', 'components.sound'], function($, MixinPrel
 
 		dispose: function() {
 			this.disposeSound();
-			this.$el.off();
+			
 			this.stopLooping();
-			if (this.wrapper) {
+			if (this.wrapper_) {
+				this.wrapper_.off();
 				this.wrapper_.next('img').show();
 				this.wrapper_.remove();
 			}

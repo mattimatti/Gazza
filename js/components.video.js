@@ -123,11 +123,15 @@ define(['jquery','mixins.preloader','components.sound','videojs'], function($,Mi
 				console.log('--->', this.plugin);
 
 				try {
+					
+					if (!this.plugin.paused()){
 					this.plugin.pause();
 					this.plugin.currentTime(0);
 					this.plugin.controlBar.hide();
 					this.plugin.controls(false);
 					this.$el.off();
+					
+					}
 
 				} catch (e) {
 
