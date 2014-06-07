@@ -1,5 +1,4 @@
 define([
-	'jquery', 
 	'skrollr',
 	'components.fade',
 	'components.360',
@@ -8,7 +7,8 @@ define([
 	'components.pan',
 	'components.carousel'
 
-	], function($, skrollr,ComponentFade,ComponentReel,ComponentVideo,ComponentEasy,ComponentPan,ComponentCarousel) {
+], function(skrollr, ComponentFade, ComponentReel, ComponentVideo, ComponentEasy, ComponentPan, ComponentCarousel) {
+
 
 	var instancesPool = [];
 
@@ -139,12 +139,40 @@ define([
 	var App = {
 
 
+		getLogger: function(active) {
+
+			var muteConsole;
+			if (active) {
+				muteConsole = window.console || {};
+			} else {
+				muteConsole = {};
+			}
+
+			var method;
+			var noop = function() {};
+			var methods = ['assert', 'clear', 'count', 'debug', 'dir', 'dirxml', 'error', 'exception', 'group', 'groupCollapsed', 'groupEnd', 'info', 'log', 'markTimeline', 'profile', 'profileEnd', 'table', 'time', 'timeEnd', 'timeStamp', 'trace', 'warn'];
+			var length = methods.length;
+
+			while (length--) {
+				method = methods[length];
+
+				// Only stub undefined methods.
+				if (!muteConsole[method]) {
+					muteConsole[method] = noop;
+				}
+			}
+
+			return muteConsole;
+
+		},
+
+
 		initialize: function() {
 
 			skrollr.init({
 				forceHeight: true,
 				keyframe: function(element, name, direction) {
-					console.log(name, direction);
+					//console.log(name, direction);
 
 					var elm = Modules[element.getAttribute('obj-type')];
 					var cfg = (element.getAttribute('obj-config'));

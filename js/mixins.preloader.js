@@ -1,6 +1,5 @@
 define(['jquery'], function($){
 
-
 	var MixinPreloader = {
 
 

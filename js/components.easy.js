@@ -1,5 +1,5 @@
 define(['jquery','mixins.preloader','components.sound'], function($,MixinPreloader,ComponentSound){
-	// component Easy do nothing it's just for completeness of the api
+	
 
 	var Component = function(element, options) {
 		this.options = options;

@@ -1,5 +1,6 @@
 define(['jquery','mixins.preloader','components.sound','panzoom'], function($,MixinPreloader,ComponentSound){
 
+
 	var Component = function(element, options) {
 
 		this.$el = $(element);

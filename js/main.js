@@ -19,9 +19,9 @@ require.config({
 
 
 require([
-	'components.scroller',
+	'app',
 	'tweenmax'
 ], function(App) {
-
+	console.error("MAIN", arguments);
 	App.initialize();
 });
