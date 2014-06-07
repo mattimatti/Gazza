@@ -30,7 +30,39 @@ h1, h2, h3, h4, h5, h6 {
 	
 	text-align: center;
 	position:relative;
+	width:100%;
+	
 }
+
+
+.force-h {
+	
+	
+	
+	width:100%;
+	background:red;
+}
+
+.force-h:before{
+	content: "";
+	display: block;
+	
+	padding-top: 56.25%;
+}
+
+
+.min-h{
+	position:  absolute;
+	top: 0;
+	left: 0;
+	bottom: 0;
+	right: 0;
+	
+}
+
+
+
+
 .responsive {
 	width:100%;
 }
