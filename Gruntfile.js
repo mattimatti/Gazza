@@ -22,8 +22,8 @@ module.exports = function(grunt) {
         uglify: {
             options: {},
             dist: {
-                src: '<%= concat.dist.dest %>',
-                dest: 'dist/app.min.js'
+                src: 'dist/require.js',
+                dest: 'dist/require.min.js'
             }
         },
         jshint: {
@@ -67,20 +67,37 @@ module.exports = function(grunt) {
         },
         // !! This is the name of the task ('requirejs')
         requirejs: {
-            compile: {
-
+            dist: {
+                // Options: https://github.com/jrburke/r.js/blob/master/build/example.build.js
                 options: {
-                    name : 'main',
-                    baseUrl: "./js/",
-                    out: "dist/require.js",
-                    mainConfigFile: './js/main.js',
-                    logLevel: 0,
-                    findNestedDependencies:true           
+                    name: 'main',
+                    out: 'dist/require.js',
+                    baseUrl: './js',
+                    optimize: 'none',
+                    mainConfigFile: 'js/main.js',
+                    /*paths: {
+                        'templates': '../../.tmp/scripts/templates',
+                        'jquery': '../../<%= yeoman.app %>/bower_components/jquery/dist/jquery',
+                        'underscore': '../../<%= yeoman.app %>/bower_components/underscore/underscore',
+                        'backbone': '../../<%= yeoman.app %>/bower_components/backbone/backbone'
+                    },*/
+                    // https://github.com/yeoman/grunt-usemin/issues/30
+                    //generateSourceMaps: true,
+                    // required to support SourceMaps
+                    // http://requirejs.org/docs/errors.html#sourcemapcomments
+                    preserveLicenseComments: false,
+                    useStrict: true,
+                    wrap: true
+                    //uglify2: {} // https://github.com/mishoo/UglifyJS2
                 }
             }
-        }
+        },
+
 
     });
+
+
+
 
 
     // These plugins provide necessary tasks
@@ -93,5 +110,5 @@ module.exports = function(grunt) {
 
 
     // Default task
-    grunt.registerTask('default', ['jshint']);
+    grunt.registerTask('default', ['jshint','requirejs','uglify']);
 };
