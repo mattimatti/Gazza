@@ -40,6 +40,7 @@ require.config({
 	
 
 	paths: {
+		almond: '../vendor/almond',
 		jquery: '../vendor/jquery-1.9.1',
 		skrollr: '../vendor/skrollr.min',
 		tweenmax: '../vendor/TweenMax',

@@ -73,9 +73,10 @@ module.exports = function(grunt) {
         requirejs: {
             dist: {
                 options: {
-                    name: 'main',
+                    name: "almond",
                     out: 'dist/require.js',
                     baseUrl: './js',
+                    include: ["main"],
                     optimize: 'none',
                     mainConfigFile: 'js/main.js',
                     preserveLicenseComments: false,
