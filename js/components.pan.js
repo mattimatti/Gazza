@@ -50,10 +50,10 @@ define(['jquery','mixins.preloader','mixins.sound','panzoom'], function($,MixinP
 
 			// must be wrapped in a container div
 			var container = $("<div class='pancontainer'></div>");
-			container.attr("width", this.plugin.width());
-			container.attr("height", this.plugin.height());
-			container.css("width", this.plugin.width());
-			container.css("height", this.plugin.height());
+			//container.attr("width", this.plugin.width());
+			//container.attr("height", this.plugin.height());
+			//container.css("width", this.plugin.width());
+			//container.css("height", this.plugin.height());
 			this.plugin.wrap(container);
 
 			this.originalimage = this.plugin.attr("src");

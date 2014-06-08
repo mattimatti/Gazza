@@ -68,7 +68,7 @@ define(['jquery', 'mixins.preloader', 'mixins.sound'], function($, MixinPreloade
 
 
 			// set the FRONT AND BACK elements as absolute
-			this.front.css("position", "absolute");
+			this.front.css("position", "relative");
 			this.front.css("top", 0);
 			this.front.css("left", 0);
 
@@ -78,10 +78,10 @@ define(['jquery', 'mixins.preloader', 'mixins.sound'], function($, MixinPreloade
 
 			this.back.css("top", 0);
 			this.back.css("left", 0);
-
-
 			this.cnt_.append(this.front);
 			this.cnt_.append(this.back);
+			
+			
 			this.wrapper_.append(this.cnt_);
 
 			this.$el.prepend(this.wrapper_);
@@ -136,7 +136,7 @@ define(['jquery', 'mixins.preloader', 'mixins.sound'], function($, MixinPreloade
 		toggleImage: function() {
 			// TODO: maybe tweenmax is excessive for this behaviour..
 
-			console.error('toggleImage', this.frontVisible);
+			console.log('toggleImage', this.frontVisible);
 
 			if (this.frontVisible) {
 				this.showBack();
@@ -157,7 +157,10 @@ define(['jquery', 'mixins.preloader', 'mixins.sound'], function($, MixinPreloade
 
 			self.transitioning = true;
 
-
+            
+			this.back.css('position','relative');
+			this.front.css('position','absolute');
+			
 			TweenMax.to(this.front, this.options.duration, {
 				alpha: 0
 			});
@@ -187,16 +190,25 @@ define(['jquery', 'mixins.preloader', 'mixins.sound'], function($, MixinPreloade
 			console.error('showFront');
 
 			this.transitioning = true;
-
+             
+			this.front.css('position','relative');
+			this.back.css('position','absolute');
+		
+			
 			TweenMax.to(this.front, this.options.duration, {
 				alpha: 1
 			});
+			
+			
 			TweenMax.to(this.back, this.options.duration, {
 				delay: this.options.delay,
 				alpha: 0,
 				onComplete: function() {
 					self.frontVisible = true;
 					self.transitioning = false;
+					
+			 
+					
 					if (self.options.loop) {
 						self.toggleImage();
 					}
@@ -222,7 +234,7 @@ define(['jquery', 'mixins.preloader', 'mixins.sound'], function($, MixinPreloade
 			
 			this.stopLooping();
 
-			if (this.wrapper_.length > 0 ) {
+			if (typeof(this.wrapper_)==='object' && this.wrapper_.length > 0 ) {
 				this.wrapper_.off();
 				this.wrapper_.next('img').show();
 				this.wrapper_.empty();

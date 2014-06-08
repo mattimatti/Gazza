@@ -42,6 +42,7 @@ define(['jquery', 'mixins.preloader', 'mixins.sound'], function($, MixinPreloade
 
 
 			this.plugin = this.$el.find('.component');
+			this.plugin.css("position","relative");
 
 
 			if(!this.plugin){
@@ -68,19 +69,19 @@ define(['jquery', 'mixins.preloader', 'mixins.sound'], function($, MixinPreloade
 
 			var firstElement = $(this.items.get(0));
 
-			firstElement.css("width", firstElement.width());
-			firstElement.css("height", firstElement.height());
+			//firstElement.css("width", firstElement.width());
+			//firstElement.css("height", firstElement.height());
+			//firstElement.css("position",'relative');
 
 
 			// set the size of the container MANTAIN VERTICAL SPACING
-			this.plugin.css("width", $(this.items.get(0)).width());
-			this.plugin.css("height", $(this.items.get(0)).height());
+			//this.plugin.css("width", $(this.items.get(0)).width());
+			//this.plugin.css("height", $(this.items.get(0)).height());
 
 
 			this.prepareItems();
 
 			// setup which will be the first pair
-
 
 
 			//if interactive is set disable loop
@@ -114,28 +115,23 @@ define(['jquery', 'mixins.preloader', 'mixins.sound'], function($, MixinPreloade
 			// hide all images
 			this.items.hide();
 
-			var self = this;
-
-			this.items.each(function(index, item) {
-				var element = $(item);
-				element.css("position", "absolute");
-				element.css("top", 0);
-				element.css("left", 0);
-				element.css("zIndex", self.items.length - 1 - index);
-
-				// check if plugin exists
-				if(self.plugin){
-					element.css("height", self.plugin.height());
-					element.css("width", self.plugin.width());
-				}
-			});
-
-
+			this.items.each($.proxy(this.prepareItem, this));
 
 			// show the first
 
-			$(this.items.get(0)).show().fadeTo(0, 1).css('zIndex', 1001);
+			$(this.items.get(0)).show().fadeTo(0, 1).css('zIndex', 1001).css("position", "relative");
 
+		},
+
+
+
+		prepareItem : function(index, item) {
+
+			var element = $(item);
+			element.css("position", "absolute");
+			element.css("top", 0);
+			element.css("left", 0);
+			element.css("zIndex", this.items.length - 1 - index);
 		},
 
 
@@ -185,9 +181,10 @@ define(['jquery', 'mixins.preloader', 'mixins.sound'], function($, MixinPreloade
 
 			this.disposeTransitions();
 
+
 			// show only current pair
-			this.front.show().css('zIndex', 1001);
-			this.back.show().css('zIndex', 1000);
+			this.front.show().css('zIndex', 1001).css("position", "absolute");
+			this.back.show().css('zIndex', 1000).css("position", "relative");
 
 			this.transitioning = true;
 
