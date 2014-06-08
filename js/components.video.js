@@ -1,5 +1,6 @@
-define(['jquery','mixins.preloader','mixins.sound','videojs'], function($,MixinPreloader,MixinSound){
+define(['jquery', 'mixins.preloader', 'mixins.sound', 'videojs'], function($, MixinPreloader, MixinSound) {
 
+	var console = window.muteConsole;
 
 	var Component = function(element, options) {
 
@@ -33,6 +34,13 @@ define(['jquery','mixins.preloader','mixins.sound','videojs'], function($,MixinP
 		initialize: function() {
 
 
+			if (this.initialized) {
+				console.warn(this.elementId + ' Component already initialized exit');
+				return;
+			}
+			this.initialized = true;
+
+
 			this.video = this.options.id; //this.$el.find('.video-js').get(0);
 
 			// if the video has no id return 
@@ -58,7 +66,7 @@ define(['jquery','mixins.preloader','mixins.sound','videojs'], function($,MixinP
 			var self = this;
 			//instance the videojs object
 			// when ready add interactivity
-			this.plugin = videojs(this.options.id, this.options).ready(function(){
+			this.plugin = videojs(this.options.id, this.options).ready(function() {
 
 				self.plugin = this;
 
@@ -107,6 +115,11 @@ define(['jquery','mixins.preloader','mixins.sound','videojs'], function($,MixinP
 
 		dispose: function() {
 
+			if (!this.initialized) {
+				console.warn(this.elementId + ' Component not initialized no dispose');
+				return;
+			}
+
 
 			console.info(this.options.id + ' ComponentVideo dispose');
 
@@ -115,14 +128,14 @@ define(['jquery','mixins.preloader','mixins.sound','videojs'], function($,MixinP
 				this.disposeSound();
 
 				try {
-					
-					if (!this.plugin.paused()){
-					this.plugin.pause();
-					this.plugin.currentTime(0);
-					this.plugin.controlBar.hide();
-					this.plugin.controls(false);
-					this.$el.off();
-					
+
+					if (!this.plugin.paused()) {
+						this.plugin.pause();
+						this.plugin.currentTime(0);
+						this.plugin.controlBar.hide();
+						this.plugin.controls(false);
+						this.$el.off();
+
 					}
 
 				} catch (e) {

@@ -1,5 +1,6 @@
 define(['jquery','mixins.preloader','mixins.sound'], function($,MixinPreloader,MixinSound){
 	
+	var console = window.muteConsole;
 
 	var Component = function(element, options) {
 		this.options = options;
@@ -19,6 +20,12 @@ define(['jquery','mixins.preloader','mixins.sound'], function($,MixinPreloader,M
 
 
 		initialize: function() {
+
+			if(this.initialized){
+				console.warn(this.elementId + ' Component already initialized exit');
+				return;
+			}
+			this.initialized = true;
 			
 			console.info(this.elementId + ' ComponentEasy initialize');
 			this.initSound();
@@ -37,6 +44,10 @@ define(['jquery','mixins.preloader','mixins.sound'], function($,MixinPreloader,M
 
 
 		dispose: function() {
+			if(!this.initialized){
+				console.warn(this.elementId + ' Component not initialized no dispose');
+				return;
+			}
 			this.disposeSound();
 			this.$el.off();
 			console.info(this.elementId + ' ComponentEasy dispose');

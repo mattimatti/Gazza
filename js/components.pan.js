@@ -1,5 +1,6 @@
 define(['jquery','mixins.preloader','mixins.sound','panzoom'], function($,MixinPreloader,MixinSound){
 
+	var console = window.muteConsole;
 
 	var Component = function(element, options) {
 
@@ -36,6 +37,13 @@ define(['jquery','mixins.preloader','mixins.sound','panzoom'], function($,MixinP
 		hqImage: null,
 
 		initialize: function() {
+
+
+			if(this.initialized){
+				console.warn(this.elementId + ' Component already initialized exit');
+				return;
+			}
+			this.initialized = true;
 			
 			this.plugin = this.$el.find('.component');
 
@@ -109,6 +117,11 @@ define(['jquery','mixins.preloader','mixins.sound','panzoom'], function($,MixinP
 
 		dispose: function() {
 
+			if(!this.initialized){
+				console.warn(this.elementId + ' Component not initialized no dispose');
+				return;
+			}
+			
 			this.disposeSound();
 
 			console.info(this.elementId + ' ComponentPan dispose');

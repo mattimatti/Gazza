@@ -1,5 +1,6 @@
-define(['jquery'], function($){
+define(['jquery'], function($) {
 
+	var console = window.muteConsole;
 
 	var DEFAULT_SOUND_ID = 'click';
 
@@ -25,7 +26,7 @@ define(['jquery'], function($){
 	$.extend(Component.prototype, {
 
 
-		initialize: function(){
+		initialize: function() {
 			createjs.Sound.alternateExtensions = ["mp3"];
 		},
 
@@ -34,7 +35,7 @@ define(['jquery'], function($){
 		registerSoundFullPath: function(fullPath, soundid) {
 
 			// if no id default to 
-			if(!soundid){
+			if (!soundid) {
 				soundid = DEFAULT_SOUND_ID;
 			}
 
@@ -53,7 +54,7 @@ define(['jquery'], function($){
 			if (customAudioPath) {
 				path = customAudioPath;
 			}
-			
+
 			fullPath = path + soundid + '.ogg';
 
 			createjs.Sound.registerSound(fullPath, soundid);
@@ -64,7 +65,7 @@ define(['jquery'], function($){
 		// play an arbitrary sound
 		playSound: function(soundId) {
 
-			if(!soundId){
+			if (!soundId) {
 				soundId = DEFAULT_SOUND_ID;
 			}
 
@@ -81,14 +82,13 @@ define(['jquery'], function($){
 
 
 		removeAllSounds: function() {
-			if(createjs.Sound){
-				try{
+			if (createjs.Sound) {
+				try {
 					createjs.Sound.removeAllSounds();
-				}catch(e){
-				}
-				
+				} catch (e) {}
+
 			}
-			
+
 		}
 
 	});

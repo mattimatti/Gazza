@@ -1,5 +1,7 @@
 define(['jquery','components.sound'], function($,ComponentSound){
 
+	var console = window.muteConsole;
+
 	var MixinSound = {
 
 

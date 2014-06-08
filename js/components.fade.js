@@ -1,5 +1,6 @@
 define(['jquery', 'mixins.preloader', 'mixins.sound'], function($, MixinPreloader, MixinSound) {
 
+	var console = window.console;
 
 	var Component = function(element, options) {
 
@@ -35,61 +36,35 @@ define(['jquery', 'mixins.preloader', 'mixins.sound'], function($, MixinPreloade
 
 		frontVisible: false,
 
+		initialized: false,
+
 		initialize: function() {
 
 			this.plugin = this.$el.find('.component');
 
+
 			if (!this.plugin) {
+				console.warn(this.elementId + ' Missing required element');
 				return;
 			}
 
+			if (this.initialized) {
+				console.warn(this.elementId + ' Component already initialized exit');
+				return;
+			}
+			this.initialized = true;
 
 			console.info(this.elementId + ' ComponentFade initialize');
 
 			this.initSound();
 
 
-
-			this.pt_Img = this.options.datapt;
-			this.Img_ar = this.options.datasrc.split(",");
-
-
-
-			// get the front and back image
-			this.front = $("<img>").attr('src', this.pt_Img + this.Img_ar[0]);
+			// hide the forst image
+			this.originalImage = this.$el.find("img").first();
+			this.originalImage.hide();
 
 
-			this.back = $("<img>").attr('src', this.pt_Img + this.Img_ar[1]);
-
-
-			this.wrapper_ = $("<div/>").addClass('force-h');
-			this.cnt_ = $("<div/>").addClass('component min-h');
-
-
-
-			// set the FRONT AND BACK elements as absolute
-			this.front.css("position", "relative");
-			this.front.css("top", 0);
-			this.front.css("left", 0);
-
-
-
-			this.back.css("position", "absolute");
-
-			this.back.css("top", 0);
-			this.back.css("left", 0);
-			this.cnt_.append(this.front);
-			this.cnt_.append(this.back);
-			
-			
-			this.wrapper_.append(this.cnt_);
-
-			this.$el.prepend(this.wrapper_);
-
-			this.$el.addClass('is_loaded');
-
-
-			this.wrapper_.next('img').hide();
+			this.buildImagesFormDatasource();
 
 
 			//if interactive is set disable loop
@@ -104,8 +79,8 @@ define(['jquery', 'mixins.preloader', 'mixins.sound'], function($, MixinPreloade
 				this.options.duration /= 2;
 
 				// assign click event
-				this.wrapper_.on('click', $.proxy(this.clickComponent, this));
-				this.wrapper_.addClass('interactive');
+				this.wrapperObj.on('click', $.proxy(this.clickComponent, this));
+				this.wrapperObj.addClass('interactive');
 
 				this.initSound();
 			}
@@ -114,6 +89,45 @@ define(['jquery', 'mixins.preloader', 'mixins.sound'], function($, MixinPreloade
 			if (this.options.loop) {
 				this.toggleImage();
 			}
+
+
+		},
+
+
+		buildImagesFormDatasource: function(){
+
+			this.cntObj = $("<div/>").addClass('component min-h');
+
+
+			// Build images from datasource
+
+			this.pt_Img = this.options.datapt;
+			this.Img_ar = this.options.datasrc.split(",");
+
+
+			// get the front and back image
+			this.front = $("<img>").attr('src', this.pt_Img + this.Img_ar[0]);
+			// set the FRONT AND BACK elements as absolute
+			this.front.css("position", "relative");
+			this.front.css("top", 0);
+			this.front.css("left", 0);
+			this.cntObj.append(this.front);
+
+
+
+			this.back = $("<img>").attr('src', this.pt_Img + this.Img_ar[1]);
+			this.back.css("position", "absolute");
+			this.back.css("top", 0);
+			this.back.css("left", 0);
+			this.cntObj.append(this.back);
+
+
+			// create an outer wrapper
+			this.wrapperObj = $("<div/>").addClass('force-h');
+			this.wrapperObj.css("position","relative");
+			this.wrapperObj.append(this.cntObj);
+
+			this.$el.prepend(this.wrapperObj);
 
 
 		},
@@ -153,7 +167,7 @@ define(['jquery', 'mixins.preloader', 'mixins.sound'], function($, MixinPreloade
 			TweenMax.killTweensOf(this.front);
 			TweenMax.killTweensOf(this.back);
 
-			console.error('showBack');
+			console.debug('showBack');
 
 			self.transitioning = true;
 
@@ -182,12 +196,10 @@ define(['jquery', 'mixins.preloader', 'mixins.sound'], function($, MixinPreloade
 
 			var self = this;
 
-
-
 			TweenMax.killTweensOf(this.front);
 			TweenMax.killTweensOf(this.back);
 
-			console.error('showFront');
+			console.debug('showFront');
 
 			this.transitioning = true;
              
@@ -226,7 +238,11 @@ define(['jquery', 'mixins.preloader', 'mixins.sound'], function($, MixinPreloade
 
 
 		dispose: function() {
-
+			
+			if(!this.initialized){
+				console.warn(this.elementId + ' Component not initialized no dispose');
+				return;
+			}
 
 			console.info(this.elementId + ' ComponentFade dispose');
 
@@ -234,13 +250,13 @@ define(['jquery', 'mixins.preloader', 'mixins.sound'], function($, MixinPreloade
 			
 			this.stopLooping();
 
-			if (typeof(this.wrapper_)==='object' && this.wrapper_.length > 0 ) {
-				this.wrapper_.off();
-				this.wrapper_.next('img').show();
-				this.wrapper_.empty();
-				this.wrapper_.remove();
-				delete this.wrapper_;
-				if(this.wrapper_){
+			if (typeof(this.wrapperObj)==='object' && this.wrapperObj.length > 0 ) {
+				this.wrapperObj.off();
+				this.wrapperObj.next('img').show();
+				this.wrapperObj.empty();
+				this.wrapperObj.remove();
+				delete this.wrapperObj;
+				if(this.wrapperObj){
 					console.error('still has wrapper!');
 				}
 			}

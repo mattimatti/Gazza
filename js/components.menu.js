@@ -1,5 +1,6 @@
 define(['jquery','mixins.preloader','mixins.sound'], function($,MixinPreloader,MixinSound){
 
+	var console = window.muteConsole;
 
 	var Component = function(element, options) {
 		console.debug('constructor', arguments);

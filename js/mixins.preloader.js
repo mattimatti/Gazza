@@ -1,5 +1,7 @@
 define(['jquery'], function($){
 
+	var console = window.muteConsole;
+
 	var MixinPreloader = {
 
 

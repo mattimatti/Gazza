@@ -3,6 +3,7 @@
 // Polyfill the console object
 
 window.console = window.console || {};
+window.muteConsole = {};
 
 var method;
 var noop = function() {};
@@ -15,6 +16,18 @@ while (mlength--) {
 	// Only stub undefined methods.
 	if (!window.console[method]) {
 		window.console[method] = noop;
+	}
+}
+
+// fill a mute console
+
+mlength = methods.length;
+while (mlength--) {
+	method = methods[mlength];
+
+	// Only stub undefined methods.
+	if (!window.muteConsole[method]) {
+		window.muteConsole[method] = noop;
 	}
 }
 

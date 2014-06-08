@@ -1,5 +1,7 @@
 define(['jquery', 'mixins.preloader', 'mixins.sound'], function($, MixinPreloader, MixinSound) {
 
+	var console = window.muteConsole;
+
 
 	var Component = function(element, options) {
 		this.$el = $(element);
@@ -39,6 +41,13 @@ define(['jquery', 'mixins.preloader', 'mixins.sound'], function($, MixinPreloade
 		sound: null,
 
 		initialize: function() {
+
+
+			if(this.initialized){
+				console.warn(this.elementId + ' Component already initialized exit');
+				return;
+			}
+			this.initialized = true;
 
 
 			this.plugin = this.$el.find('.component');
@@ -228,8 +237,11 @@ define(['jquery', 'mixins.preloader', 'mixins.sound'], function($, MixinPreloade
 
 
 		dispose: function() {
-
-
+			
+			if(!this.initialized){
+				console.warn(this.elementId + ' Component not initialized no dispose');
+				return;
+			}
 			console.info(this.elementId + ': Carousel dispose');
 			
 			try {
