@@ -58,5 +58,5 @@ require([
 	'app',
 	'tweenmax'
 ], function(App) {
-	App.initialize();
+	App.main();
 });

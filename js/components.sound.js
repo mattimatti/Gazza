@@ -1,13 +1,13 @@
 define(['jquery'], function($) {
 
-	var console = window.muteConsole;
+	var console = window.console;
 
 	var DEFAULT_SOUND_ID = 'click';
 
 
 	// component Easy do nothing it's just for completeness of the api
 
-	var Component = function(options) {
+	var ComponentSound = function(options) {
 
 		if (!options) {
 			options = {};
@@ -23,7 +23,7 @@ define(['jquery'], function($) {
 
 	};
 
-	$.extend(Component.prototype, {
+	$.extend(ComponentSound.prototype, {
 
 
 		initialize: function() {
@@ -39,7 +39,7 @@ define(['jquery'], function($) {
 				soundid = DEFAULT_SOUND_ID;
 			}
 
-			console.debug('registerSoundFullPath', fullPath, soundid);
+			console.debug('ComponentSound:registerSoundFullPath', fullPath, soundid);
 
 			createjs.Sound.registerSound(fullPath, soundid);
 		},
@@ -47,6 +47,8 @@ define(['jquery'], function($) {
 
 		// register a sound just by id. the defalt folder 
 		registerSoundById: function(soundid, customAudioPath) {
+
+			console.debug('ComponentSound:registerSoundById', arguments);
 
 			var path = this.options.audioPath;
 			var fullPath;
@@ -70,6 +72,7 @@ define(['jquery'], function($) {
 			}
 
 			if (!createjs.Sound.initializeDefaultPlugins()) {
+				console.error('ComponentSound:playSound error', soundid);
 				return;
 			}
 
@@ -93,6 +96,6 @@ define(['jquery'], function($) {
 
 	});
 
-	return Component;
+	return ComponentSound;
 
 });

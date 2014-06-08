@@ -145,7 +145,7 @@ define(['jquery', 'mixins.preloader', 'mixins.sound'], function($, MixinPreloade
 				return;
 			}
 
-			this.sound.playSound('click');
+			this.playSound();
 			this.toggleImage();
 		},
 

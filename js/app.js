@@ -6,12 +6,13 @@ define([
 	'components.video',
 	'components.easy',
 	'components.pan',
-	'components.carousel'
+	'components.carousel',
+	'components.menu'
 
-], function($, skrollr, ComponentFade, ComponentReel, ComponentVideo, ComponentEasy, ComponentPan, ComponentCarousel) {
+], function($, skrollr, ComponentFade, ComponentReel, ComponentVideo, ComponentEasy, ComponentPan, ComponentCarousel, ComponentMenu) {
 
 
-	var console = window.console;
+	var console = window.muteConsole;
 
 
 	var instancesPool = [];
@@ -19,6 +20,7 @@ define([
 
 	var Modules = {
 
+		
 		'image-fade': {
 
 			init: function(a, b) {
@@ -120,6 +122,7 @@ define([
 
 		},
 
+		
 		'carousel': {
 
 			init: function(a, b) {
@@ -148,12 +151,20 @@ define([
 	var App = {
 
 
+		objMenu: null,
+
+
+		initMenu: function(){
+			this.objMenu = new ComponentMenu($("#menu"), {});
+		},
+
+
 		hasHash: function() {
 			return window.location.hash !== '';
 		},
 
 		setHash: function(hash) {
-			window.location.hash = hash;
+			window.location.hash = '/' + hash;
 		},
 
 
@@ -190,11 +201,11 @@ define([
 			if (direction === 'down') {
 				switch (name) {
 					case 'dataTopBottom':
-					console.error(itemId + " DESTROY");
+						//console.info(itemId + " DESTROY");
 						this.removeElement(element);
 						break;
 					case 'dataBottomTop':
-						console.error(itemId + " INIT");
+						//console.info(itemId + " INIT");
 						this.initElement(element);
 						this.setHash(itemId);
 						break;
@@ -202,12 +213,12 @@ define([
 			} else {
 				switch (name) {
 					case 'dataTopBottom':
-						console.error(itemId + " INIT");
+						//console.info(itemId + " INIT");
 						this.initElement(element);
 						this.setHash(itemId);
 						break;
 					case 'dataBottomTop':
-						console.error(itemId + " DESTROY");
+						//console.info(itemId + " DESTROY");
 						this.removeElement(element);
 						break;
 				}
@@ -229,59 +240,56 @@ define([
 		},
 
 
-		browserHasHashOnLoad: function(){
+		browserHasHashOnLoad: function() {
 			console.debug("browserHasHashOnLoad");
 
 			var hashValue = window.location.hash.replace(/\//, '').substring(1);
 
 			var element = document.getElementById(hashValue);
 
-			console.error(element,hashValue);
-
 			var offset = this.objScroller.relativeToAbsolute(element, 'top', 'top');
 
 			console.error('move to offset', offset);
-	
-			this.objScroller.animateTo(offset ,{
-				done:$.proxy(this.enableEmitters,this)
+
+			this.objScroller.animateTo(offset, {
+				done: $.proxy(this.enableEmitters, this)
 			});
 
 		},
 
-		enableEmitters: function(){
-			console.error("enableEmitters");
-			this.objScroller.on('keyframe',$.proxy(this.onKeyFrame, this));
+		enableEmitters: function() {
+			console.debug("enableEmitters");
+			this.objScroller.on('keyframe', $.proxy(this.onKeyFrame, this));
 		},
 
-		disableEmitters: function(){
-			console.error("disableEmitters");
+		disableEmitters: function() {
+			console.debug("disableEmitters");
 			this.objScroller.off('keyframe');
 		},
 
-		initialize: function() {
+		main: function() {
+			this.initializeScroller();
+			this.initMenu();
+		},
 
-			console.error("window.scroll", $(document).scrollTop());
+		initializeScroller: function() {
 
 			this.setupEmitters();
 
 			// initilaize the scroller
 			this.objScroller = skrollr.init({
-				forceHeight: false,
+				forceHeight: true,
 				keyframe: $.proxy(this.onKeyFrame, this)
 			});
 
-			
-
 			// if has hash
-			if(this.hasHash()){
-				
+			if (this.hasHash()) {
 				this.disableEmitters();
 				this.browserHasHashOnLoad();
 			}
 
 		}
 	};
-
 
 
 

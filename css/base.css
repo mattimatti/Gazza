@@ -180,6 +180,7 @@ p {
 	
 	padding: 0 15% 0 15%;
 	margin: 0;
+	min-height:56%;
 }
 
 .box.neverpad{
@@ -734,6 +735,8 @@ border:none;
 z-index:1000000000;
 
 }
+
+
 
 #menuArea{
 	z-index:1000000000;

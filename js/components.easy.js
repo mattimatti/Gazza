@@ -31,15 +31,16 @@ define(['jquery','mixins.preloader','mixins.sound'], function($,MixinPreloader,M
 			this.initSound();
 
 			if(this.options.sound){
-				this.$el.on("click", $.proxy(this.playSound,this));
+				this.$el.on("click", $.proxy(this.elementClick,this));
 				this.$el.addClass("interactive");
 			}
 		},
 
 
-		playSound: function(){
-			console.debug(this.elementId + ' ComponentEasy playSound');
-			this.sound.playSound('click');
+		elementClick: function(){
+			console.debug(this.elementId + ' ComponentEasy elementClick');
+			
+			this.playSound();
 		},
 
 

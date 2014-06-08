@@ -21120,8 +21120,6 @@ define('components.pan',['jquery','mixins.preloader','mixins.sound','panzoom'], 
 
 			console.debug('Instance plugin  panzoom with options', this.options);
 
-			this.plugin.panzoom({});
-
 		},
 
 
@@ -21140,6 +21138,7 @@ define('components.pan',['jquery','mixins.preloader','mixins.sound','panzoom'], 
 		toggleZoom: function() {
 			console.debug('toggleZoom this.zoomIn' , this.zoomIn);
 			if(!this.zoomIn){
+				this.plugin.panzoom({});
 				this.swapSource(this.hqImage);
 				this.plugin.panzoom('zoom',this.options.maxZoom,{ animate: true });
 				this.zoomIn = true;
@@ -21147,6 +21146,7 @@ define('components.pan',['jquery','mixins.preloader','mixins.sound','panzoom'], 
 				this.plugin.panzoom('reset');
 				this.zoomIn = false;
 				this.swapSource(this.originalimage);
+				this.plugin.panzoom("destroy");
 			}
 			
 		},
@@ -21184,7 +21184,7 @@ define('components.pan',['jquery','mixins.preloader','mixins.sound','panzoom'], 
 });
 define('components.carousel',['jquery', 'mixins.preloader', 'mixins.sound'], function($, MixinPreloader, MixinSound) {
 
-	var console = window.console;
+	var console = window.muteConsole;
 
 
 	var Component = function(element, options) {
@@ -21460,6 +21460,63 @@ define('components.carousel',['jquery', 'mixins.preloader', 'mixins.sound'], fun
 	return Component;
 
 });
+define('components.menu',['jquery','mixins.preloader','mixins.sound'], function($,MixinPreloader,MixinSound){
+
+	var console = window.console;
+
+	var Component = function(element, options) {
+		console.debug('constructor', arguments);
+		this.options = options;
+		this.$el = element;
+	};
+
+	// MIXIN
+
+	$.extend(Component.prototype, MixinPreloader);
+	$.extend(Component.prototype, MixinSound);
+
+	//extend prototype	
+
+	$.extend(Component.prototype, {
+
+
+
+		initialize: function() {
+			console.debug('Menu initialize', arguments);
+
+			this.populate();
+
+		},
+
+
+		populate: function(){
+			console.debug('Menu populate');
+
+			// leggo tutti gli elementi con class anno
+
+				
+		},
+
+		createItem: function(data){
+			console.debug('Menu populate');
+
+
+				
+		},
+
+
+		dispose: function() {
+			console.debug('Menu dispose');
+		}
+
+
+
+	});
+
+
+	return Component;
+
+});
 define('app',[
 	'jquery',
 	'skrollr',
@@ -21468,12 +21525,13 @@ define('app',[
 	'components.video',
 	'components.easy',
 	'components.pan',
-	'components.carousel'
+	'components.carousel',
+	'components.menu'
 
-], function($, skrollr, ComponentFade, ComponentReel, ComponentVideo, ComponentEasy, ComponentPan, ComponentCarousel) {
+], function($, skrollr, ComponentFade, ComponentReel, ComponentVideo, ComponentEasy, ComponentPan, ComponentCarousel, ComponentMenu) {
 
 
-	var console = window.console;
+	var console = window.muteConsole;
 
 
 	var instancesPool = [];
@@ -21481,6 +21539,7 @@ define('app',[
 
 	var Modules = {
 
+		
 		'image-fade': {
 
 			init: function(a, b) {
@@ -21582,6 +21641,7 @@ define('app',[
 
 		},
 
+		
 		'carousel': {
 
 			init: function(a, b) {
@@ -21610,12 +21670,20 @@ define('app',[
 	var App = {
 
 
+		objMenu: null,
+
+
+		initMenu: function(){
+			this.objMenu = new ComponentMenu($("#menu"), {});
+		},
+
+
 		hasHash: function() {
 			return window.location.hash !== '';
 		},
 
 		setHash: function(hash) {
-			window.location.hash = hash;
+			window.location.hash = '/' + hash;
 		},
 
 
@@ -21652,11 +21720,11 @@ define('app',[
 			if (direction === 'down') {
 				switch (name) {
 					case 'dataTopBottom':
-					console.error(itemId + " DESTROY");
+						//console.info(itemId + " DESTROY");
 						this.removeElement(element);
 						break;
 					case 'dataBottomTop':
-						console.error(itemId + " INIT");
+						//console.info(itemId + " INIT");
 						this.initElement(element);
 						this.setHash(itemId);
 						break;
@@ -21664,12 +21732,12 @@ define('app',[
 			} else {
 				switch (name) {
 					case 'dataTopBottom':
-						console.error(itemId + " INIT");
+						//console.info(itemId + " INIT");
 						this.initElement(element);
 						this.setHash(itemId);
 						break;
 					case 'dataBottomTop':
-						console.error(itemId + " DESTROY");
+						//console.info(itemId + " DESTROY");
 						this.removeElement(element);
 						break;
 				}
@@ -21691,59 +21759,56 @@ define('app',[
 		},
 
 
-		browserHasHashOnLoad: function(){
+		browserHasHashOnLoad: function() {
 			console.debug("browserHasHashOnLoad");
 
 			var hashValue = window.location.hash.replace(/\//, '').substring(1);
 
 			var element = document.getElementById(hashValue);
 
-			console.error(element,hashValue);
-
 			var offset = this.objScroller.relativeToAbsolute(element, 'top', 'top');
 
 			console.error('move to offset', offset);
-	
-			this.objScroller.animateTo(offset ,{
-				done:$.proxy(this.enableEmitters,this)
+
+			this.objScroller.animateTo(offset, {
+				done: $.proxy(this.enableEmitters, this)
 			});
 
 		},
 
-		enableEmitters: function(){
-			console.error("enableEmitters");
-			this.objScroller.on('keyframe',$.proxy(this.onKeyFrame, this));
+		enableEmitters: function() {
+			console.debug("enableEmitters");
+			this.objScroller.on('keyframe', $.proxy(this.onKeyFrame, this));
 		},
 
-		disableEmitters: function(){
-			console.error("disableEmitters");
+		disableEmitters: function() {
+			console.debug("disableEmitters");
 			this.objScroller.off('keyframe');
 		},
 
-		initialize: function() {
+		main: function() {
+			this.initializeScroller();
+			this.initMenu();
+		},
 
-			console.error("window.scroll", $(document).scrollTop());
+		initializeScroller: function() {
 
 			this.setupEmitters();
 
 			// initilaize the scroller
 			this.objScroller = skrollr.init({
-				forceHeight: false,
+				forceHeight: true,
 				keyframe: $.proxy(this.onKeyFrame, this)
 			});
 
-			
-
 			// if has hash
-			if(this.hasHash()){
-				
+			if (this.hasHash()) {
 				this.disableEmitters();
 				this.browserHasHashOnLoad();
 			}
 
 		}
 	};
-
 
 
 
@@ -28525,7 +28590,7 @@ require([
 	'app',
 	'tweenmax'
 ], function(App) {
-	App.initialize();
+	App.main();
 });
 define("main", function(){});
 

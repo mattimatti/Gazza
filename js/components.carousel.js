@@ -1,6 +1,6 @@
 define(['jquery', 'mixins.preloader', 'mixins.sound'], function($, MixinPreloader, MixinSound) {
 
-	var console = window.console;
+	var console = window.muteConsole;
 
 
 	var Component = function(element, options) {
@@ -180,7 +180,7 @@ define(['jquery', 'mixins.preloader', 'mixins.sound'], function($, MixinPreloade
 			console.debug(this.elementId + ':clickComponent', this.frontVisible);
 			this.setupNextPair();
 			this.showNext();
-			this.sound.playSound('click');
+			this.playSound();
 		},
 
 

@@ -11,7 +11,7 @@ define(['jquery','mixins.preloader','mixins.sound'], function($,MixinPreloader,M
 	// MIXIN
 
 	$.extend(Component.prototype, MixinPreloader);
-	$.extend(Component.prototype, MixinPreloader);
+	$.extend(Component.prototype, MixinSound);
 
 	//extend prototype	
 
@@ -20,12 +20,31 @@ define(['jquery','mixins.preloader','mixins.sound'], function($,MixinPreloader,M
 
 
 		initialize: function() {
-			console.debug('initialize', arguments);
+			console.debug('Menu initialize', arguments);
+
+			this.populate();
+
+		},
+
+
+		populate: function(){
+			console.debug('Menu populate');
+
+			// leggo tutti gli elementi con class anno
+
+				
+		},
+
+		createItem: function(data){
+			console.debug('Menu populate');
+
+
+				
 		},
 
 
 		dispose: function() {
-			console.debug('dispose');
+			console.debug('Menu dispose');
 		}
 
 

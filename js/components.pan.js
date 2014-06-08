@@ -84,14 +84,12 @@ define(['jquery','mixins.preloader','mixins.sound','panzoom'], function($,MixinP
 
 			console.debug('Instance plugin  panzoom with options', this.options);
 
-			this.plugin.panzoom({});
-
 		},
 
 
 		clickComponent : function(){
 			console.debug('clickComponent');
-			this.sound.playSound('click');
+			this.playSound();
 			this.toggleZoom();
 		},
 
@@ -104,6 +102,7 @@ define(['jquery','mixins.preloader','mixins.sound','panzoom'], function($,MixinP
 		toggleZoom: function() {
 			console.debug('toggleZoom this.zoomIn' , this.zoomIn);
 			if(!this.zoomIn){
+				this.plugin.panzoom({});
 				this.swapSource(this.hqImage);
 				this.plugin.panzoom('zoom',this.options.maxZoom,{ animate: true });
 				this.zoomIn = true;
@@ -111,6 +110,7 @@ define(['jquery','mixins.preloader','mixins.sound','panzoom'], function($,MixinP
 				this.plugin.panzoom('reset');
 				this.zoomIn = false;
 				this.swapSource(this.originalimage);
+				this.plugin.panzoom("destroy");
 			}
 			
 		},
