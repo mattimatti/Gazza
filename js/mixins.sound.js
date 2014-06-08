@@ -1,6 +1,6 @@
-define(['jquery', 'components.sound'], function($, ComponentSound) {
+define(['jquery', 'mediaelement'], function($) {
 
-	var console = window.muteConsole;
+	var console = window.console;
 
 	var MixinSound = {
 
@@ -8,40 +8,47 @@ define(['jquery', 'components.sound'], function($, ComponentSound) {
 		// video has no sound
 		initSound: function() {
 			console.debug('MixinSound:initSound');
-			this.sound = new ComponentSound();
 
 			if (this.options.sound) {
 
-				if (!this.elementId) {
-					alert("errore!");
-				}
+				var source = this.options.sound;
+				source = source.substr(0, source.lastIndexOf('.'));
 
-				this.sound.registerSoundFullPath(this.options.sound,this.elementId);
+				var $embed = $("<audio id='audio_" + this.elementId + "' style='display:none;' class='playSound' ><source src='" + source + ".mp3' /><source src='" + source + ".ogv' /><object width='320' height='240' type='application/x-shockwave-flash' data='./images/flashmediaelement.swf'><param name='movie' value='flashmediaelement.swf' /><param name='flashvars' value='controls=false&file='" + source + ".mp3' /><img src='http://placehold.it/350x150' width='320' height='240' title='No video playback capabilities' /></object></audio>");
+				this.$el.append($embed);
+
+				this.audioPlayerObj = window.MediaElementPlayer("#audio_" + this.elementId);
+
 			}
+
+
 		},
+
 
 
 		// Play the component sound
 		playSound: function() {
 			console.debug('MixinSound:playSound');
-			if (this.sound && this.elementId) {
-				this.sound.playSound(this.elementId);
+			if (this.audioPlayerObj) {
+				this.audioPlayerObj.setSrc(this.options.sound);
+				this.audioPlayerObj.play();
 			}
-		},
 
+		},
 
 
 		// remove sound
 		disposeSound: function() {
-			console.debug('MixinSound:disposeSound');
-			if (this.sound) {
-				//this.sound.removeAllSounds();
-				//delete this.sound;
-			}
+
+			this.$el.find('.playSound').remove();
+
+			this.audioPlayerObj = null;
+			delete this.audioPlayerObj;
+
 		}
 
-	};
 
+	};
 
 	return MixinSound;
 

@@ -39,9 +39,16 @@ define(['jquery'], function($) {
 				soundid = DEFAULT_SOUND_ID;
 			}
 
-			console.debug('ComponentSound:registerSoundFullPath', fullPath, soundid);
+			console.info('ComponentSound:registerSoundFullPath', fullPath, soundid);
 
 			createjs.Sound.registerSound(fullPath, soundid);
+			createjs.Sound.addEventListener("fileload", $.proxy(this.handleFileLoad, this));
+		},
+
+
+		handleFileLoad: function(event){
+			console.info("ComponentSound:Preloaded:", event.id, event.src);
+
 		},
 
 
@@ -72,7 +79,7 @@ define(['jquery'], function($) {
 			}
 
 			if (!createjs.Sound.initializeDefaultPlugins()) {
-				console.error('ComponentSound:playSound error', soundid);
+				console.error('ComponentSound:playSound error');
 				return;
 			}
 

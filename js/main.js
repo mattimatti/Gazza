@@ -46,7 +46,8 @@ require.config({
 		tweenmax: '../vendor/TweenMax',
 		reel: '../vendor/jquery.reel',
 		panzoom: '../vendor/jquery.panzoom',
-		videojs: '../vendor/video-js-4.1.0/video.dev'
+		videojs: '../vendor/video-js-4.1.0/video.dev',
+		mediaelement: '../vendor/mediaelement/mediaelement-and-player'
 	}
 
 });
