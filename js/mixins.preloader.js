@@ -88,14 +88,12 @@ define(['jquery'], function($){
 		loadedElement: function(item) {
 			console.warn("loadedElement");
 
-
 			// if has data source apply as source and remove attribute from element
 
 			if(item.attr("data-src")){
 				item.attr("src", item.attr("data-src"));
 				item.attr("data-src", null);
 			}
-
 
 			this.preloadCount --;
 
@@ -114,13 +112,13 @@ define(['jquery'], function($){
 
 
 		preloadAbort: function() {
-			//console.warn("preloadAbort BEFORE", this.preloadAjaxPool.length);
+			console.warn("preloadAbort BEFORE", this.preloadAjaxPool.length);
 			var self = this;
 			$.each(this.preloadAjaxPool, function(i, xhr) {
 				xhr.abort();
 				self.preloadRemoveXhr(xhr);
 			});
-			//console.error("preloadAbort AFTER", this.preloadAjaxPool.length);
+			console.error("preloadAbort AFTER", this.preloadAjaxPool.length);
 		},
 
 

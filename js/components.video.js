@@ -1,6 +1,6 @@
 define(['jquery', 'mixins.preloader', 'mixins.sound', 'videojs'], function($, MixinPreloader, MixinSound) {
 
-	var console = window.muteConsole;
+	var console = window.console;
 
 	var Component = function(element, options) {
 
@@ -133,8 +133,7 @@ define(['jquery', 'mixins.preloader', 'mixins.sound', 'videojs'], function($, Mi
 						this.plugin.pause();
 						this.plugin.currentTime(0);
 						this.plugin.controlBar.hide();
-						this.plugin.controls(false);
-						this.$el.off();
+						
 
 					}
 
@@ -144,6 +143,8 @@ define(['jquery', 'mixins.preloader', 'mixins.sound', 'videojs'], function($, Mi
 				}
 
 			}
+
+			this.$el.off();
 
 			// rimuoviamo
 			delete this.$el;

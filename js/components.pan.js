@@ -1,6 +1,6 @@
 define(['jquery','mixins.preloader','mixins.sound','panzoom'], function($,MixinPreloader,MixinSound){
 
-	var console = window.muteConsole;
+	var console = window.console;
 
 	var Component = function(element, options) {
 

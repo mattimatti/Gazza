@@ -1,4 +1,5 @@
 define([
+	'jquery',
 	'skrollr',
 	'components.fade',
 	'components.360',
@@ -7,7 +8,7 @@ define([
 	'components.pan',
 	'components.carousel'
 
-], function(skrollr, ComponentFade, ComponentReel, ComponentVideo, ComponentEasy, ComponentPan, ComponentCarousel) {
+], function($, skrollr, ComponentFade, ComponentReel, ComponentVideo, ComponentEasy, ComponentPan, ComponentCarousel) {
 
 
 	var console = window.console;
@@ -21,9 +22,11 @@ define([
 		'image-fade': {
 
 			init: function(a, b) {
-				var obj = new ComponentFade(a, b);
-				obj.preload();
-				instancesPool[a.id] = obj;
+				if (!instancesPool[a.id]) {
+					var obj = new ComponentFade(a, b);
+					obj.preload();
+					instancesPool[a.id] = obj;
+				}
 			},
 
 			remove: function(a, b) {
@@ -40,9 +43,11 @@ define([
 		'image-360': {
 
 			init: function(a, b) {
-				var obj = new ComponentReel(a, b);
-				obj.preload();
-				instancesPool[a.id] = obj;
+				if (!instancesPool[a.id]) {
+					var obj = new ComponentReel(a, b);
+					obj.preload();
+					instancesPool[a.id] = obj;
+				}
 			},
 			remove: function(a, b) {
 				if (instancesPool[a.id]) {
@@ -57,9 +62,11 @@ define([
 		'video-clip': {
 
 			init: function(a, b) {
-				var obj = new ComponentVideo(a, b);
-				obj.preload();
-				instancesPool[a.id] = obj;
+				if (!instancesPool[a.id]) {
+					var obj = new ComponentVideo(a, b);
+					obj.preload();
+					instancesPool[a.id] = obj;
+				}
 			},
 			remove: function(a, b) {
 				if (instancesPool[a.id]) {
@@ -74,9 +81,11 @@ define([
 		'image-easy': {
 
 			init: function(a, b) {
-				var obj = new ComponentEasy(a, b);
-				obj.preload();
-				instancesPool[a.id] = obj;
+				if (!instancesPool[a.id]) {
+					var obj = new ComponentEasy(a, b);
+					obj.preload();
+					instancesPool[a.id] = obj;
+				}
 
 			},
 			remove: function(a, b) {
@@ -93,9 +102,11 @@ define([
 		'image-pan': {
 
 			init: function(a, b) {
-				var obj = new ComponentPan(a, b);
-				obj.preload();
-				instancesPool[a.id] = obj;
+				if (!instancesPool[a.id]) {
+					var obj = new ComponentPan(a, b);
+					obj.preload();
+					instancesPool[a.id] = obj;
+				}
 
 			},
 			remove: function(a, b) {
@@ -134,69 +145,144 @@ define([
 
 
 
-	// append behaviours
-	$(".box").attr("data-emit-events", "data-emit-events");
-	$(".box").attr("data-top-bottom", "").attr("data-bottom-top", "");
-
-
 	var App = {
 
 
+		hasHash: function() {
+			return window.location.hash !== '';
+		},
+
+		setHash: function(hash) {
+			window.location.hash = hash;
+		},
+
+
+		initElement: function(element) {
+
+			var elm = Modules[element.getAttribute('obj-type')];
+			var cfg = (element.getAttribute('obj-config'));
+			cfg = $.parseJSON(cfg);
+
+			if (elm) {
+				elm.init(element, cfg);
+			}
+
+		},
+
+		removeElement: function(element) {
+			var elm = Modules[element.getAttribute('obj-type')];
+			var cfg = (element.getAttribute('obj-config'));
+			cfg = $.parseJSON(cfg);
+
+			if (elm) {
+				elm.remove(element, cfg);
+			}
+
+		},
+
+		onKeyFrame: function(element, name, direction) {
+
+			var item = $(element);
+			var itemId = item.attr("id");
+
+			//console.error(itemId, name, direction);
+
+			if (direction === 'down') {
+				switch (name) {
+					case 'dataTopBottom':
+					console.error(itemId + " DESTROY");
+						this.removeElement(element);
+						break;
+					case 'dataBottomTop':
+						console.error(itemId + " INIT");
+						this.initElement(element);
+						this.setHash(itemId);
+						break;
+				}
+			} else {
+				switch (name) {
+					case 'dataTopBottom':
+						console.error(itemId + " INIT");
+						this.initElement(element);
+						this.setHash(itemId);
+						break;
+					case 'dataBottomTop':
+						console.error(itemId + " DESTROY");
+						this.removeElement(element);
+						break;
+				}
+			}
+		},
+
+
+
+		disposeEmitters: function() {
+			console.debug("disposeEmitters");
+			$(".box").attr("data-emit-events", null);
+		},
+
+
+		setupEmitters: function() {
+			console.debug("setBoxYearEvents");
+			$(".box").attr("data-top-bottom", "").attr("data-bottom-top", "");
+			$(".box").attr("data-emit-events", "data-emit-events");
+		},
+
+
+		browserHasHashOnLoad: function(){
+			console.debug("browserHasHashOnLoad");
+
+			var hashValue = window.location.hash.replace(/\//, '').substring(1);
+
+			var element = document.getElementById(hashValue);
+
+			console.error(element,hashValue);
+
+			var offset = this.objScroller.relativeToAbsolute(element, 'top', 'top');
+
+			console.error('move to offset', offset);
+	
+			this.objScroller.animateTo(offset ,{
+				done:$.proxy(this.enableEmitters,this)
+			});
+
+		},
+
+		enableEmitters: function(){
+			console.error("enableEmitters");
+			this.objScroller.on('keyframe',$.proxy(this.onKeyFrame, this));
+		},
+
+		disableEmitters: function(){
+			console.error("disableEmitters");
+			this.objScroller.off('keyframe');
+		},
+
 		initialize: function() {
 
-			skrollr.init({
-				forceHeight: true,
-				keyframe: function(element, name, direction) {
-					
-					console.log(name, direction);
+			console.error("window.scroll", $(document).scrollTop());
 
-					var elm = Modules[element.getAttribute('obj-type')];
-					var cfg = (element.getAttribute('obj-config'));
+			this.setupEmitters();
 
-					// parse to json object
-					cfg = $.parseJSON(cfg);
-
-					//element.className='box skrollable '+direction;
-
-					if (direction === 'down') {
-						switch (name) {
-
-							case 'dataTopBottom':
-
-								elm.remove(element, cfg);
-								break;
-
-
-							case 'dataBottomTop':
-
-								elm.init(element, cfg);
-								break;
-						}
-					} else {
-
-						switch (name) {
-
-							case 'dataTopBottom':
-
-								elm.init(element, cfg);
-
-								break;
-
-
-							case 'dataBottomTop':
-
-								elm.remove(element, cfg);
-								break;
-
-						}
-
-					}
-
-				}
-
+			// initilaize the scroller
+			this.objScroller = skrollr.init({
+				forceHeight: false,
+				keyframe: $.proxy(this.onKeyFrame, this)
 			});
+
+			
+
+			// if has hash
+			if(this.hasHash()){
+				
+				this.disableEmitters();
+				this.browserHasHashOnLoad();
+			}
+
 		}
 	};
+
+
 
 
 	return App;
