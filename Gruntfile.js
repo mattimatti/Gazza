@@ -30,18 +30,23 @@ module.exports = function(grunt) {
             options: {
                 node: true,
                 curly: true,
-                eqeqeq: false,
+                eqeqeq: true,
                 immed: true,
                 latedef: true,
                 newcap: true,
                 noarg: true,
                 sub: true,
-                undef: false,
+                undef: true,
                 unused: false,
                 eqnull: true,
                 browser: true,
                 globals: {
-                    jQuery: true
+                    jQuery: true,
+                    define: true,
+                    createjs: true,
+                    $: true,
+                    TweenMax: true,
+                    videojs: true
                 },
                 boss: true
             },
@@ -65,30 +70,17 @@ module.exports = function(grunt) {
                 tasks: ['jshint:lib_test', 'qunit']
             }
         },
-        // !! This is the name of the task ('requirejs')
         requirejs: {
             dist: {
-                // Options: https://github.com/jrburke/r.js/blob/master/build/example.build.js
                 options: {
                     name: 'main',
                     out: 'dist/require.js',
                     baseUrl: './js',
                     optimize: 'none',
                     mainConfigFile: 'js/main.js',
-                    /*paths: {
-                        'templates': '../../.tmp/scripts/templates',
-                        'jquery': '../../<%= yeoman.app %>/bower_components/jquery/dist/jquery',
-                        'underscore': '../../<%= yeoman.app %>/bower_components/underscore/underscore',
-                        'backbone': '../../<%= yeoman.app %>/bower_components/backbone/backbone'
-                    },*/
-                    // https://github.com/yeoman/grunt-usemin/issues/30
-                    //generateSourceMaps: true,
-                    // required to support SourceMaps
-                    // http://requirejs.org/docs/errors.html#sourcemapcomments
                     preserveLicenseComments: false,
                     useStrict: true,
                     wrap: true
-                    //uglify2: {} // https://github.com/mishoo/UglifyJS2
                 }
             }
         },

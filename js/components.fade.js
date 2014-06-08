@@ -15,7 +15,7 @@ define(['jquery', 'mixins.preloader', 'mixins.sound'], function($, MixinPreloade
 			delay: 0,
 			duration: 2,
 			sound: null,
-			datasrc:""
+			datasrc: ""
 		};
 
 		// merge default options with
@@ -36,7 +36,6 @@ define(['jquery', 'mixins.preloader', 'mixins.sound'], function($, MixinPreloade
 
 		frontVisible: false,
 
-		initialized: false,
 
 		initialize: function() {
 
@@ -49,14 +48,19 @@ define(['jquery', 'mixins.preloader', 'mixins.sound'], function($, MixinPreloade
 			}
 
 			if (this.initialized) {
-				console.warn(this.elementId + ' Component already initialized exit');
+				console.error(this.elementId + ' Component already initialized exit');
 				return;
 			}
+
 			this.initialized = true;
 
 			console.info(this.elementId + ' ComponentFade initialize');
 
 			this.initSound();
+
+
+			// ensure we have no wrapper 
+			this.disposeWrapper(this.$el.find(".force-h"));
 
 
 			// hide the forst image
@@ -74,7 +78,7 @@ define(['jquery', 'mixins.preloader', 'mixins.sound'], function($, MixinPreloade
 
 			// if no loop enable click
 			if (this.options.interactive) {
-				
+
 				// slow down the animation duration
 				this.options.duration /= 2;
 
@@ -94,7 +98,7 @@ define(['jquery', 'mixins.preloader', 'mixins.sound'], function($, MixinPreloade
 		},
 
 
-		buildImagesFormDatasource: function(){
+		buildImagesFormDatasource: function() {
 
 			this.cntObj = $("<div/>").addClass('component min-h');
 
@@ -124,7 +128,7 @@ define(['jquery', 'mixins.preloader', 'mixins.sound'], function($, MixinPreloade
 
 			// create an outer wrapper
 			this.wrapperObj = $("<div/>").addClass('force-h');
-			this.wrapperObj.css("position","relative");
+			this.wrapperObj.css("position", "relative");
 			this.wrapperObj.append(this.cntObj);
 
 			this.$el.prepend(this.wrapperObj);
@@ -171,10 +175,10 @@ define(['jquery', 'mixins.preloader', 'mixins.sound'], function($, MixinPreloade
 
 			self.transitioning = true;
 
-            
-			this.back.css('position','relative');
-			this.front.css('position','absolute');
-			
+
+			this.back.css('position', 'relative');
+			this.front.css('position', 'absolute');
+
 			TweenMax.to(this.front, this.options.duration, {
 				alpha: 0
 			});
@@ -202,25 +206,25 @@ define(['jquery', 'mixins.preloader', 'mixins.sound'], function($, MixinPreloade
 			console.debug('showFront');
 
 			this.transitioning = true;
-             
-			this.front.css('position','relative');
-			this.back.css('position','absolute');
-		
-			
+
+			this.front.css('position', 'relative');
+			this.back.css('position', 'absolute');
+
+
 			TweenMax.to(this.front, this.options.duration, {
 				alpha: 1
 			});
-			
-			
+
+
 			TweenMax.to(this.back, this.options.duration, {
 				delay: this.options.delay,
 				alpha: 0,
 				onComplete: function() {
 					self.frontVisible = true;
 					self.transitioning = false;
-					
-			 
-					
+
+
+
 					if (self.options.loop) {
 						self.toggleImage();
 					}
@@ -237,9 +241,24 @@ define(['jquery', 'mixins.preloader', 'mixins.sound'], function($, MixinPreloade
 		},
 
 
+		disposeWrapper: function(objWrapper) {
+			if (objWrapper) {
+				console.debug(this.elementId + ' ComponentFade disposeWrapper!');
+				objWrapper.off();
+				objWrapper.empty();
+				objWrapper.remove();
+				if (objWrapper) {
+					console.error(this.elementId + ' ComponentFade still has wrapper!');
+				}
+			}
+
+		},
+
+
+
 		dispose: function() {
-			
-			if(!this.initialized){
+
+			if (!this.initialized) {
 				console.warn(this.elementId + ' Component not initialized no dispose');
 				return;
 			}
@@ -247,23 +266,18 @@ define(['jquery', 'mixins.preloader', 'mixins.sound'], function($, MixinPreloade
 			console.info(this.elementId + ' ComponentFade dispose');
 
 			this.disposeSound();
-			
+
 			this.stopLooping();
 
-			if (typeof(this.wrapperObj)==='object' && this.wrapperObj.length > 0 ) {
-				this.wrapperObj.off();
-				this.wrapperObj.next('img').show();
-				this.wrapperObj.empty();
-				this.wrapperObj.remove();
-				delete this.wrapperObj;
-				if(this.wrapperObj){
-					console.error('still has wrapper!');
-				}
+			if (this.wrapperObj.length > 0) {
+				this.disposeWrapper(this.wrapperObj);
 			}
+
+			// show the original image
+			this.$el.find('img').first().show();
 
 			delete this.$el;
 
-			console.debug(this);
 
 		}
 

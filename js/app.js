@@ -10,6 +10,9 @@ define([
 ], function(skrollr, ComponentFade, ComponentReel, ComponentVideo, ComponentEasy, ComponentPan, ComponentCarousel) {
 
 
+	var console = window.console;
+
+
 	var instancesPool = [];
 
 
@@ -144,7 +147,8 @@ define([
 			skrollr.init({
 				forceHeight: true,
 				keyframe: function(element, name, direction) {
-					//console.log(name, direction);
+					
+					console.log(name, direction);
 
 					var elm = Modules[element.getAttribute('obj-type')];
 					var cfg = (element.getAttribute('obj-config'));

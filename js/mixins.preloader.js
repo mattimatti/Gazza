@@ -127,14 +127,14 @@ define(['jquery'], function($){
 		preloadAddXhr: function(xhr, item) {
 			//console.debug('preloadAddXhr', xhr);
 			this.preloadAjaxPool = $.grep(this.preloadAjaxPool, function(value) {
-				return value != xhr;
+				return value !== xhr;
 			});
 		},
 
 		preloadRemoveXhr: function(xhr) {
 			//console.debug('preloadRemoveXhr', xhr);
 			this.preloadAjaxPool = $.grep(this.preloadAjaxPool, function(value) {
-				return value != xhr;
+				return value !== xhr;
 			});
 		}
 
