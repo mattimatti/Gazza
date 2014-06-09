@@ -28,9 +28,10 @@ define(['jquery','mixins.preloader','mixins.sound'], function($,MixinPreloader,M
 			this.initialized = true;
 			
 			console.info(this.elementId + ' ComponentEasy initialize');
-			this.initSound();
+			
 
 			if(this.options.sound){
+				this.$el.hammer().on("tap",$.proxy(this.clickComponent, this));
 				this.$el.on("click", $.proxy(this.elementClick,this));
 				this.$el.addClass("interactive");
 			}
@@ -39,7 +40,7 @@ define(['jquery','mixins.preloader','mixins.sound'], function($,MixinPreloader,M
 
 		elementClick: function(){
 			console.debug(this.elementId + ' ComponentEasy elementClick');
-			
+			this.initSound();
 			this.playSound();
 		},
 
@@ -51,6 +52,7 @@ define(['jquery','mixins.preloader','mixins.sound'], function($,MixinPreloader,M
 			}
 			this.disposeSound();
 			this.$el.off();
+			this.$el.hammer().off();
 			console.info(this.elementId + ' ComponentEasy dispose');
 			delete this.$el;
 			delete this.options;

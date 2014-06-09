@@ -1,4 +1,4 @@
-define(['jquery', 'mixins.preloader', 'mixins.sound'], function($, MixinPreloader, MixinSound) {
+define(['jquery', 'mixins.preloader', 'mixins.sound', 'hammer'], function($, MixinPreloader, MixinSound) {
 
 	var console = window.muteConsole;
 
@@ -71,9 +71,6 @@ define(['jquery', 'mixins.preloader', 'mixins.sound'], function($, MixinPreloade
 				return;
 			}
 
-
-			this.initSound();
-
 			console.info(this.elementId + ': Carousel initialize');
 
 			var firstElement = $(this.items.get(0));
@@ -101,7 +98,16 @@ define(['jquery', 'mixins.preloader', 'mixins.sound'], function($, MixinPreloade
 			// if no loop enable click
 			if (this.options.interactive) {
 				// assign click event
-				this.$el.on('click', $.proxy(this.clickComponent, this));
+
+
+
+				this.$el.off();
+				this.$el.hammer().off();
+
+				this.$el.on("click",$.proxy(this.clickComponent, this));
+				
+				this.$el.hammer().on("doubletap",$.proxy(this.clickComponent, this));
+
 				this.$el.addClass('interactive');
 			}
 
@@ -180,6 +186,7 @@ define(['jquery', 'mixins.preloader', 'mixins.sound'], function($, MixinPreloade
 			console.debug(this.elementId + ':clickComponent', this.frontVisible);
 			this.setupNextPair();
 			this.showNext();
+			this.initSound();
 			this.playSound();
 		},
 
@@ -248,6 +255,7 @@ define(['jquery', 'mixins.preloader', 'mixins.sound'], function($, MixinPreloade
 
 				this.disposeSound();
 
+				this.$el.hammer().off();
 				this.$el.off();
 
 				this.$el.removeClass('interactive');

@@ -69,8 +69,14 @@ define(['jquery', 'mixins.preloader', 'mixins.sound', 'videojs'], function($, Mi
 			this.plugin = videojs(this.options.id, this.options).ready(function() {
 
 				self.plugin = this;
+				
+		
 
 				self.checkInteract();
+				
+				
+				
+				
 
 			});
 
@@ -93,7 +99,7 @@ define(['jquery', 'mixins.preloader', 'mixins.sound', 'videojs'], function($, Mi
 		toggleVideoPlayback: function() {
 
 			if (!this.plugin) {
-				console.error("clicking a video not inited");
+				console.error(this.elementId + " ComponentVideo clicking a video not inited");
 				return;
 			}
 
@@ -103,7 +109,7 @@ define(['jquery', 'mixins.preloader', 'mixins.sound', 'videojs'], function($, Mi
 				isPaused = this.plugin.paused();
 			} catch (e) {}
 
-			console.debug("toggleVideoPlayback", this.plugin, this.plugin.paused());
+			console.debug(this.elementId + " ComponentVideo toggleVideoPlayback", this.plugin, this.plugin.paused());
 
 			if (!isPaused) {
 				this.plugin.pause();
@@ -116,7 +122,7 @@ define(['jquery', 'mixins.preloader', 'mixins.sound', 'videojs'], function($, Mi
 		dispose: function() {
 
 			if (!this.initialized) {
-				console.warn(this.elementId + ' Component not initialized no dispose');
+				console.warn(this.elementId + ' ComponentVideo not initialized no dispose');
 				return;
 			}
 
@@ -134,11 +140,10 @@ define(['jquery', 'mixins.preloader', 'mixins.sound', 'videojs'], function($, Mi
 						this.plugin.currentTime(0);
 						this.plugin.controlBar.hide();
 						
-
 					}
 
 				} catch (e) {
-					console.error('errors disposing video component');
+					console.error('ComponentVideo errors disposing video component');
 					console.error(e);
 				}
 

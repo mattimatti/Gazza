@@ -24,6 +24,7 @@ define(['jquery', 'mixins.preloader', 'mixins.sound', 'reel'], function($, Mixin
 	// MIXIN
 
 	$.extend(Component.prototype, MixinPreloader);
+	$.extend(Component.prototype, MixinSound);
 
 	//extend prototype
 
@@ -33,13 +34,13 @@ define(['jquery', 'mixins.preloader', 'mixins.sound', 'reel'], function($, Mixin
 
 
 			if(this.initialized){
-				console.warn(this.elementId + ' Component already initialized exit');
+				console.warn(this.elementId + ' Component360 already initialized exit');
 				return;
 			}
 			this.initialized = true;
 
 
-			console.info(this.elementId + ': 360 initialize');
+			console.info(this.elementId + ': Component360 initialize');
 
 
 			if (this.options.interactive) {
@@ -57,24 +58,52 @@ define(['jquery', 'mixins.preloader', 'mixins.sound', 'reel'], function($, Mixin
 			this.plugin.attr("height", this.plugin.height());
 
 
-			console.debug('instance reel with options', this.options);
+			console.debug(this.elementId + ': Component360 instance reel with options', this.options);
 
 			// setup the plugin
 			this.plugin.reel(this.options);
+
+
+			if(this.options.sound){
+				
+				// assign click event
+				this.plugin.hammer().on('tap', $.proxy(this.clickComponent, this));
+				this.plugin.addClass('interactive');
+			}
+
+
+
+		},
+
+
+		// the user click
+		clickComponent: function() {
+			console.debug('clickComponent');
+			this.initSound();
+			this.playSound();
 		},
 
 
 
 		dispose: function() {
 			if(!this.initialized){
-				console.warn(this.elementId + ' Component not initialized no dispose');
+				console.warn(this.elementId + ': Component360 not initialized no dispose');
 				return;
 			}
-			console.info(this.elementId + ': 360 dispose');
+			console.info(this.elementId + ': Component360 dispose');
+
+
+			this.disposeSound();
 
 			if (this.plugin) {
 				this.plugin.unreel();
+				this.plugin.hammer().off();
+				this.plugin.off();
+				this.plugin = null;
+				delete this.plugin;
 			}
+
+
 
 		}
 

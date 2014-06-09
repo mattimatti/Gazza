@@ -2,7 +2,7 @@ define(['jquery','mixins.preloader','mixins.sound','hammer','panzoom'], function
 
 	var console = window.console;
 
-	var ComponentPan = function(element, options) {
+	var Component = function(element, options) {
 
 		this.$el = $(element);
 
@@ -22,12 +22,12 @@ define(['jquery','mixins.preloader','mixins.sound','hammer','panzoom'], function
 
 	// MIXIN
 	
-	$.extend(ComponentPan.prototype, MixinPreloader);
-	$.extend(ComponentPan.prototype, MixinSound);
+	$.extend(Component.prototype, MixinPreloader);
+	$.extend(Component.prototype, MixinSound);
 
 	//extend prototype	
 
-	$.extend(ComponentPan.prototype, {
+	$.extend(Component.prototype, {
 
 		// initial state
 		zoomIn : false,
@@ -55,9 +55,18 @@ define(['jquery','mixins.preloader','mixins.sound','hammer','panzoom'], function
 			
 			console.info(this.elementId + ' ComponentPan initialize');
 
+			this.initSound();
+
+			// must be wrapped in a container div
+			var container = $("<div class='pancontainer'></div>");
+			container.attr("width", this.plugin.width());
+			//container.attr("height", this.plugin.height());
+			container.css("width", this.plugin.width());
+			//container.css("height", this.plugin.height());
+			this.plugin.wrap(container);
 
 			this.originalimage = this.plugin.attr("src");
-			console.debug("originalimage", this.originalimage);
+			console.debug("original", this.originalimage);
 
 
 			if(this.options.hqSrc){
@@ -66,28 +75,36 @@ define(['jquery','mixins.preloader','mixins.sound','hammer','panzoom'], function
 				this.hqImage = this.originalimage;
 			}
 
+			// setup interaction on double click
+			// having interaction on click interferes with the pan
+
+			// TODO: check on mobile.. 
+
+
+			
+			
 
 			console.debug(this.elementId + ' ComponentPan Instance plugin  panzoom with options', this.options);
 
-			this.enableInteraction();
-
-
-			var opts = {
-				zoomType: "inner",
-				zoomWindowFadeIn: 500,
-				zoomWindowFadeOut: 750,
-				constrainType:"height",
-				zoomLevel:maxZoom
-			};
-
-			this.plugin.data('zoom-image',this.hqImage);
-			this.plugin.elevateZoom(opts);
+			if(this.options.hqSrc){
+				this.enableInteraction();
+			}else{
+				this.plugin.panzoom({});
+			}
+			
 
 		},
 
 
 		enableInteraction: function(){
 			console.debug(this.elementId + ' ComponentPan enableInteraction');
+
+			//this.$el.off();
+
+			//this.$el.on("dblclick", $.proxy(this.clickComponent,this));
+			//this.$el.hammer().on("doubletap", $.proxy(this.clickComponent,this));
+
+			this.plugin.addClass('interactive');
 		},
 
 
@@ -106,9 +123,15 @@ define(['jquery','mixins.preloader','mixins.sound','hammer','panzoom'], function
 		toggleZoom: function() {
 			console.debug(this.elementId + ' ComponentPan toggleZoom this.zoomIn' , this.zoomIn);
 			if(!this.zoomIn){
+				this.plugin.panzoom({});
+				this.swapSource(this.hqImage);
+				this.plugin.panzoom('zoom',this.options.maxZoom,{ animate: true });
 				this.zoomIn = true;
 			}else{
+				this.plugin.panzoom('reset');
 				this.zoomIn = false;
+				this.swapSource(this.originalimage);
+				this.plugin.panzoom("destroy");
 			}
 			
 		},
@@ -125,12 +148,13 @@ define(['jquery','mixins.preloader','mixins.sound','hammer','panzoom'], function
 			console.info(this.elementId + ' ComponentPan dispose');
 
 			if (this.plugin) {
-
+				this.plugin.panzoom('reset');
 				this.zoomIn = false;
-
+				this.swapSource(this.originalimage);
 				// remove click
 				this.$el.off();
-
+				this.plugin.panzoom("destroy");
+				this.plugin.unwrap(this.plugin.parent());
 				this.plugin = null;
 				delete this.plugin;
 			}
@@ -142,6 +166,6 @@ define(['jquery','mixins.preloader','mixins.sound','hammer','panzoom'], function
 
 	});
 
-	return ComponentPan;
+	return Component;
 
 });

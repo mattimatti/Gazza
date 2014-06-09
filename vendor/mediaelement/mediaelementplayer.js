@@ -1227,10 +1227,10 @@ if (typeof jQuery != 'undefined') {
 		};
 	}
 
-	$(document).ready(function() {
+	//$(document).ready(function() {
 		// auto enable using JSON attribute
-		$('.mejs-player').mediaelementplayer();
-	});
+	//	$('.mejs-player').mediaelementplayer();
+	//});
 
 	// push out to window
 	window.MediaElementPlayer = mejs.MediaElementPlayer;

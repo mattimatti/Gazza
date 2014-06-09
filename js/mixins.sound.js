@@ -7,7 +7,9 @@ define(['jquery', 'mediaelement'], function($) {
 
 		// video has no sound
 		initSound: function() {
-			console.debug('MixinSound:initSound');
+	
+
+			
 
 			// toggle visibility
 			var playerStyle = 'hide';
@@ -17,7 +19,8 @@ define(['jquery', 'mediaelement'], function($) {
 				iPadUseNativeControls: false,
 				iPhoneUseNativeControls: false,
 				AndroidUseNativeControls: false,
-				isVideo: false
+				isVideo: false,
+				autoRewind: false
 			};
 
 
@@ -40,24 +43,25 @@ define(['jquery', 'mediaelement'], function($) {
 
 
 
-			if (this.options.sound) {
+			if (this.options.sound && ! this.audioPlayerObj) {
 
+				console.debug('MixinSound:initSound');
 
 				var source = this.options.sound;
 				source = source.substr(0, source.lastIndexOf('.'));
 				// encodeuricomponent to print in flashvars!
-				source = encodeURIComponent(source);
-
+				var flashSource = window.escape(source);
 
 				console.debug('setting source: ', source);
 
-
-				var flashCode = "<object width='320' height='240' type='application/x-shockwave-flash' data='./images/flashmediaelement.swf'><param name='movie' value='./images/flashmediaelement.swf' /><param name='flashvars' value='controls=false&file='" + source + ".mp3' /><img src='http://placehold.it/350x150' width='320' height='240' title='No video playback capabilities' /></object>";
+				var flashCode = "<object width='320' height='240' type='application/x-shockwave-flash' data='./images/flashmediaelement.swf'><param name='movie' value='./images/flashmediaelement.swf' /><param name='flashvars' value='controls=false&file='" + flashSource + ".mp3' /><img src='http://placehold.it/350x150' width='320' height='240' title='No video playback capabilities' /></object>";
 
 				var $embed = $("<audio id='audio_" + this.elementId + "'  class='playSound responsive " + playerStyle + "' ><source src='" + source + ".mp3' /><source src='" + source + ".ogv' />"+flashCode+"</audio>");
 				this.$el.append($embed);
 
 				this.audioPlayerObj = window.MediaElementPlayer("#audio_" + this.elementId, soundOptions);
+
+				console.debug('MediaElementPlayer: inited', this.audioPlayerObj, $embed);
 
 			}
 
@@ -68,10 +72,18 @@ define(['jquery', 'mediaelement'], function($) {
 
 		// Play the component sound
 		playSound: function() {
-			console.debug('MixinSound:playSound');
+			
+			this.initSound();
+
 			if (this.audioPlayerObj) {
-				console.debug(this.audioPlayerObj);
-				this.audioPlayerObj.setSrc(this.options.sound);
+				console.debug('MixinSound:playSound');
+
+				this.audioPlayerObj.setSrc([
+					   { src:this.options.sound, type:'audio/ogg' },
+					   { src:this.options.sound.replace('.ogv','.mp3'), type:'audio/mp3' }
+					]);
+
+			
 				this.audioPlayerObj.play();
 			}
 
@@ -81,7 +93,7 @@ define(['jquery', 'mediaelement'], function($) {
 		// remove sound
 		disposeSound: function() {
 
-			this.$el.find('.playSound').remove();
+			this.$el.find("audio_" + this.elementId).empty().remove();
 
 			this.audioPlayerObj = null;
 			delete this.audioPlayerObj;
