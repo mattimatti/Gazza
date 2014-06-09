@@ -140,6 +140,7 @@ define(['jquery', 'mixins.preloader', 'mixins.sound', 'videojs'], function($, Mi
 						this.plugin.currentTime(0);
 						this.plugin.controlBar.hide();
 						
+
 					}
 
 				} catch (e) {

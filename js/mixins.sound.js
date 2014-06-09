@@ -1,6 +1,6 @@
 define(['jquery', 'mediaelement'], function($) {
 
-	var console = window.console;
+	var console = window.muteConsole;
 
 	var MixinSound = {
 
@@ -8,8 +8,6 @@ define(['jquery', 'mediaelement'], function($) {
 		// video has no sound
 		initSound: function() {
 	
-
-			
 
 			// toggle visibility
 			var playerStyle = 'hide';
@@ -42,8 +40,9 @@ define(['jquery', 'mediaelement'], function($) {
 			}
 
 
+			// idf we have a sound source we do initialize
 
-			if (this.options.sound && ! this.audioPlayerObj) {
+			if (this.options.sound ) {
 
 				console.debug('MixinSound:initSound');
 
@@ -71,6 +70,8 @@ define(['jquery', 'mediaelement'], function($) {
 
 
 		// Play the component sound
+		// Seems like the audio tag must be redrawn evey time we want to play..
+		// see http://stackoverflow.com/questions/8733330/why-cant-i-play-sounds-more-than-once-using-html5-audio-tag
 		playSound: function() {
 			
 			this.initSound();
