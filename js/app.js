@@ -150,13 +150,8 @@ define([
 
 	var App = {
 
-
+		// Menu instance
 		objMenu: null,
-
-
-		initMenu: function(){
-			this.objMenu = new ComponentMenu($("#menu"), {});
-		},
 
 
 		hasHash: function() {
@@ -262,16 +257,24 @@ define([
 			this.objScroller.on('keyframe', $.proxy(this.onKeyFrame, this));
 		},
 
+		// prevent the boxes to emit
 		disableEmitters: function() {
 			console.debug("disableEmitters");
 			this.objScroller.off('keyframe');
 		},
 
+		// main entry function
 		main: function() {
 			this.initializeScroller();
 			this.initMenu();
 		},
 
+		// initilaize  the sticky menu
+		initMenu: function(){
+			this.objMenu = new ComponentMenu($("#menu_"), {});
+		},
+
+		//initialize the scroller
 		initializeScroller: function() {
 
 			this.setupEmitters();

@@ -15310,15 +15310,55 @@ define('mixins.sound',['jquery', 'mediaelement'], function($) {
 		initSound: function() {
 			console.debug('MixinSound:initSound');
 
+			// toggle visibility
+			var playerStyle = 'hide';
+
+			var soundOptions = {
+				alwaysShowControls: false,
+				iPadUseNativeControls: false,
+				iPhoneUseNativeControls: false,
+				AndroidUseNativeControls: false,
+				isVideo: false
+			};
+
+
+
+			if (this.options.soundControls) {
+
+				playerStyle = '';
+
+				soundOptions.alwaysShowControls = true;
+				soundOptions.iPadUseNativeControls = true;
+				soundOptions.iPhoneUseNativeControls = true;
+				soundOptions.AndroidUseNativeControls = true;
+				soundOptions.features =  ['playpause', 'progress', 'duration'];
+
+			}else{
+
+				soundOptions.audioWidth = -1;
+				soundOptions.audioHeight = -1;
+			}
+
+
+
 			if (this.options.sound) {
+
 
 				var source = this.options.sound;
 				source = source.substr(0, source.lastIndexOf('.'));
+				// encodeuricomponent to print in flashvars!
+				source = encodeURIComponent(source);
 
-				var $embed = $("<audio id='audio_" + this.elementId + "' style='display:none;' class='playSound' ><source src='" + source + ".mp3' /><source src='" + source + ".ogv' /><object width='320' height='240' type='application/x-shockwave-flash' data='./images/flashmediaelement.swf'><param name='movie' value='flashmediaelement.swf' /><param name='flashvars' value='controls=false&file='" + source + ".mp3' /><img src='http://placehold.it/350x150' width='320' height='240' title='No video playback capabilities' /></object></audio>");
+
+				console.debug('setting source: ', source);
+
+
+				var flashCode = "<object width='320' height='240' type='application/x-shockwave-flash' data='./images/flashmediaelement.swf'><param name='movie' value='./images/flashmediaelement.swf' /><param name='flashvars' value='controls=false&file='" + source + ".mp3' /><img src='http://placehold.it/350x150' width='320' height='240' title='No video playback capabilities' /></object>";
+
+				var $embed = $("<audio id='audio_" + this.elementId + "'  class='playSound responsive " + playerStyle + "' ><source src='" + source + ".mp3' /><source src='" + source + ".ogv' />"+flashCode+"</audio>");
 				this.$el.append($embed);
 
-				this.audioPlayerObj = window.MediaElementPlayer("#audio_" + this.elementId);
+				this.audioPlayerObj = window.MediaElementPlayer("#audio_" + this.elementId, soundOptions);
 
 			}
 
@@ -15331,6 +15371,7 @@ define('mixins.sound',['jquery', 'mediaelement'], function($) {
 		playSound: function() {
 			console.debug('MixinSound:playSound');
 			if (this.audioPlayerObj) {
+				console.debug(this.audioPlayerObj);
 				this.audioPlayerObj.setSrc(this.options.sound);
 				this.audioPlayerObj.play();
 			}
@@ -26520,14 +26561,17 @@ define('components.carousel',['jquery', 'mixins.preloader', 'mixins.sound'], fun
 	return Component;
 
 });
-define('components.menu',['jquery','mixins.preloader','mixins.sound'], function($,MixinPreloader,MixinSound){
+define('components.menu',['jquery', 'mixins.preloader', 'mixins.sound'], function($, MixinPreloader, MixinSound) {
 
-	var console = window.console;
+	var console = window.muteConsole;
 
 	var Component = function(element, options) {
-		console.debug('constructor', arguments);
+		console.error('constructor', arguments);
 		this.options = options;
+		// the jquery element
 		this.$el = element;
+
+		this.initialize();
 	};
 
 	// MIXIN
@@ -26539,29 +26583,111 @@ define('components.menu',['jquery','mixins.preloader','mixins.sound'], function(
 
 	$.extend(Component.prototype, {
 
-
-
 		initialize: function() {
-			console.debug('Menu initialize', arguments);
+			console.error('Menu initialize', arguments);
+
+			this.cleanup();
 
 			this.populate();
 
+			this.initStickyNess();
+
 		},
 
 
-		populate: function(){
-			console.debug('Menu populate');
-
-			// leggo tutti gli elementi con class anno
-
-				
+		cleanup: function() {
+			this.$el.empty();
+			this.$root = $("<ul/>");
+			this.$el.append(this.$root);
 		},
 
-		createItem: function(data){
+
+		populate: function() {
 			console.debug('Menu populate');
+			$(".anno").each($.proxy(this.createItem, this));
+		},
+
+		createItem: function(index, object) {
+			console.debug('createItem', arguments);
+
+			var itemId = $(object).attr("id");
+			
+			var label = $(object).attr("data-label");
+
+			var item = $("<li>").attr("id", "menuitem-" + itemId);
+
+			var linkitem = $("<a>").text(label).attr("href", "#" + itemId);
+			item.append(linkitem);
+
+			this.$root.append(item);
+
+			this.$root.css("right", 0);
+			this.$root.css("position", "absolute");
+			this.$root.css("zIndex", 1200);
+			this.$root.css("height", $(window).height());
+
+		},
 
 
-				
+		initStickyNess: function() {
+
+			this.menuOffsetTop = 0;
+
+			$(window).scroll($.proxy(this.onWindowScroll, this));
+			$(window).on('hashchange', $.proxy(this.onHashChange, this));
+
+		},
+
+
+		onWindowScroll: function() {
+
+			var $windowTag = $(window);
+			var scrollTop = $windowTag.scrollTop();
+
+			if (this.menuOffsetTop < scrollTop) {
+				this.$root.css('top', scrollTop);
+			} else {
+				this.$root.css('top', 0);
+			}
+		},
+
+
+
+		onHashChange: function() {
+			this.updateSelectedItemByHashTag();
+		},
+
+
+
+		updateSelectedItemByHashTag: function() {
+			console.debug('updateSelectedItemByHashTag');
+			var hashValue;
+			if (window.location.hash !== '') {
+				hashValue = window.location.hash.replace(/\//, '').substring(1);
+				console.debug("updateSelectedItemByHashTag: we have n hash", hashValue);
+			}
+
+			this.selectById(hashValue);
+
+		},
+
+
+
+		selectById: function(id) {
+			console.debug('selectById', id);
+			this.unselectAll();
+
+			var yearId = $("#" + id).parents(".anno").attr("id");
+			console.error(yearId);
+
+
+			this.$root.find("#menuitem-" + yearId).addClass("active");
+		},
+
+
+		unselectAll: function() {
+			console.debug('unselectAll');
+			this.$root.find("li").removeClass("active");
 		},
 
 
@@ -26729,13 +26855,8 @@ define('app',[
 
 	var App = {
 
-
+		// Menu instance
 		objMenu: null,
-
-
-		initMenu: function(){
-			this.objMenu = new ComponentMenu($("#menu"), {});
-		},
 
 
 		hasHash: function() {
@@ -26841,16 +26962,24 @@ define('app',[
 			this.objScroller.on('keyframe', $.proxy(this.onKeyFrame, this));
 		},
 
+		// prevent the boxes to emit
 		disableEmitters: function() {
 			console.debug("disableEmitters");
 			this.objScroller.off('keyframe');
 		},
 
+		// main entry function
 		main: function() {
 			this.initializeScroller();
 			this.initMenu();
 		},
 
+		// initilaize  the sticky menu
+		initMenu: function(){
+			this.objMenu = new ComponentMenu($("#menu_"), {});
+		},
+
+		//initialize the scroller
 		initializeScroller: function() {
 
 			this.setupEmitters();
