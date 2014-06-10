@@ -97,7 +97,7 @@ define(['jquery', 'mixins.preloader', 'mixins.sound', 'videojs'], function($, Mi
 
 		// toggle the video playstate
 		toggleVideoPlayback: function() {
-
+console.info(this.elementId + " toggle clip");
 			if (!this.plugin) {
 				console.error(this.elementId + " ComponentVideo clicking a video not inited");
 				return;
