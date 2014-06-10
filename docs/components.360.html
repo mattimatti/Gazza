@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+  <title>components.360.js</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <meta name="viewport" content="width=device-width, target-densitydpi=160dpi, initial-scale=1.0; maximum-scale=1.0; user-scalable=0;">
+  <link rel="stylesheet" media="all" href="docco.css" />
+</head>
+<body>
+  <div id="container">
+    <div id="background"></div>
+    
+      <ul id="jump_to">
+        <li>
+          <a class="large" href="javascript:void(0);">Jump To &hellip;</a>
+          <a class="small" href="javascript:void(0);">+</a>
+          <div id="jump_wrapper">
+          <div id="jump_page">
+            
+              
+              <a class="source" href="app.html">
+                app.js
+              </a>
+            
+              
+              <a class="source" href="components.360.html">
+                components.360.js
+              </a>
+            
+              
+              <a class="source" href="components.carousel.html">
+                components.carousel.js
+              </a>
+            
+              
+              <a class="source" href="components.easy.html">
+                components.easy.js
+              </a>
+            
+              
+              <a class="source" href="components.fade.html">
+                components.fade.js
+              </a>
+            
+              
+              <a class="source" href="components.fade2.html">
+                components.fade2.js
+              </a>
+            
+              
+              <a class="source" href="components.menu.html">
+                components.menu.js
+              </a>
+            
+              
+              <a class="source" href="components.pan.html">
+                components.pan.js
+              </a>
+            
+              
+              <a class="source" href="components.pan2.html">
+                components.pan2.js
+              </a>
+            
+              
+              <a class="source" href="components.pan3.html">
+                components.pan3.js
+              </a>
+            
+              
+              <a class="source" href="components.panold.html">
+                components.panold.js
+              </a>
+            
+              
+              <a class="source" href="components.sound.html">
+                components.sound.js
+              </a>
+            
+              
+              <a class="source" href="components.video.html">
+                components.video.js
+              </a>
+            
+              
+              <a class="source" href="main.html">
+                main.js
+              </a>
+            
+              
+              <a class="source" href="mixins.preloader.html">
+                mixins.preloader.js
+              </a>
+            
+              
+              <a class="source" href="mixins.sound.html">
+                mixins.sound.js
+              </a>
+            
+          </div>
+        </li>
+      </ul>
+    
+    <ul class="sections">
+        
+          <li id="title">
+              <div class="annotation">
+                  <h1>components.360.js</h1>
+              </div>
+          </li>
+        
+        
+        
+        <li id="section-1">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-1">&#182;</a>
+              </div>
+              
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>define([<span class="hljs-string">'jquery'</span>, <span class="hljs-string">'mixins.preloader'</span>, <span class="hljs-string">'mixins.sound'</span>, <span class="hljs-string">'reel'</span>], <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">($, MixinPreloader, MixinSound)</span> {</span>
+
+	<span class="hljs-keyword">var</span> console = window.muteConsole;
+
+	<span class="hljs-keyword">var</span> Component = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(element, options)</span> {</span>
+
+		<span class="hljs-keyword">this</span>.$el = $(element);
+
+		<span class="hljs-keyword">this</span>.elementId = <span class="hljs-keyword">this</span>.$el.attr(<span class="hljs-string">'id'</span>);</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-2">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-2">&#182;</a>
+              </div>
+              <p>Default options for the reel plugin</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>		<span class="hljs-keyword">this</span>.defaults = {
+			images: <span class="hljs-literal">null</span>,
+			cursor: <span class="hljs-string">'default'</span>, <span class="hljs-comment">// define the cursor</span>
+			draggable: <span class="hljs-literal">false</span>,
+			interactive: <span class="hljs-literal">false</span>
+		};</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-3">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-3">&#182;</a>
+              </div>
+              <p>merge default options with</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>		<span class="hljs-keyword">this</span>.options = $.extend(<span class="hljs-keyword">this</span>.defaults, options);
+
+	};</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-4">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-4">&#182;</a>
+              </div>
+              <p>MIXIN</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>
+	$.extend(Component.prototype, MixinPreloader);
+	$.extend(Component.prototype, MixinSound);</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-5">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-5">&#182;</a>
+              </div>
+              <p>extend prototype</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>
+	$.extend(Component.prototype, {
+
+		initialize: <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> {</span>
+
+
+			<span class="hljs-keyword">if</span>(<span class="hljs-keyword">this</span>.initialized){
+				console.warn(<span class="hljs-keyword">this</span>.elementId + <span class="hljs-string">' Component360 already initialized exit'</span>);
+				<span class="hljs-keyword">return</span>;
+			}
+			<span class="hljs-keyword">this</span>.initialized = <span class="hljs-literal">true</span>;
+
+
+			console.info(<span class="hljs-keyword">this</span>.elementId + <span class="hljs-string">': Component360 initialize'</span>);
+
+
+			<span class="hljs-keyword">if</span> (<span class="hljs-keyword">this</span>.options.interactive) {
+				<span class="hljs-keyword">this</span>.options.cursor = <span class="hljs-string">'pointer'</span>;
+				<span class="hljs-keyword">this</span>.options.draggable = <span class="hljs-literal">true</span>;
+			}</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-6">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-6">&#182;</a>
+              </div>
+              <p>remove custom option</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>			<span class="hljs-keyword">delete</span> <span class="hljs-keyword">this</span>.options.interactive;
+
+			<span class="hljs-keyword">this</span>.plugin = <span class="hljs-keyword">this</span>.$el.find(<span class="hljs-string">'.component'</span>);</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-7">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-7">&#182;</a>
+              </div>
+              <p>override the size. plugin needs them explicitly</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>			<span class="hljs-keyword">this</span>.plugin.attr(<span class="hljs-string">"width"</span>, <span class="hljs-keyword">this</span>.plugin.width());
+			<span class="hljs-keyword">this</span>.plugin.attr(<span class="hljs-string">"height"</span>, <span class="hljs-keyword">this</span>.plugin.height());
+
+
+			console.debug(<span class="hljs-keyword">this</span>.elementId + <span class="hljs-string">': Component360 instance reel with options'</span>, <span class="hljs-keyword">this</span>.options);</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-8">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-8">&#182;</a>
+              </div>
+              <p>setup the plugin</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>			<span class="hljs-keyword">this</span>.plugin.reel(<span class="hljs-keyword">this</span>.options);
+
+
+			<span class="hljs-keyword">if</span>(<span class="hljs-keyword">this</span>.options.sound){</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-9">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-9">&#182;</a>
+              </div>
+              <p>assign click event</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>				<span class="hljs-keyword">this</span>.plugin.hammer().on(<span class="hljs-string">'tap'</span>, $.proxy(<span class="hljs-keyword">this</span>.clickComponent, <span class="hljs-keyword">this</span>));
+				<span class="hljs-keyword">this</span>.plugin.addClass(<span class="hljs-string">'interactive'</span>);
+			}
+
+
+
+		},</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-10">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-10">&#182;</a>
+              </div>
+              <p>the user click</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>		clickComponent: <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> {</span>
+			console.debug(<span class="hljs-string">'clickComponent'</span>);
+			<span class="hljs-keyword">this</span>.initSound();
+			<span class="hljs-keyword">this</span>.playSound();
+		},
+
+
+
+		dispose: <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> {</span>
+			<span class="hljs-keyword">if</span>(!<span class="hljs-keyword">this</span>.initialized){
+				console.warn(<span class="hljs-keyword">this</span>.elementId + <span class="hljs-string">': Component360 not initialized no dispose'</span>);
+				<span class="hljs-keyword">return</span>;
+			}
+			console.info(<span class="hljs-keyword">this</span>.elementId + <span class="hljs-string">': Component360 dispose'</span>);
+
+
+			<span class="hljs-keyword">this</span>.disposeSound();
+
+			<span class="hljs-keyword">if</span> (<span class="hljs-keyword">this</span>.plugin) {
+				<span class="hljs-keyword">this</span>.plugin.unreel();
+				<span class="hljs-keyword">this</span>.plugin.hammer().off();
+				<span class="hljs-keyword">this</span>.plugin.off();
+				<span class="hljs-keyword">this</span>.plugin = <span class="hljs-literal">null</span>;
+				<span class="hljs-keyword">delete</span> <span class="hljs-keyword">this</span>.plugin;
+			}
+
+
+
+		}
+
+
+
+	});
+
+	<span class="hljs-keyword">return</span> Component;
+
+});</pre></div></div>
+            
+        </li>
+        
+    </ul>
+  </div>
+</body>
+</html>

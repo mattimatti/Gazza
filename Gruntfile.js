@@ -86,10 +86,17 @@ module.exports = function(grunt) {
             }
         },
 
+        docco: {
+            debug: {
+                src: ['js/**/*.js'],
+                options: {
+                    output: 'docs/'
+                }
+            }
+        }
+
 
     });
-
-
 
 
 
@@ -100,8 +107,10 @@ module.exports = function(grunt) {
     grunt.loadNpmTasks('grunt-contrib-jshint');
     grunt.loadNpmTasks('grunt-contrib-watch');
     grunt.loadNpmTasks('grunt-contrib-requirejs');
+    grunt.loadNpmTasks('grunt-docco');
 
 
     // Default task
-    grunt.registerTask('default', ['jshint','requirejs','uglify']);
+    grunt.registerTask('default', ['jshint']);
+    grunt.registerTask('release', ['jshint', 'requirejs', 'uglify']);
 };

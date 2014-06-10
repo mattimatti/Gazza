@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+  <title>components.fade.js</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <meta name="viewport" content="width=device-width, target-densitydpi=160dpi, initial-scale=1.0; maximum-scale=1.0; user-scalable=0;">
+  <link rel="stylesheet" media="all" href="docco.css" />
+</head>
+<body>
+  <div id="container">
+    <div id="background"></div>
+    
+      <ul id="jump_to">
+        <li>
+          <a class="large" href="javascript:void(0);">Jump To &hellip;</a>
+          <a class="small" href="javascript:void(0);">+</a>
+          <div id="jump_wrapper">
+          <div id="jump_page">
+            
+              
+              <a class="source" href="app.html">
+                app.js
+              </a>
+            
+              
+              <a class="source" href="components.360.html">
+                components.360.js
+              </a>
+            
+              
+              <a class="source" href="components.carousel.html">
+                components.carousel.js
+              </a>
+            
+              
+              <a class="source" href="components.easy.html">
+                components.easy.js
+              </a>
+            
+              
+              <a class="source" href="components.fade.html">
+                components.fade.js
+              </a>
+            
+              
+              <a class="source" href="components.fade2.html">
+                components.fade2.js
+              </a>
+            
+              
+              <a class="source" href="components.menu.html">
+                components.menu.js
+              </a>
+            
+              
+              <a class="source" href="components.pan.html">
+                components.pan.js
+              </a>
+            
+              
+              <a class="source" href="components.pan2.html">
+                components.pan2.js
+              </a>
+            
+              
+              <a class="source" href="components.pan3.html">
+                components.pan3.js
+              </a>
+            
+              
+              <a class="source" href="components.panold.html">
+                components.panold.js
+              </a>
+            
+              
+              <a class="source" href="components.sound.html">
+                components.sound.js
+              </a>
+            
+              
+              <a class="source" href="components.video.html">
+                components.video.js
+              </a>
+            
+              
+              <a class="source" href="main.html">
+                main.js
+              </a>
+            
+              
+              <a class="source" href="mixins.preloader.html">
+                mixins.preloader.js
+              </a>
+            
+              
+              <a class="source" href="mixins.sound.html">
+                mixins.sound.js
+              </a>
+            
+          </div>
+        </li>
+      </ul>
+    
+    <ul class="sections">
+        
+          <li id="title">
+              <div class="annotation">
+                  <h1>components.fade.js</h1>
+              </div>
+          </li>
+        
+        
+        
+        <li id="section-1">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-1">&#182;</a>
+              </div>
+              
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>define([<span class="hljs-string">'jquery'</span>, <span class="hljs-string">'mixins.preloader'</span>, <span class="hljs-string">'mixins.sound'</span>], <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">($, MixinPreloader, MixinSound)</span> {</span>
+
+	<span class="hljs-keyword">var</span> console = window.muteConsole;
+
+	<span class="hljs-keyword">var</span> Component = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(element, options)</span> {</span>
+
+		<span class="hljs-keyword">this</span>.$el = $(element);
+
+		<span class="hljs-keyword">this</span>.elementId = <span class="hljs-keyword">this</span>.$el.attr(<span class="hljs-string">'id'</span>);</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-2">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-2">&#182;</a>
+              </div>
+              <p>Default options for the fade plugin</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>
+		<span class="hljs-keyword">this</span>.defaults = {
+			loop: <span class="hljs-literal">true</span>,
+			delay: <span class="hljs-number">0</span>,
+			duration: <span class="hljs-number">2</span>,
+			sound: <span class="hljs-literal">null</span>,
+			datasrc: <span class="hljs-string">""</span>
+		};</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-3">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-3">&#182;</a>
+              </div>
+              <p>merge default options with</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>		<span class="hljs-keyword">this</span>.options = $.extend(<span class="hljs-keyword">this</span>.defaults, options);
+
+	};</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-4">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-4">&#182;</a>
+              </div>
+              <p>MIXIN</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>
+	$.extend(Component.prototype, MixinPreloader);
+	$.extend(Component.prototype, MixinSound);</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-5">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-5">&#182;</a>
+              </div>
+              <p>extend prototype    </p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>
+	$.extend(Component.prototype, {
+
+		transitioning: <span class="hljs-literal">false</span>,
+
+		frontVisible: <span class="hljs-literal">false</span>,
+
+
+		initialize: <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> {</span>
+
+			<span class="hljs-keyword">this</span>.plugin = <span class="hljs-keyword">this</span>.$el.find(<span class="hljs-string">'.component'</span>);
+
+
+			<span class="hljs-keyword">if</span> (!<span class="hljs-keyword">this</span>.plugin) {
+				console.warn(<span class="hljs-keyword">this</span>.elementId + <span class="hljs-string">' Missing required element'</span>);
+				<span class="hljs-keyword">return</span>;
+			}
+
+			<span class="hljs-keyword">if</span> (<span class="hljs-keyword">this</span>.initialized) {
+				console.error(<span class="hljs-keyword">this</span>.elementId + <span class="hljs-string">' Component already initialized exit'</span>);
+				<span class="hljs-keyword">return</span>;
+			}
+
+			<span class="hljs-keyword">this</span>.initialized = <span class="hljs-literal">true</span>;
+
+			console.info(<span class="hljs-keyword">this</span>.elementId + <span class="hljs-string">' ComponentFade initialize'</span>);
+
+			<span class="hljs-keyword">this</span>.initSound();</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-6">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-6">&#182;</a>
+              </div>
+              <p>ensure we have no wrapper </p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>			<span class="hljs-keyword">this</span>.disposeWrapper(<span class="hljs-keyword">this</span>.$el.find(<span class="hljs-string">".force-h"</span>));</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-7">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-7">&#182;</a>
+              </div>
+              <p>hide the forst image</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>			<span class="hljs-keyword">this</span>.originalImage = <span class="hljs-keyword">this</span>.$el.find(<span class="hljs-string">"img"</span>).first();
+			<span class="hljs-keyword">this</span>.originalImage.hide();
+
+
+			<span class="hljs-keyword">this</span>.buildImagesFormDatasource();</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-8">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-8">&#182;</a>
+              </div>
+              <p>if interactive is set disable loop</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>			<span class="hljs-keyword">if</span> (<span class="hljs-keyword">this</span>.options.interactive) {
+				<span class="hljs-keyword">this</span>.options.loop = <span class="hljs-literal">false</span>;
+			}</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-9">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-9">&#182;</a>
+              </div>
+              <p>if no loop enable click</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>			<span class="hljs-keyword">if</span> (<span class="hljs-keyword">this</span>.options.interactive) {</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-10">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-10">&#182;</a>
+              </div>
+              <p>slow down the animation duration</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>				<span class="hljs-keyword">this</span>.options.duration /= <span class="hljs-number">2</span>;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-11">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-11">&#182;</a>
+              </div>
+              <p>assign click event</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>				<span class="hljs-keyword">this</span>.wrapperObj.on(<span class="hljs-string">'click'</span>, $.proxy(<span class="hljs-keyword">this</span>.clickComponent, <span class="hljs-keyword">this</span>));
+				<span class="hljs-keyword">this</span>.wrapperObj.addClass(<span class="hljs-string">'interactive'</span>);
+
+				<span class="hljs-keyword">this</span>.initSound();
+			}</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-12">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-12">&#182;</a>
+              </div>
+              <p>if loopstart toggling</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>			<span class="hljs-keyword">if</span> (<span class="hljs-keyword">this</span>.options.loop) {
+				<span class="hljs-keyword">this</span>.toggleImage();
+			}
+
+
+		},
+
+
+		buildImagesFormDatasource: <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> {</span>
+
+			<span class="hljs-keyword">this</span>.cntObj = $(<span class="hljs-string">"&lt;div/&gt;"</span>).addClass(<span class="hljs-string">'component min-h'</span>);</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-13">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-13">&#182;</a>
+              </div>
+              <p>Build images from datasource</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>
+			<span class="hljs-keyword">this</span>.pt_Img = <span class="hljs-keyword">this</span>.options.datapt;
+			<span class="hljs-keyword">this</span>.Img_ar = <span class="hljs-keyword">this</span>.options.datasrc.split(<span class="hljs-string">","</span>);</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-14">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-14">&#182;</a>
+              </div>
+              <p>get the front and back image</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>			<span class="hljs-keyword">this</span>.front = $(<span class="hljs-string">"&lt;img&gt;"</span>).attr(<span class="hljs-string">'src'</span>, <span class="hljs-keyword">this</span>.pt_Img + <span class="hljs-keyword">this</span>.Img_ar[<span class="hljs-number">0</span>]);</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-15">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-15">&#182;</a>
+              </div>
+              <p>set the FRONT AND BACK elements as absolute</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>			<span class="hljs-keyword">this</span>.front.css(<span class="hljs-string">"position"</span>, <span class="hljs-string">"relative"</span>);
+			<span class="hljs-keyword">this</span>.front.css(<span class="hljs-string">"top"</span>, <span class="hljs-number">0</span>);
+			<span class="hljs-keyword">this</span>.front.css(<span class="hljs-string">"left"</span>, <span class="hljs-number">0</span>);
+			<span class="hljs-keyword">this</span>.cntObj.append(<span class="hljs-keyword">this</span>.front);
+
+
+
+			<span class="hljs-keyword">this</span>.back = $(<span class="hljs-string">"&lt;img&gt;"</span>).attr(<span class="hljs-string">'src'</span>, <span class="hljs-keyword">this</span>.pt_Img + <span class="hljs-keyword">this</span>.Img_ar[<span class="hljs-number">1</span>]);
+			<span class="hljs-keyword">this</span>.back.css(<span class="hljs-string">"position"</span>, <span class="hljs-string">"absolute"</span>);
+			<span class="hljs-keyword">this</span>.back.css(<span class="hljs-string">"top"</span>, <span class="hljs-number">0</span>);
+			<span class="hljs-keyword">this</span>.back.css(<span class="hljs-string">"left"</span>, <span class="hljs-number">0</span>);
+			<span class="hljs-keyword">this</span>.cntObj.append(<span class="hljs-keyword">this</span>.back);</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-16">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-16">&#182;</a>
+              </div>
+              <p>create an outer wrapper</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>			<span class="hljs-keyword">this</span>.wrapperObj = $(<span class="hljs-string">"&lt;div/&gt;"</span>).addClass(<span class="hljs-string">'force-h'</span>);
+			<span class="hljs-keyword">this</span>.wrapperObj.css(<span class="hljs-string">"position"</span>, <span class="hljs-string">"relative"</span>);
+			<span class="hljs-keyword">this</span>.wrapperObj.append(<span class="hljs-keyword">this</span>.cntObj);
+
+			<span class="hljs-keyword">this</span>.$el.prepend(<span class="hljs-keyword">this</span>.wrapperObj);
+
+
+		},</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-17">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-17">&#182;</a>
+              </div>
+              <p>the user click</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>		clickComponent: <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> {</span>
+			console.debug(<span class="hljs-string">'clickComponent'</span>);
+
+			<span class="hljs-keyword">if</span> (<span class="hljs-keyword">this</span>.transitioning) {
+				<span class="hljs-keyword">return</span>;
+			}
+
+			<span class="hljs-keyword">this</span>.playSound();
+			<span class="hljs-keyword">this</span>.toggleImage();
+		},
+
+
+
+		toggleImage: <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> {</span></pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-18">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-18">&#182;</a>
+              </div>
+              <p>TODO: maybe tweenmax is excessive for this behaviour..</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>
+			console.log(<span class="hljs-string">'toggleImage'</span>, <span class="hljs-keyword">this</span>.frontVisible);
+
+			<span class="hljs-keyword">if</span> (<span class="hljs-keyword">this</span>.frontVisible) {
+				<span class="hljs-keyword">this</span>.showBack();
+			} <span class="hljs-keyword">else</span> {
+				<span class="hljs-keyword">this</span>.showFront();
+			}
+		},
+
+
+		showBack: <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> {</span>
+
+			<span class="hljs-keyword">var</span> self = <span class="hljs-keyword">this</span>;
+
+			TweenMax.killTweensOf(<span class="hljs-keyword">this</span>.front);
+			TweenMax.killTweensOf(<span class="hljs-keyword">this</span>.back);
+
+			console.debug(<span class="hljs-string">'showBack'</span>);
+
+			self.transitioning = <span class="hljs-literal">true</span>;
+
+
+			<span class="hljs-keyword">this</span>.back.css(<span class="hljs-string">'position'</span>, <span class="hljs-string">'relative'</span>);
+			<span class="hljs-keyword">this</span>.front.css(<span class="hljs-string">'position'</span>, <span class="hljs-string">'absolute'</span>);
+
+			TweenMax.to(<span class="hljs-keyword">this</span>.front, <span class="hljs-keyword">this</span>.options.duration, {
+				alpha: <span class="hljs-number">0</span>
+			});
+			TweenMax.to(<span class="hljs-keyword">this</span>.back, <span class="hljs-keyword">this</span>.options.duration, {
+				delay: <span class="hljs-keyword">this</span>.options.delay,
+				alpha: <span class="hljs-number">1</span>,
+				onComplete: <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> {</span>
+					self.frontVisible = <span class="hljs-literal">false</span>;
+					self.transitioning = <span class="hljs-literal">false</span>;
+					<span class="hljs-keyword">if</span> (self.options.loop) {
+						self.toggleImage();
+					}
+				}
+			});
+
+		},
+
+		showFront: <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> {</span>
+
+			<span class="hljs-keyword">var</span> self = <span class="hljs-keyword">this</span>;
+
+			TweenMax.killTweensOf(<span class="hljs-keyword">this</span>.front);
+			TweenMax.killTweensOf(<span class="hljs-keyword">this</span>.back);
+
+			console.debug(<span class="hljs-string">'showFront'</span>);
+
+			<span class="hljs-keyword">this</span>.transitioning = <span class="hljs-literal">true</span>;
+
+			<span class="hljs-keyword">this</span>.front.css(<span class="hljs-string">'position'</span>, <span class="hljs-string">'relative'</span>);
+			<span class="hljs-keyword">this</span>.back.css(<span class="hljs-string">'position'</span>, <span class="hljs-string">'absolute'</span>);
+
+
+			TweenMax.to(<span class="hljs-keyword">this</span>.front, <span class="hljs-keyword">this</span>.options.duration, {
+				alpha: <span class="hljs-number">1</span>
+			});
+
+
+			TweenMax.to(<span class="hljs-keyword">this</span>.back, <span class="hljs-keyword">this</span>.options.duration, {
+				delay: <span class="hljs-keyword">this</span>.options.delay,
+				alpha: <span class="hljs-number">0</span>,
+				onComplete: <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> {</span>
+					self.frontVisible = <span class="hljs-literal">true</span>;
+					self.transitioning = <span class="hljs-literal">false</span>;
+
+
+
+					<span class="hljs-keyword">if</span> (self.options.loop) {
+						self.toggleImage();
+					}
+				}
+			});
+
+		},
+
+
+		stopLooping: <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> {</span>
+			<span class="hljs-keyword">if</span> (<span class="hljs-keyword">this</span>.options) {
+				<span class="hljs-keyword">this</span>.options.loop = <span class="hljs-literal">false</span>;
+			}
+		},
+
+
+		disposeWrapper: <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(objWrapper)</span> {</span>
+			<span class="hljs-keyword">if</span> (objWrapper) {
+				console.debug(<span class="hljs-keyword">this</span>.elementId + <span class="hljs-string">' ComponentFade disposeWrapper!'</span>);
+				objWrapper.off();
+				objWrapper.empty();
+				objWrapper.remove();
+				<span class="hljs-keyword">if</span> (objWrapper) {
+					console.error(<span class="hljs-keyword">this</span>.elementId + <span class="hljs-string">' ComponentFade still has wrapper!'</span>);
+				}
+			}
+
+		},
+
+
+
+		dispose: <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> {</span>
+
+			<span class="hljs-keyword">if</span> (!<span class="hljs-keyword">this</span>.initialized) {
+				console.warn(<span class="hljs-keyword">this</span>.elementId + <span class="hljs-string">' Component not initialized no dispose'</span>);
+				<span class="hljs-keyword">return</span>;
+			}
+
+			console.info(<span class="hljs-keyword">this</span>.elementId + <span class="hljs-string">' ComponentFade dispose'</span>);
+
+			<span class="hljs-keyword">this</span>.disposeSound();
+
+			<span class="hljs-keyword">this</span>.stopLooping();
+
+			<span class="hljs-keyword">if</span> (<span class="hljs-keyword">this</span>.wrapperObj.length &gt; <span class="hljs-number">0</span>) {
+				<span class="hljs-keyword">this</span>.disposeWrapper(<span class="hljs-keyword">this</span>.wrapperObj);
+			}</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-19">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-19">&#182;</a>
+              </div>
+              <p>show the original image</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>			<span class="hljs-keyword">this</span>.$el.find(<span class="hljs-string">'img'</span>).first().show();
+
+			<span class="hljs-keyword">delete</span> <span class="hljs-keyword">this</span>.$el;
+
+
+		}
+
+
+
+	});
+
+	<span class="hljs-keyword">return</span> Component;
+
+
+});</pre></div></div>
+            
+        </li>
+        
+    </ul>
+  </div>
+</body>
+</html>

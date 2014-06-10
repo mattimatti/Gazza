@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+  <title>components.carousel.js</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <meta name="viewport" content="width=device-width, target-densitydpi=160dpi, initial-scale=1.0; maximum-scale=1.0; user-scalable=0;">
+  <link rel="stylesheet" media="all" href="docco.css" />
+</head>
+<body>
+  <div id="container">
+    <div id="background"></div>
+    
+      <ul id="jump_to">
+        <li>
+          <a class="large" href="javascript:void(0);">Jump To &hellip;</a>
+          <a class="small" href="javascript:void(0);">+</a>
+          <div id="jump_wrapper">
+          <div id="jump_page">
+            
+              
+              <a class="source" href="app.html">
+                app.js
+              </a>
+            
+              
+              <a class="source" href="components.360.html">
+                components.360.js
+              </a>
+            
+              
+              <a class="source" href="components.carousel.html">
+                components.carousel.js
+              </a>
+            
+              
+              <a class="source" href="components.easy.html">
+                components.easy.js
+              </a>
+            
+              
+              <a class="source" href="components.fade.html">
+                components.fade.js
+              </a>
+            
+              
+              <a class="source" href="components.fade2.html">
+                components.fade2.js
+              </a>
+            
+              
+              <a class="source" href="components.menu.html">
+                components.menu.js
+              </a>
+            
+              
+              <a class="source" href="components.pan.html">
+                components.pan.js
+              </a>
+            
+              
+              <a class="source" href="components.pan2.html">
+                components.pan2.js
+              </a>
+            
+              
+              <a class="source" href="components.pan3.html">
+                components.pan3.js
+              </a>
+            
+              
+              <a class="source" href="components.panold.html">
+                components.panold.js
+              </a>
+            
+              
+              <a class="source" href="components.sound.html">
+                components.sound.js
+              </a>
+            
+              
+              <a class="source" href="components.video.html">
+                components.video.js
+              </a>
+            
+              
+              <a class="source" href="main.html">
+                main.js
+              </a>
+            
+              
+              <a class="source" href="mixins.preloader.html">
+                mixins.preloader.js
+              </a>
+            
+              
+              <a class="source" href="mixins.sound.html">
+                mixins.sound.js
+              </a>
+            
+          </div>
+        </li>
+      </ul>
+    
+    <ul class="sections">
+        
+          <li id="title">
+              <div class="annotation">
+                  <h1>components.carousel.js</h1>
+              </div>
+          </li>
+        
+        
+        
+        <li id="section-1">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-1">&#182;</a>
+              </div>
+              
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>define([<span class="hljs-string">'jquery'</span>, <span class="hljs-string">'mixins.preloader'</span>, <span class="hljs-string">'mixins.sound'</span>, <span class="hljs-string">'hammer'</span>], <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">($, MixinPreloader, MixinSound)</span> {</span>
+
+	<span class="hljs-keyword">var</span> console = window.muteConsole;
+
+
+	<span class="hljs-keyword">var</span> ComponentCarousel = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(element, options)</span> {</span>
+		<span class="hljs-keyword">this</span>.$el = $(element);
+
+		<span class="hljs-keyword">this</span>.elementId = <span class="hljs-keyword">this</span>.$el.attr(<span class="hljs-string">'id'</span>);</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-2">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-2">&#182;</a>
+              </div>
+              <p>Default options for the fade plugin</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>
+		<span class="hljs-keyword">this</span>.defaults = {
+			loop: <span class="hljs-literal">true</span>,
+			delay: <span class="hljs-number">0.5</span>,
+			duration: <span class="hljs-number">1</span>,
+			sound: <span class="hljs-literal">null</span>
+		};</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-3">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-3">&#182;</a>
+              </div>
+              <p>merge default options with</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>		<span class="hljs-keyword">this</span>.options = $.extend(<span class="hljs-keyword">this</span>.defaults, options);
+
+	};</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-4">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-4">&#182;</a>
+              </div>
+              <p>MIXIN</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>
+	$.extend(ComponentCarousel.prototype, MixinPreloader);
+	$.extend(ComponentCarousel.prototype, MixinSound);</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-5">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-5">&#182;</a>
+              </div>
+              <p>extend prototype</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>
+	$.extend(ComponentCarousel.prototype, {
+
+		transitioning: <span class="hljs-literal">false</span>,
+
+		frontVisible: <span class="hljs-literal">true</span>,
+
+		imageIndex: -<span class="hljs-number">1</span>,
+
+		sound: <span class="hljs-literal">null</span>,
+
+		initialize: <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> {</span>
+
+
+			<span class="hljs-keyword">if</span>(<span class="hljs-keyword">this</span>.initialized){
+				console.warn(<span class="hljs-keyword">this</span>.elementId + <span class="hljs-string">' Component already initialized exit'</span>);
+				<span class="hljs-keyword">return</span>;
+			}
+			<span class="hljs-keyword">this</span>.initialized = <span class="hljs-literal">true</span>;
+
+
+			<span class="hljs-keyword">this</span>.plugin = <span class="hljs-keyword">this</span>.$el.find(<span class="hljs-string">'.component'</span>);
+			<span class="hljs-keyword">this</span>.plugin.css(<span class="hljs-string">"position"</span>,<span class="hljs-string">"relative"</span>);
+
+
+			<span class="hljs-keyword">if</span>(!<span class="hljs-keyword">this</span>.plugin){
+				console.error(<span class="hljs-string">"component not found"</span>);
+				<span class="hljs-keyword">return</span>;
+			}
+
+			<span class="hljs-keyword">this</span>.items = <span class="hljs-keyword">this</span>.$el.find(<span class="hljs-string">'.item'</span>);
+
+			<span class="hljs-keyword">this</span>.itemsCount = <span class="hljs-keyword">this</span>.items.length;
+
+			console.debug(<span class="hljs-string">'this.itemsCount'</span>, <span class="hljs-keyword">this</span>.itemsCount);</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-6">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-6">&#182;</a>
+              </div>
+              <p>if no items no carousel</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>			<span class="hljs-keyword">if</span> (<span class="hljs-keyword">this</span>.itemsCount === <span class="hljs-number">0</span>) {
+				console.error(<span class="hljs-string">"carousel must have at least one item"</span>);
+				<span class="hljs-keyword">return</span>;
+			}
+
+			console.info(<span class="hljs-keyword">this</span>.elementId + <span class="hljs-string">': Carousel initialize'</span>);
+
+			<span class="hljs-keyword">var</span> firstElement = $(<span class="hljs-keyword">this</span>.items.get(<span class="hljs-number">0</span>));</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-7">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-7">&#182;</a>
+              </div>
+              <p>firstElement.css(“width”, firstElement.width());
+firstElement.css(“height”, firstElement.height());
+firstElement.css(“position”,’relative’);</p>
+
+            </div>
+            
+        </li>
+        
+        
+        <li id="section-8">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-8">&#182;</a>
+              </div>
+              <p>set the size of the container MANTAIN VERTICAL SPACING
+this.plugin.css(“width”, $(this.items.get(0)).width());
+this.plugin.css(“height”, $(this.items.get(0)).height());</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>
+
+			<span class="hljs-keyword">this</span>.prepareItems();</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-9">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-9">&#182;</a>
+              </div>
+              <p>setup which will be the first pair</p>
+
+            </div>
+            
+        </li>
+        
+        
+        <li id="section-10">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-10">&#182;</a>
+              </div>
+              <p>if interactive is set disable loop</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>			<span class="hljs-keyword">if</span> (<span class="hljs-keyword">this</span>.options.interactive) {
+				<span class="hljs-keyword">this</span>.options.loop = <span class="hljs-literal">false</span>;
+			}</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-11">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-11">&#182;</a>
+              </div>
+              <p>if no loop enable click</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>			<span class="hljs-keyword">if</span> (<span class="hljs-keyword">this</span>.options.interactive) {</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-12">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-12">&#182;</a>
+              </div>
+              <p>assign click event</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>
+
+
+				<span class="hljs-keyword">this</span>.$el.off();
+				<span class="hljs-keyword">this</span>.$el.hammer().off();
+
+				<span class="hljs-keyword">this</span>.$el.on(<span class="hljs-string">"click"</span>,$.proxy(<span class="hljs-keyword">this</span>.clickComponent, <span class="hljs-keyword">this</span>));
+				
+				<span class="hljs-keyword">this</span>.$el.hammer().on(<span class="hljs-string">"doubletap"</span>,$.proxy(<span class="hljs-keyword">this</span>.clickComponent, <span class="hljs-keyword">this</span>));
+
+				<span class="hljs-keyword">this</span>.$el.addClass(<span class="hljs-string">'interactive'</span>);
+			}</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-13">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-13">&#182;</a>
+              </div>
+              <p>if loopstart toggling</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>			<span class="hljs-keyword">if</span> (<span class="hljs-keyword">this</span>.options.loop) {
+				<span class="hljs-keyword">this</span>.setupNextPair();
+				<span class="hljs-keyword">this</span>.showNext();
+			}
+
+
+		},
+
+		prepareItems: <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> {</span>
+			console.debug(<span class="hljs-keyword">this</span>.elementId + <span class="hljs-string">':prepareItems'</span>);
+
+			<span class="hljs-keyword">if</span> (!<span class="hljs-keyword">this</span>.items) {
+				<span class="hljs-keyword">this</span>.items = <span class="hljs-keyword">this</span>.$el.find(<span class="hljs-string">'.item'</span>);
+			}</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-14">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-14">&#182;</a>
+              </div>
+              <p>hide all images</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>			<span class="hljs-keyword">this</span>.items.hide();
+
+			<span class="hljs-keyword">this</span>.items.each($.proxy(<span class="hljs-keyword">this</span>.prepareItem, <span class="hljs-keyword">this</span>));</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-15">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-15">&#182;</a>
+              </div>
+              <p>show the first</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>
+			$(<span class="hljs-keyword">this</span>.items.get(<span class="hljs-number">0</span>)).show().fadeTo(<span class="hljs-number">0</span>, <span class="hljs-number">1</span>).css(<span class="hljs-string">'zIndex'</span>, <span class="hljs-number">1001</span>).css(<span class="hljs-string">"position"</span>, <span class="hljs-string">"relative"</span>);
+
+		},
+
+
+
+		prepareItem : <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(index, item)</span> {</span>
+
+			<span class="hljs-keyword">var</span> element = $(item);
+			element.css(<span class="hljs-string">"position"</span>, <span class="hljs-string">"absolute"</span>);
+			element.css(<span class="hljs-string">"top"</span>, <span class="hljs-number">0</span>);
+			element.css(<span class="hljs-string">"left"</span>, <span class="hljs-number">0</span>);
+			element.css(<span class="hljs-string">"zIndex"</span>, <span class="hljs-keyword">this</span>.items.length - <span class="hljs-number">1</span> - index);
+		},
+
+
+
+		setupNextPair: <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> {</span>
+
+			console.debug(<span class="hljs-keyword">this</span>.elementId + <span class="hljs-string">':setupNextPair'</span>);
+
+			<span class="hljs-keyword">if</span> (<span class="hljs-keyword">this</span>.imageIndex + <span class="hljs-number">1</span> &gt;= <span class="hljs-keyword">this</span>.itemsCount) {
+				<span class="hljs-keyword">this</span>.imageIndex = -<span class="hljs-number">1</span>;
+			}
+
+			<span class="hljs-keyword">this</span>.imageIndex++;
+
+			<span class="hljs-keyword">var</span> frontIndex = <span class="hljs-keyword">this</span>.imageIndex;
+			<span class="hljs-keyword">var</span> backIndex = <span class="hljs-keyword">this</span>.imageIndex + <span class="hljs-number">1</span>;
+
+			<span class="hljs-keyword">if</span> (backIndex &gt;= <span class="hljs-keyword">this</span>.itemsCount) {
+				backIndex = <span class="hljs-number">0</span>;
+			}
+
+			console.debug(<span class="hljs-string">'will transition from '</span>, frontIndex, <span class="hljs-string">' to '</span>, backIndex);
+
+			<span class="hljs-keyword">this</span>.front = $(<span class="hljs-keyword">this</span>.items.get(frontIndex));
+			<span class="hljs-keyword">this</span>.back = $(<span class="hljs-keyword">this</span>.items.get(backIndex));</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-16">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-16">&#182;</a>
+              </div>
+              <p>hide all </p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>			<span class="hljs-keyword">this</span>.items.hide();
+		},</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-17">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-17">&#182;</a>
+              </div>
+              <p>the user click</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>		clickComponent: <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> {</span>
+			<span class="hljs-keyword">if</span> (<span class="hljs-keyword">this</span>.transitioning) {
+				<span class="hljs-keyword">return</span>;
+			}
+			console.debug(<span class="hljs-keyword">this</span>.elementId + <span class="hljs-string">':clickComponent'</span>, <span class="hljs-keyword">this</span>.frontVisible);
+			<span class="hljs-keyword">this</span>.setupNextPair();
+			<span class="hljs-keyword">this</span>.showNext();
+			<span class="hljs-keyword">this</span>.initSound();
+			<span class="hljs-keyword">this</span>.playSound();
+		},
+
+
+		showNext: <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> {</span>
+
+			console.debug(<span class="hljs-keyword">this</span>.elementId + <span class="hljs-string">': showNext'</span>, <span class="hljs-keyword">this</span>.frontVisible, <span class="hljs-string">'duration'</span>, <span class="hljs-keyword">this</span>.options.duration);
+
+			<span class="hljs-keyword">this</span>.disposeTransitions();</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-18">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-18">&#182;</a>
+              </div>
+              <p>show only current pair</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>			<span class="hljs-keyword">this</span>.front.show().css(<span class="hljs-string">'zIndex'</span>, <span class="hljs-number">1001</span>).css(<span class="hljs-string">"position"</span>, <span class="hljs-string">"absolute"</span>);
+			<span class="hljs-keyword">this</span>.back.show().css(<span class="hljs-string">'zIndex'</span>, <span class="hljs-number">1000</span>).css(<span class="hljs-string">"position"</span>, <span class="hljs-string">"relative"</span>);
+
+			<span class="hljs-keyword">this</span>.transitioning = <span class="hljs-literal">true</span>;
+
+			TweenMax.to(<span class="hljs-keyword">this</span>.front, <span class="hljs-keyword">this</span>.options.duration, {
+				alpha: <span class="hljs-number">0</span>,
+				delay: <span class="hljs-keyword">this</span>.options.delay
+			});
+
+			TweenMax.to(<span class="hljs-keyword">this</span>.back, <span class="hljs-keyword">this</span>.options.duration, {
+				delay: <span class="hljs-keyword">this</span>.options.delay,
+				alpha: <span class="hljs-number">1</span>,
+				onComplete: $.proxy(<span class="hljs-keyword">this</span>.onNextVisible, <span class="hljs-keyword">this</span>)
+			});
+
+		},
+
+		onNextVisible: <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> {</span>
+
+			<span class="hljs-keyword">this</span>.frontVisible = <span class="hljs-literal">false</span>;
+			console.debug(<span class="hljs-keyword">this</span>.elementId + <span class="hljs-string">':onNextVisible frontVisible?'</span>, <span class="hljs-keyword">this</span>.frontVisible);
+			<span class="hljs-keyword">this</span>.transitioning = <span class="hljs-literal">false</span>;
+			<span class="hljs-keyword">if</span> (<span class="hljs-keyword">this</span>.options.loop) {
+				<span class="hljs-keyword">this</span>.setupNextPair();
+				<span class="hljs-keyword">this</span>.showNext();
+			}
+
+		},
+
+
+		disposeTransitions: <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> {</span>
+			TweenMax.killTweensOf(<span class="hljs-keyword">this</span>.front);
+			TweenMax.killTweensOf(<span class="hljs-keyword">this</span>.back);
+		},
+
+
+		stopLooping: <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> {</span>
+			<span class="hljs-keyword">if</span> (<span class="hljs-keyword">this</span>.options.loop) {
+				<span class="hljs-keyword">this</span>.options.loop = <span class="hljs-literal">false</span>;
+			}
+		},
+
+
+		dispose: <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> {</span>
+			
+			<span class="hljs-keyword">if</span>(!<span class="hljs-keyword">this</span>.initialized){
+				console.warn(<span class="hljs-keyword">this</span>.elementId + <span class="hljs-string">' Component not initialized no dispose'</span>);
+				<span class="hljs-keyword">return</span>;
+			}
+			console.info(<span class="hljs-keyword">this</span>.elementId + <span class="hljs-string">': Carousel dispose'</span>);
+			
+			<span class="hljs-keyword">try</span> {
+
+				<span class="hljs-keyword">this</span>.disposeSound();
+
+				<span class="hljs-keyword">this</span>.$el.hammer().off();
+				<span class="hljs-keyword">this</span>.$el.off();
+
+				<span class="hljs-keyword">this</span>.$el.removeClass(<span class="hljs-string">'interactive'</span>);
+
+				<span class="hljs-keyword">this</span>.stopLooping();
+				<span class="hljs-keyword">this</span>.disposeTransitions();
+
+				<span class="hljs-keyword">this</span>.prepareItems();
+
+				<span class="hljs-keyword">this</span>.imageIndex = -<span class="hljs-number">1</span>;
+				<span class="hljs-keyword">this</span>.transitioning = <span class="hljs-literal">false</span>;
+
+			} <span class="hljs-keyword">catch</span> (ex) {
+				console.error(<span class="hljs-keyword">this</span>.elementId + <span class="hljs-string">': Error in Carousel dispose'</span>);
+				console.error(ex);
+			}
+
+
+
+		}
+
+
+
+	});
+
+	<span class="hljs-keyword">return</span> ComponentCarousel;
+
+});</pre></div></div>
+            
+        </li>
+        
+    </ul>
+  </div>
+</body>
+</html>

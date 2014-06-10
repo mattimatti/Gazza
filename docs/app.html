@@ -1,0 +1,656 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+  <title>app.js</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <meta name="viewport" content="width=device-width, target-densitydpi=160dpi, initial-scale=1.0; maximum-scale=1.0; user-scalable=0;">
+  <link rel="stylesheet" media="all" href="docco.css" />
+</head>
+<body>
+  <div id="container">
+    <div id="background"></div>
+    
+      <ul id="jump_to">
+        <li>
+          <a class="large" href="javascript:void(0);">Jump To &hellip;</a>
+          <a class="small" href="javascript:void(0);">+</a>
+          <div id="jump_wrapper">
+          <div id="jump_page">
+            
+              
+              <a class="source" href="app.html">
+                app.js
+              </a>
+            
+              
+              <a class="source" href="components.360.html">
+                components.360.js
+              </a>
+            
+              
+              <a class="source" href="components.carousel.html">
+                components.carousel.js
+              </a>
+            
+              
+              <a class="source" href="components.easy.html">
+                components.easy.js
+              </a>
+            
+              
+              <a class="source" href="components.fade.html">
+                components.fade.js
+              </a>
+            
+              
+              <a class="source" href="components.fade2.html">
+                components.fade2.js
+              </a>
+            
+              
+              <a class="source" href="components.menu.html">
+                components.menu.js
+              </a>
+            
+              
+              <a class="source" href="components.pan.html">
+                components.pan.js
+              </a>
+            
+              
+              <a class="source" href="components.pan2.html">
+                components.pan2.js
+              </a>
+            
+              
+              <a class="source" href="components.pan3.html">
+                components.pan3.js
+              </a>
+            
+              
+              <a class="source" href="components.panold.html">
+                components.panold.js
+              </a>
+            
+              
+              <a class="source" href="components.sound.html">
+                components.sound.js
+              </a>
+            
+              
+              <a class="source" href="components.video.html">
+                components.video.js
+              </a>
+            
+              
+              <a class="source" href="main.html">
+                main.js
+              </a>
+            
+              
+              <a class="source" href="mixins.preloader.html">
+                mixins.preloader.js
+              </a>
+            
+              
+              <a class="source" href="mixins.sound.html">
+                mixins.sound.js
+              </a>
+            
+          </div>
+        </li>
+      </ul>
+    
+    <ul class="sections">
+        
+          <li id="title">
+              <div class="annotation">
+                  <h1>app.js</h1>
+              </div>
+          </li>
+        
+        
+        
+        <li id="section-1">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-1">&#182;</a>
+              </div>
+              
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>define([
+	<span class="hljs-string">'jquery'</span>,
+	<span class="hljs-string">'components.fade'</span>,
+	<span class="hljs-string">'components.360'</span>,
+	<span class="hljs-string">'components.video'</span>,
+	<span class="hljs-string">'components.easy'</span>,
+	<span class="hljs-string">'components.pan'</span>,
+	<span class="hljs-string">'components.carousel'</span>,
+	<span class="hljs-string">'components.menu'</span>,
+	<span class="hljs-string">'inview'</span>
+], <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">($, ComponentFade, ComponentReel, ComponentVideo, ComponentEasy, ComponentPan, ComponentCarousel, ComponentMenu)</span> {</span>
+
+
+	<span class="hljs-keyword">var</span> console = window.console;
+
+
+	<span class="hljs-keyword">var</span> instancesPool = [];
+
+
+	<span class="hljs-keyword">var</span> Modules = {
+
+		<span class="hljs-string">'image-360'</span>: {
+
+			init: <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(a, b)</span> {</span>
+				<span class="hljs-keyword">if</span> (!instancesPool[a.id]) {
+					<span class="hljs-keyword">var</span> obj = <span class="hljs-keyword">new</span> ComponentReel(a, b);
+					obj.preload();
+					instancesPool[a.id] = obj;
+				}
+			},
+			remove: <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(a, b)</span> {</span>
+				<span class="hljs-keyword">if</span> (instancesPool[a.id]) {
+					instancesPool[a.id].dispose();
+					instancesPool[a.id].preloadAbort();
+					<span class="hljs-keyword">delete</span> instancesPool[a.id];
+				}
+
+			}
+		},
+
+		<span class="hljs-string">'video-clip'</span>: {
+
+			init: <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(a, b)</span> {</span>
+				<span class="hljs-keyword">if</span> (!instancesPool[a.id]) {
+					<span class="hljs-keyword">var</span> obj = <span class="hljs-keyword">new</span> ComponentVideo(a, b);
+					obj.preload();
+					instancesPool[a.id] = obj;
+				}
+			},
+			remove: <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(a, b)</span> {</span>
+				<span class="hljs-keyword">if</span> (instancesPool[a.id]) {
+					instancesPool[a.id].dispose();
+					instancesPool[a.id].preloadAbort();
+					<span class="hljs-keyword">delete</span> instancesPool[a.id];
+				}
+
+			}
+		},
+		<span class="hljs-string">'image-easy'</span>: {
+
+			init: <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(a, b)</span> {</span>
+				<span class="hljs-keyword">if</span> (!instancesPool[a.id]) {
+					<span class="hljs-keyword">var</span> obj = <span class="hljs-keyword">new</span> ComponentEasy(a, b);
+					obj.preload();
+					instancesPool[a.id] = obj;
+				}
+
+			},
+			remove: <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(a, b)</span> {</span>
+				<span class="hljs-keyword">if</span> (instancesPool[a.id]) {
+					instancesPool[a.id].dispose();
+					instancesPool[a.id].preloadAbort();
+					<span class="hljs-keyword">delete</span> instancesPool[a.id];
+				}
+
+			}
+
+		},
+
+		<span class="hljs-string">'image-pan'</span>: {
+
+			init: <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(a, b)</span> {</span>
+				<span class="hljs-keyword">if</span> (!instancesPool[a.id]) {
+					<span class="hljs-keyword">var</span> obj = <span class="hljs-keyword">new</span> ComponentPan(a, b);
+					obj.preload();
+					instancesPool[a.id] = obj;
+				}
+
+			},
+			remove: <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(a, b)</span> {</span>
+				<span class="hljs-keyword">if</span> (instancesPool[a.id]) {
+					instancesPool[a.id].dispose();
+					instancesPool[a.id].preloadAbort();
+					<span class="hljs-keyword">delete</span> instancesPool[a.id];
+				}
+
+			}
+
+		},
+
+
+		<span class="hljs-string">'carousel'</span>: {
+
+			init: <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(a, b)</span> {</span>
+				<span class="hljs-keyword">if</span> (!instancesPool[a.id]) {
+					<span class="hljs-keyword">var</span> obj = <span class="hljs-keyword">new</span> ComponentCarousel(a, b);
+					obj.preload();
+					instancesPool[a.id] = obj;
+				}
+
+			},
+			remove: <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(a, b)</span> {</span>
+				<span class="hljs-keyword">if</span> (instancesPool[a.id]) {
+					instancesPool[a.id].dispose();
+					instancesPool[a.id].preloadAbort();
+					<span class="hljs-keyword">delete</span> instancesPool[a.id];
+				}
+
+			}
+
+		}
+
+	};
+
+
+
+	<span class="hljs-keyword">var</span> App = {</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-2">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-2">&#182;</a>
+              </div>
+              <p>Menu instance</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>		objMenu: <span class="hljs-literal">null</span>,
+
+
+		hasHash: <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> {</span>
+			<span class="hljs-keyword">return</span> window.location.hash !== <span class="hljs-string">''</span>;
+		},
+
+		setHash: <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(hash)</span> {</span>
+			window.location.hash = <span class="hljs-string">'/'</span> + hash;
+		},
+
+
+		initElement: <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(element)</span> {</span>
+
+			<span class="hljs-keyword">var</span> elm = Modules[element.getAttribute(<span class="hljs-string">'obj-type'</span>)];
+			<span class="hljs-keyword">var</span> id = element.getAttribute(<span class="hljs-string">'id'</span>);
+			<span class="hljs-keyword">var</span> cfg = (element.getAttribute(<span class="hljs-string">'obj-config'</span>));
+			<span class="hljs-keyword">var</span> json = {};
+			<span class="hljs-keyword">try</span> {
+				json = $.parseJSON(cfg);
+			} <span class="hljs-keyword">catch</span> (e) {
+				console.error(<span class="hljs-string">"Error parsing json"</span>, cfg);
+			}</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-3">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-3">&#182;</a>
+              </div>
+              <p>console.debug(“initElement”, id, cfg, json);</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>			<span class="hljs-keyword">if</span> (elm) {
+				elm.init(element, json);
+			}
+
+		},
+
+		removeElement: <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(element)</span> {</span>
+			<span class="hljs-keyword">var</span> elm = Modules[element.getAttribute(<span class="hljs-string">'obj-type'</span>)];
+
+			<span class="hljs-keyword">if</span> (elm) {
+				elm.remove(element);
+			}
+
+		},
+
+		disposeEmitters: <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> {</span>
+			console.debug(<span class="hljs-string">"disposeEmitters"</span>);
+			$(<span class="hljs-string">".box"</span>).attr(<span class="hljs-string">"data-emit-events"</span>, <span class="hljs-literal">null</span>);
+		},
+
+
+		setupEmitters: <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> {</span>
+			console.debug(<span class="hljs-string">"setBoxYearEvents"</span>);
+			$(<span class="hljs-string">".box"</span>).attr(<span class="hljs-string">"data-top-bottom"</span>, <span class="hljs-string">"data-top-bottom"</span>).attr(<span class="hljs-string">"data-bottom-top"</span>, <span class="hljs-string">"data-bottom-top"</span>);
+			$(<span class="hljs-string">".box"</span>).attr(<span class="hljs-string">"data-emit-events"</span>, <span class="hljs-string">"data-emit-events"</span>);
+
+
+			$(<span class="hljs-string">".anno"</span>).attr(<span class="hljs-string">"data-top-bottom"</span>, <span class="hljs-string">""</span>).attr(<span class="hljs-string">"data-bottom-top"</span>, <span class="hljs-string">""</span>);
+			$(<span class="hljs-string">".anno"</span>).attr(<span class="hljs-string">"data-emit-events"</span>, <span class="hljs-string">"data-emit-events"</span>);
+		},
+
+
+		browserHasHashOnLoad: <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> {</span>
+			console.debug(<span class="hljs-string">"browserHasHashOnLoad"</span>);
+
+			<span class="hljs-keyword">var</span> hashValue = window.location.hash.replace(<span class="hljs-regexp">/\//</span>, <span class="hljs-string">''</span>).substring(<span class="hljs-number">1</span>);
+
+			<span class="hljs-keyword">var</span> element = document.getElementById(hashValue);
+
+			<span class="hljs-keyword">var</span> offset = <span class="hljs-keyword">this</span>.objScroller.relativeToAbsolute(element, <span class="hljs-string">'top'</span>, <span class="hljs-string">'top'</span>);
+
+			console.debug(<span class="hljs-string">'move to offset'</span>, offset);
+
+			<span class="hljs-keyword">this</span>.objScroller.animateTo(offset, {
+				done: $.proxy(<span class="hljs-keyword">this</span>.enableEmitters, <span class="hljs-keyword">this</span>)
+			});
+
+		},
+
+		enableEmitters: <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> {</span>
+			console.debug(<span class="hljs-string">"enableEmitters"</span>);
+			<span class="hljs-keyword">this</span>.objScroller.on(<span class="hljs-string">'keyframe'</span>, $.proxy(<span class="hljs-keyword">this</span>.onKeyFrame, <span class="hljs-keyword">this</span>));
+		},</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-4">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-4">&#182;</a>
+              </div>
+              <p>prevent the boxes to emit</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>		disableEmitters: <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> {</span>
+			console.debug(<span class="hljs-string">"disableEmitters"</span>);
+			<span class="hljs-keyword">this</span>.objScroller.off(<span class="hljs-string">'keyframe'</span>);
+		},</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-5">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-5">&#182;</a>
+              </div>
+              <p>main entry function</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>		main: <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> {</span>
+			<span class="hljs-keyword">this</span>.initializeScroller();
+			<span class="hljs-keyword">this</span>.initMenu();
+		},</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-6">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-6">&#182;</a>
+              </div>
+              <p>initilaize  the sticky menu</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>		initMenu: <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> {</span>
+			<span class="hljs-keyword">this</span>.objMenu = <span class="hljs-keyword">new</span> ComponentMenu($(<span class="hljs-string">"#menu_"</span>), {});
+		},
+
+
+
+		initializeScroller: <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> {</span>
+			$(<span class="hljs-string">'.box'</span>).bind(<span class="hljs-string">'inview'</span>, $.proxy(<span class="hljs-keyword">this</span>.onInviewTimer, <span class="hljs-keyword">this</span>));
+		},
+
+
+		garbageCollector: <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> {</span>
+
+			<span class="hljs-keyword">var</span> self = <span class="hljs-keyword">this</span>;
+			
+			console.info(instancesPool);
+
+			<span class="hljs-keyword">var</span> count = <span class="hljs-number">0</span>;
+			<span class="hljs-keyword">for</span> (<span class="hljs-keyword">var</span> pepe <span class="hljs-keyword">in</span> instancesPool) {
+				count++;
+			}
+
+			<span class="hljs-keyword">if</span> (count &lt; <span class="hljs-number">3</span>) {
+				<span class="hljs-keyword">return</span>;
+			}
+
+
+
+			<span class="hljs-keyword">var</span> actualScrollTop = $(window).scrollTop();
+			<span class="hljs-keyword">var</span> screenHeight = $(window).height();
+
+			console.error(<span class="hljs-string">"passa garbageCollector"</span>, count, <span class="hljs-string">'elementi'</span>, <span class="hljs-string">'actualScrollTop'</span>, actualScrollTop, <span class="hljs-string">'screenHeight'</span>, screenHeight);
+
+			<span class="hljs-keyword">for</span> (<span class="hljs-keyword">var</span> name <span class="hljs-keyword">in</span> instancesPool) {
+				<span class="hljs-keyword">var</span> objInPool = instancesPool[name];
+				console.error(name, <span class="hljs-string">"item"</span>, objInPool.getMyPos());
+
+				<span class="hljs-keyword">var</span> myPos = objInPool.getMyPos();
+				<span class="hljs-keyword">var</span> myHeight = objInPool.getHeight();
+
+				<span class="hljs-comment">/*
+				if(  myPos + myHeight - actualScrollTop &gt;  screenHeight){
+					console.error(name, 'sono fuori schermo piuuuuu');
+				}
+				*/</span>
+
+				<span class="hljs-keyword">if</span> (myPos + myHeight - actualScrollTop &lt; <span class="hljs-number">0</span>) {
+					console.error(name, <span class="hljs-string">'devo essere pulito'</span>);
+					<span class="hljs-keyword">var</span> obj = {
+						id: name
+					};
+					self.removeElement(obj);
+				}
+
+			}
+
+
+		},
+
+
+		lastScrollPosition: <span class="hljs-number">0</span>,
+
+		onInviewTimer: <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(e, isInView, visiblePartX, visiblePartY)</span> {</span>
+
+
+			<span class="hljs-keyword">var</span> direction = <span class="hljs-string">'topTObottom'</span>;
+			<span class="hljs-keyword">var</span> currentScrollPosition = $(window).scrollTop();
+			<span class="hljs-keyword">if</span> (currentScrollPosition &gt; <span class="hljs-keyword">this</span>.lastScrollPosition) {
+				direction = <span class="hljs-string">'topTObottom'</span>;
+			}
+			<span class="hljs-keyword">if</span> (currentScrollPosition &lt; <span class="hljs-keyword">this</span>.lastScrollPosition) {
+				direction = <span class="hljs-string">"bottomTOtop"</span>;
+			} <span class="hljs-keyword">else</span> {
+
+			}
+
+			<span class="hljs-keyword">this</span>.lastScrollPosition = currentScrollPosition;
+
+
+
+			<span class="hljs-keyword">var</span> element = e.target;
+
+			<span class="hljs-keyword">var</span> item = $(element);
+			<span class="hljs-keyword">var</span> itemId = item.attr(<span class="hljs-string">"id"</span>);</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-7">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-7">&#182;</a>
+              </div>
+              <p>console.error(‘onInviewTimer’, itemId, isInView);</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>
+
+
+			<span class="hljs-keyword">if</span> (item.data(<span class="hljs-string">'inviewtimer'</span>)) {
+				clearTimeout(item.data(<span class="hljs-string">'inviewtimer'</span>));
+				item.removeData(<span class="hljs-string">'inviewtimer'</span>);
+			}
+
+			<span class="hljs-keyword">var</span> self = <span class="hljs-keyword">this</span>;
+
+
+
+			<span class="hljs-keyword">if</span> (!isInView) {
+				self.removeElement(element);
+			}
+
+
+
+			item.data(<span class="hljs-string">'inviewtimer'</span>, setTimeout(<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> {</span>
+
+
+				<span class="hljs-comment">/*
+				if(!isInView){
+					console.info(itemId + " DESTROY", visiblePartY,direction);
+					self.removeElement(element);
+				}else{
+					console.info(itemId + " INIT", visiblePartY, direction);
+					self.initElement(element);
+				}
+
+				if(isInView === true){
+					console.info(itemId + " INIT", visiblePartY, direction);
+					self.initElement(element);
+				}else{
+					console.info(itemId + " DESTROY", visiblePartY,direction);
+					self.removeElement(element);
+				}
+
+
+				console.info("instancesPool", instancesPool);
+				*/</span>
+
+
+
+				<span class="hljs-keyword">if</span> (visiblePartY &amp;&amp; element) {
+
+
+
+					<span class="hljs-keyword">if</span> (direction === <span class="hljs-string">'topTObottom'</span>) {
+
+						<span class="hljs-keyword">switch</span> (visiblePartY) {
+
+							<span class="hljs-keyword">case</span> <span class="hljs-string">'bottom'</span>:
+								console.info(itemId + <span class="hljs-string">" DESTROY"</span>, visiblePartY, direction);
+								self.removeElement(element);
+								<span class="hljs-keyword">break</span>;
+							<span class="hljs-keyword">case</span> <span class="hljs-string">'top'</span>:
+							<span class="hljs-keyword">case</span> <span class="hljs-string">'both'</span>:
+								console.info(itemId + <span class="hljs-string">" INIT"</span>, visiblePartY, direction);</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-8">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-8">&#182;</a>
+              </div>
+              <p>element.setAttribute(‘isInit’,true);</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>								self.initElement(element);
+								self.setHash(itemId);</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-9">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-9">&#182;</a>
+              </div>
+              <p>self.garbageCollector();</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>								<span class="hljs-keyword">break</span>;
+							<span class="hljs-keyword">default</span>:
+
+								<span class="hljs-keyword">break</span>;
+						}
+
+					} <span class="hljs-keyword">else</span> {
+
+
+						<span class="hljs-keyword">switch</span> (visiblePartY) {
+
+							<span class="hljs-keyword">case</span> <span class="hljs-string">'top'</span>:
+								console.info(itemId + <span class="hljs-string">" DESTROY"</span>, visiblePartY, direction);
+								self.removeElement(element);
+								<span class="hljs-keyword">break</span>;
+
+							<span class="hljs-keyword">case</span> <span class="hljs-string">'bottom'</span>:
+							<span class="hljs-keyword">case</span> <span class="hljs-string">'both'</span>:
+								console.info(itemId + <span class="hljs-string">" INIT"</span>, visiblePartY, direction);
+								self.initElement(element);
+								self.setHash(itemId);</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-10">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-10">&#182;</a>
+              </div>
+              <p>self.garbageCollector();</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>								<span class="hljs-keyword">break</span>;
+							<span class="hljs-keyword">default</span>:
+
+								<span class="hljs-keyword">break</span>;
+						}
+
+					}
+
+				}
+
+
+
+			}, <span class="hljs-number">1000</span>));
+		},
+
+
+	};
+
+
+
+	<span class="hljs-keyword">return</span> App;
+
+});</pre></div></div>
+            
+        </li>
+        
+    </ul>
+  </div>
+</body>
+</html>
