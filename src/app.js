@@ -136,6 +136,19 @@ define([
 
 		setHash: function(hash) {
 			window.location.hash = '/' + hash;
+			this.trackView(hash);
+		},
+
+
+		trackView: function(hash) {
+
+			try {
+				var trackId = window.location.href + window.location.hash;
+				console.info('tracking', trackId);
+				s.trackAjaxFotoGallery(trackId);
+			} catch (trackingExc) {
+
+			}
 		},
 
 
@@ -232,7 +245,7 @@ define([
 		garbageCollector: function() {
 
 			var self = this;
-			
+
 			console.info(instancesPool);
 
 			var count = 0;

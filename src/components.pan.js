@@ -150,7 +150,8 @@ define(['jquery', 'mixins.preloader', 'mixins.sound', 'cloudzoom'], function($, 
 
 			// create a wrapper
 			this.wrapperObj = $("<div style='position: relative; overflow: hidden;'/>");
-			this.wrapperObj.css('width', this.plugin.width());
+			// Disable. this breaks responsiveness
+			//this.wrapperObj.css('width', this.plugin.width());
 			this.wrapperObj.css('height', this.plugin.height());
 
 
@@ -168,13 +169,16 @@ define(['jquery', 'mixins.preloader', 'mixins.sound', 'cloudzoom'], function($, 
 			this.contentObj.css('position', 'absolute');
 			this.contentObj.css('zIndex', 100);
 			this.contentObj.css('left', 0);
+			this.contentObj.css('right', 0);
 			this.contentObj.css('zIndex', 100);
+			this.contentObj.hide();
 
 
 
 			this.plugin.css('position', 'absolute');
 			this.plugin.css('zIndex', 101);
 			this.plugin.css('left', 0);
+			this.plugin.css('right', 0);
 
 		},
 
@@ -188,6 +192,7 @@ define(['jquery', 'mixins.preloader', 'mixins.sound', 'cloudzoom'], function($, 
 			this.$el.hammer();
 			this.$el.on('doubletap', $.proxy(this.toggleZoom, this));
 			this.$el.on('pinch', $.proxy(this.toggleZoom, this));
+			this.$el.addClass("interactive");
 
 		},
 
@@ -212,6 +217,8 @@ define(['jquery', 'mixins.preloader', 'mixins.sound', 'cloudzoom'], function($, 
 			//	return;
 			//}
 
+
+
 			console.error(event.target);
 			console.error(this.elementId + ' ComponentPan toggleZoom actually this.zoomIn? ', this.zoomIn);
 
@@ -225,6 +232,7 @@ define(['jquery', 'mixins.preloader', 'mixins.sound', 'cloudzoom'], function($, 
 				this.zoomIn = true;
 
 				this.plugin.hide();
+				this.contentObj.show();
 
 				TweenMax.to(this.contentObj, duration, {
 					alpha: 1,
@@ -265,6 +273,8 @@ define(['jquery', 'mixins.preloader', 'mixins.sound', 'cloudzoom'], function($, 
 					css: {
 						scaleX: 1,
 						scaleY: 1,
+						left:0,
+						right:0,
 						transformOrigin: "center center"
 					},
 					onComplete: $.proxy(this.detachDragEvents, this)

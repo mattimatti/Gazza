@@ -10,20 +10,11 @@ module.exports = function(grunt) {
             '* Copyright (c) <%= grunt.template.today("yyyy") %> <%= pkg.author.name %>;' +
             ' Licensed <%= props.license %> */\n',
         // Task configuration
-        concat: {
-            options: {
-                stripBanners: true
-            },
-            dist: {
-                src: ['js/vendor/**.js', 'js/**.js'],
-                dest: 'dist/app.js'
-            }
-        },
         uglify: {
             options: {},
             dist: {
-                src: 'dist/require.js',
-                dest: 'dist/require.min.js'
+                src: 'js/require.js',
+                dest: 'js/require.min.js'
             }
         },
         jshint: {
@@ -45,6 +36,7 @@ module.exports = function(grunt) {
                     define: true,
                     createjs: true,
                     $: true,
+                    s:true,
                     TweenMax: true,
                     videojs: true
                 },
@@ -54,7 +46,7 @@ module.exports = function(grunt) {
                 src: 'gruntfile.js'
             },
             lib_test: {
-                src: ['js/**.js']
+                src: ['src/**.js']
             }
         },
         qunit: {
@@ -74,11 +66,11 @@ module.exports = function(grunt) {
             dist: {
                 options: {
                     name: "almond",
-                    out: 'dist/require.js',
-                    baseUrl: './js',
+                    out: 'js/require.js',
+                    baseUrl: './src',
                     include: ["main"],
                     optimize: 'none',
-                    mainConfigFile: 'js/main.js',
+                    mainConfigFile: 'src/main.js',
                     preserveLicenseComments: false,
                     useStrict: true,
                     wrap: true
@@ -88,7 +80,7 @@ module.exports = function(grunt) {
 
         docco: {
             debug: {
-                src: ['js/**/*.js'],
+                src: ['src/**/*.js'],
                 options: {
                     output: 'docs/'
                 }

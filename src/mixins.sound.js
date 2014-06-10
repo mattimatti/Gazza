@@ -1,6 +1,6 @@
 define(['jquery', 'mediaelement'], function($) {
 
-	var console = window.muteConsole;
+	var console = window.console;
 
 	var MixinSound = {
 
@@ -77,14 +77,18 @@ define(['jquery', 'mediaelement'], function($) {
 			this.initSound();
 
 			if (this.audioPlayerObj) {
-				console.debug('MixinSound:playSound');
 
-				this.audioPlayerObj.setSrc([
+				
+
+				var sourceData = [
 					{ src:this.options.sound, type:'audio/ogg' },
 					{ src:this.options.sound.replace('.ogv','.mp3'), type:'audio/mp3' }
-					]);
+					];
 
-			
+				console.debug('MixinSound:playSound:' ,sourceData);
+
+				this.audioPlayerObj.setSrc(sourceData);
+
 				this.audioPlayerObj.play();
 			}
 

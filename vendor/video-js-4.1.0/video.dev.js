@@ -1119,9 +1119,9 @@ vjs.getAbsoluteURL = function(url){
 vjs.log = function(){
   vjs.log.history = vjs.log.history || [];   // store logs to an array for reference
   vjs.log.history.push(arguments);
-  if(window.console){
-    window.console.log(Array.prototype.slice.call(arguments));
-  }
+ // if(window.console){
+ //   window.console.log(Array.prototype.slice.call(arguments));
+ // }
 };
 
 // Offset Left
@@ -2793,6 +2793,7 @@ vjs.Player.prototype.techCall = function(method, arg){
   // Otherwise call method now
   } else {
     try {
+      console.error('TECH', arguments);
       this.tech[method](arg);
     } catch(e) {
       vjs.log(e);
