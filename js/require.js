@@ -441,7 +441,7 @@ define("almond", function(){});
 // the stack via arguments.caller.callee and Firefox dies if
 // you try to trace through "use strict" call chains. (#13335)
 // Support: Firefox 18+
-//"use strict";
+//
 var
 	// The deferred used on DOM ready
 	readyList,
@@ -11929,7 +11929,7 @@ window.MediaElement = mejs.MediaElement;
  *
  */
 ;(function(context, exports, undefined) {
-    "use strict";
+    
     var i18n = {
         "locale": {
             "language" : '',
@@ -12037,7 +12037,7 @@ window.MediaElement = mejs.MediaElement;
 // i18n fixes for compatibility with WordPress
 ;(function(exports, undefined) {
 
-    "use strict";
+    
 
     if ( typeof mejsL10n != 'undefined' ) {
         exports[mejsL10n.language] = mejsL10n.strings;
@@ -12061,7 +12061,7 @@ window.MediaElement = mejs.MediaElement;
  */
 ;(function(exports, undefined) {
 
-    "use strict";
+    
 
     if (typeof exports.de === 'undefined') {
         exports.de = {
@@ -12089,7 +12089,7 @@ window.MediaElement = mejs.MediaElement;
  */
 ;(function(exports, undefined) {
 
-    "use strict";
+    
 
     if (typeof exports.zh === 'undefined') {
         exports.zh = {
@@ -15307,7 +15307,7 @@ define("mediaelement", function(){});
 
 define('mixins.sound',['jquery', 'mediaelement'], function($) {
 
-	var console = window.console;
+	var console = window.muteConsole;
 
 	var MixinSound = {
 
@@ -15709,52 +15709,6 @@ define('components.fade',['jquery', 'mixins.preloader', 'mixins.sound'], functio
 
 
 });
-/**
-          @@@@@@@@@@@@@@
-      @@@@@@@@@@@@@@@@@@@@@@
-    @@@@@@@@          @@@@@@@@
-  @@@@@@@                @@@@@@@
- @@@@@@@                  @@@@@@@
- @@@@@@@                  @@@@@@@
- @@@@@@@@     @          @@@@@@@@
-  @@@@@@@@@  @@@       @@@@@@@@@
-   @@@@@@@@@@@@@@   @@@@@@@@@@@
-     @@@@@@@@@@@@@    @@@@@@@
-       @@@@@@@@@@@@     @@@
-          @@@@@@
-         @@@@
-        @@
- *
- * jQuery Reel
- * ===========
- * The 360° plugin for jQuery
- *
- * @license Copyright (c) 2009-2013 Petr Vostrel (http://petr.vostrel.cz/)
- * Licensed under the MIT License (LICENSE.txt).
- *
- * jQuery Reel
- * http://reel360.org
- * Version: 1.3.0
- * Updated: 2013-11-04
- *
- * Requires jQuery 1.6.2 or higher
- */
-
-/*
- * CDN
- * ---
- * - http://code.vostrel.net/jquery.reel-bundle.js (recommended)
- * - http://code.vostrel.net/jquery.reel.js
- * - http://code.vostrel.net/jquery.reel-debug.js
- * - or http://code.vostrel.net/jquery.reel-edge.js if you feel like it ;)
- *
- * Optional Plugins
- * ----------------
- * - jQuery.mouseWheel [B] (Brandon Aaron, http://plugins.jquery.com/project/mousewheel)
- * - or jQuery.event.special.wheel (Three Dub Media, http://blog.threedubmedia.com/2008/08/eventspecialwheel.html)
- *
- * [B] Marked plugins are contained (with permissions) in the "bundle" version from the CDN
- */
 
 (function(factory){
 
@@ -18649,9 +18603,9 @@ define('components.360',['jquery', 'mixins.preloader', 'mixins.sound', 'reel'], 
 });
 define('components.video',['jquery', 'mixins.preloader', 'mixins.sound', 'mediaelement'], function($, MixinPreloader, MixinSound) {
 
-	var console = window.console;
+	var console = window.muteConsole;
 
-	var Component = function(element, options) {
+	var ComponentVideo = function(element, options) {
 
 		this.$el = $(element);
 
@@ -18673,12 +18627,12 @@ define('components.video',['jquery', 'mixins.preloader', 'mixins.sound', 'mediae
 
 	// MIXIN
 
-	$.extend(Component.prototype, MixinPreloader);
-	$.extend(Component.prototype, MixinSound);
+	$.extend(ComponentVideo.prototype, MixinPreloader);
+	$.extend(ComponentVideo.prototype, MixinSound);
 
 	//extend prototype
 
-	$.extend(Component.prototype, {
+	$.extend(ComponentVideo.prototype, {
 
 
 
@@ -18998,7 +18952,7 @@ define('components.video',['jquery', 'mixins.preloader', 'mixins.sound', 'mediae
 	});
 
 
-	return Component;
+	return ComponentVideo;
 
 });
 define('components.easy',['jquery','mixins.preloader','mixins.sound'], function($,MixinPreloader,MixinSound){
@@ -19145,7 +19099,7 @@ define("cloudzoom", function(){});
 
 define('components.pan',['jquery', 'mixins.preloader', 'mixins.sound', 'cloudzoom'], function($, MixinPreloader, MixinSound) {
 
-	var console = window.console;
+	var console = window.muteConsole;
 
 
 
@@ -19494,7 +19448,7 @@ define('components.pan',['jquery', 'mixins.preloader', 'mixins.sound', 'cloudzoo
  * Licensed under the MIT license */
 
 (function(window, undefined) {
-  'use strict';
+  
 
 /**
  * @main
@@ -21655,7 +21609,7 @@ if(typeof define == 'function' && define.amd) {
  * Copyright (c) 2014 Jorik Tangelder <j.tangelder@gmail.com>;
  * Licensed under the MIT license */
 (function(window, undefined) {
-  'use strict';
+  
 
 function setupPlugin(Hammer, $) {
     // provide polyfill for Date.now()
@@ -22092,7 +22046,7 @@ define('components.menu',['jquery', 'mixins.preloader', 'mixins.sound'], functio
 
 
 		initStickyNess: function() {
-
+			console.error("menu initStickyNess");
 			this.menuOffsetTop = 0;
 
 			$(window).scroll($.proxy(this.onWindowScroll, this));
@@ -22102,7 +22056,7 @@ define('components.menu',['jquery', 'mixins.preloader', 'mixins.sound'], functio
 
 
 		onWindowScroll: function() {
-
+			console.error("menu onWindowScroll");
 			var $windowTag = $(window);
 			var scrollTop = $windowTag.scrollTop();
 
@@ -22331,7 +22285,7 @@ define('app',[
 ], function($, ComponentFade, ComponentReel, ComponentVideo, ComponentEasy, ComponentPan, ComponentCarousel, ComponentMenu) {
 
 
-	var console = window.console;
+	var console = window.muteConsole;
 
 
 	var instancesPool = [];
@@ -22762,7 +22716,7 @@ define('app',[
 
 (window._gsQueue || (window._gsQueue = [])).push( function() {
 
-	"use strict";
+	
 
 	window._gsDefine("TweenMax", ["core.Animation","core.SimpleTimeline","TweenLite"], function(Animation, SimpleTimeline, TweenLite) {
 		
@@ -27815,7 +27769,7 @@ define('app',[
  */
 (function(window) {
 
-		"use strict";
+		
 		var _globals = window.GreenSockGlobals || window;
 		if (_globals.TweenLite) {
 			return; //in case the core set of classes is already loaded, don't instantiate twice.
@@ -29461,6 +29415,20 @@ define('app',[
 })(window);
 define("tweenmax", function(){});
 
+
+var noConflict = true;
+
+/*
+if (window.jQuery) {
+	define('jquery', [], function() {
+		return window.jQuery;
+	});
+	noConflict = true;
+	window.$ = window.jQuery;
+}
+
+*/
+
 // Polyfill the console object
 
 window.console = window.console || {};
@@ -29499,19 +29467,18 @@ while (mlength--) {
 // The require config file
 require.config({
 
-
 	paths: {
-		almond: '../vendor/almond',
-		jquery: '../vendor/jquery-1.9.1',
-		inview: '../vendor/jquery.inview',
-		tweenmax: '../vendor/TweenMax',
-		reel: '../vendor/jquery.reel',
-		cloudzoom: '../vendor/cloudzoom-1',
-		hammerjs: '../vendor/hammer',
-		hammer: '../vendor/jquery.hammer',
-		videojs: '../vendor/video-js-4.1.0/video.dev',
-		mediaelement: '../vendor/mediaelement/mediaelement-and-player'
-	},
+	almond: '../vendor/almond',
+	jquery: '../vendor/jquery-1.9.1',
+	inview: '../vendor/jquery.inview',
+	tweenmax: '../vendor/TweenMax',
+	reel: '../vendor/jquery.reel',
+	cloudzoom: '../vendor/cloudzoom-1',
+	hammerjs: '../vendor/hammer',
+	hammer: '../vendor/jquery.hammer',
+	videojs: '../vendor/video-js-4.1.0/video.dev',
+	mediaelement: '../vendor/mediaelement/mediaelement-and-player'
+},
 
 	shim: {
 		"inview": ["jquery"],
@@ -29524,10 +29491,14 @@ require.config({
 
 
 require([
+	'jquery',
 	'app',
-	'tweenmax', 
+	'tweenmax',
 	'hammer'
-], function(App) {
+], function($, App) {
+	if (noConflict) {
+		$.noConflict(true);
+	}
 	App.main();
 });
 define("main", function(){});

@@ -1,6 +1,6 @@
 define(['jquery', 'mediaelement'], function($) {
 
-	var console = window.console;
+	var console = window.muteConsole;
 
 	var MixinSound = {
 

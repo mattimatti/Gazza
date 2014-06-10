@@ -1,3 +1,17 @@
+
+var noConflict = true;
+
+/*
+if (window.jQuery) {
+	define('jquery', [], function() {
+		return window.jQuery;
+	});
+	noConflict = true;
+	window.$ = window.jQuery;
+}
+
+*/
+
 // Polyfill the console object
 
 window.console = window.console || {};
@@ -36,19 +50,18 @@ while (mlength--) {
 // The require config file
 require.config({
 
-
 	paths: {
-		almond: '../vendor/almond',
-		jquery: '../vendor/jquery-1.9.1',
-		inview: '../vendor/jquery.inview',
-		tweenmax: '../vendor/TweenMax',
-		reel: '../vendor/jquery.reel',
-		cloudzoom: '../vendor/cloudzoom-1',
-		hammerjs: '../vendor/hammer',
-		hammer: '../vendor/jquery.hammer',
-		videojs: '../vendor/video-js-4.1.0/video.dev',
-		mediaelement: '../vendor/mediaelement/mediaelement-and-player'
-	},
+	almond: '../vendor/almond',
+	jquery: '../vendor/jquery-1.9.1',
+	inview: '../vendor/jquery.inview',
+	tweenmax: '../vendor/TweenMax',
+	reel: '../vendor/jquery.reel',
+	cloudzoom: '../vendor/cloudzoom-1',
+	hammerjs: '../vendor/hammer',
+	hammer: '../vendor/jquery.hammer',
+	videojs: '../vendor/video-js-4.1.0/video.dev',
+	mediaelement: '../vendor/mediaelement/mediaelement-and-player'
+},
 
 	shim: {
 		"inview": ["jquery"],
@@ -61,9 +74,13 @@ require.config({
 
 
 require([
+	'jquery',
 	'app',
-	'tweenmax', 
+	'tweenmax',
 	'hammer'
-], function(App) {
+], function($, App) {
+	if (noConflict) {
+		$.noConflict(true);
+	}
 	App.main();
 });

@@ -11,7 +11,10 @@ module.exports = function(grunt) {
             ' Licensed <%= props.license %> */\n',
         // Task configuration
         uglify: {
-            options: {},
+            options: {
+                preserveComments : false,
+                banner: '/*! GazzaScroll v.01 @flolovebit @mattimatti */'
+            },
             dist: {
                 src: 'js/require.js',
                 dest: 'js/require.min.js'
@@ -72,7 +75,7 @@ module.exports = function(grunt) {
                     optimize: 'none',
                     mainConfigFile: 'src/main.js',
                     preserveLicenseComments: false,
-                    useStrict: true,
+                    useStrict: false,
                     wrap: true
                 }
             }

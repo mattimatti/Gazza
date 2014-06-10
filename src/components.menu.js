@@ -67,7 +67,7 @@ define(['jquery', 'mixins.preloader', 'mixins.sound'], function($, MixinPreloade
 
 
 		initStickyNess: function() {
-
+			console.error("menu initStickyNess");
 			this.menuOffsetTop = 0;
 
 			$(window).scroll($.proxy(this.onWindowScroll, this));
@@ -77,7 +77,7 @@ define(['jquery', 'mixins.preloader', 'mixins.sound'], function($, MixinPreloade
 
 
 		onWindowScroll: function() {
-
+			console.error("menu onWindowScroll");
 			var $windowTag = $(window);
 			var scrollTop = $windowTag.scrollTop();
 

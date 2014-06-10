@@ -11,7 +11,7 @@ define([
 ], function($, ComponentFade, ComponentReel, ComponentVideo, ComponentEasy, ComponentPan, ComponentCarousel, ComponentMenu) {
 
 
-	var console = window.console;
+	var console = window.muteConsole;
 
 
 	var instancesPool = [];
