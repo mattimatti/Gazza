@@ -84,6 +84,11 @@
               </a>
             
               
+              <a class="source" href="components.video2.html">
+                components.video2.js
+              </a>
+            
+              
               <a class="source" href="main.html">
                 main.js
               </a>
@@ -123,7 +128,7 @@
             
             <div class="content"><div class='highlight'><pre>define([<span class="hljs-string">'jquery'</span>, <span class="hljs-string">'mediaelement'</span>], <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">($)</span> {</span>
 
-	<span class="hljs-keyword">var</span> console = window.muteConsole;
+	<span class="hljs-keyword">var</span> console = window.console;
 
 	<span class="hljs-keyword">var</span> MixinSound = {</pre></div></div>
             
@@ -256,14 +261,18 @@ see <a href="http://stackoverflow.com/questions/8733330/why-cant-i-play-sounds-m
 			<span class="hljs-keyword">this</span>.initSound();
 
 			<span class="hljs-keyword">if</span> (<span class="hljs-keyword">this</span>.audioPlayerObj) {
-				console.debug(<span class="hljs-string">'MixinSound:playSound'</span>);
 
-				<span class="hljs-keyword">this</span>.audioPlayerObj.setSrc([
+				
+
+				<span class="hljs-keyword">var</span> sourceData = [
 					{ src:<span class="hljs-keyword">this</span>.options.sound, type:<span class="hljs-string">'audio/ogg'</span> },
 					{ src:<span class="hljs-keyword">this</span>.options.sound.replace(<span class="hljs-string">'.ogv'</span>,<span class="hljs-string">'.mp3'</span>), type:<span class="hljs-string">'audio/mp3'</span> }
-					]);
+					];
 
-			
+				console.debug(<span class="hljs-string">'MixinSound:playSound:'</span> ,sourceData);
+
+				<span class="hljs-keyword">this</span>.audioPlayerObj.setSrc(sourceData);
+
 				<span class="hljs-keyword">this</span>.audioPlayerObj.play();
 			}
 

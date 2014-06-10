@@ -84,6 +84,11 @@
               </a>
             
               
+              <a class="source" href="components.video2.html">
+                components.video2.js
+              </a>
+            
+              
               <a class="source" href="main.html">
                 main.js
               </a>
@@ -344,9 +349,7 @@
 
             </div>
             
-            <div class="content"><div class='highlight'><pre>			<span class="hljs-keyword">this</span>.wrapperObj = $(<span class="hljs-string">"&lt;div style='position: relative; overflow: hidden;'/&gt;"</span>);
-			<span class="hljs-keyword">this</span>.wrapperObj.css(<span class="hljs-string">'width'</span>, <span class="hljs-keyword">this</span>.plugin.width());
-			<span class="hljs-keyword">this</span>.wrapperObj.css(<span class="hljs-string">'height'</span>, <span class="hljs-keyword">this</span>.plugin.height());</pre></div></div>
+            <div class="content"><div class='highlight'><pre>			<span class="hljs-keyword">this</span>.wrapperObj = $(<span class="hljs-string">"&lt;div style='position: relative; overflow: hidden;'/&gt;"</span>);</pre></div></div>
             
         </li>
         
@@ -357,11 +360,12 @@
               <div class="pilwrap ">
                 <a class="pilcrow" href="#section-8">&#182;</a>
               </div>
-              <p>create a new image to drag</p>
+              <p>Disable. this breaks responsiveness
+this.wrapperObj.css(‘width’, this.plugin.width());</p>
 
             </div>
             
-            <div class="content"><div class='highlight'><pre>			<span class="hljs-keyword">this</span>.contentObj = $(<span class="hljs-string">'&lt;img class="component responsive draggable-pan"/&gt;'</span>);</pre></div></div>
+            <div class="content"><div class='highlight'><pre>			<span class="hljs-keyword">this</span>.wrapperObj.css(<span class="hljs-string">'height'</span>, <span class="hljs-keyword">this</span>.plugin.height());</pre></div></div>
             
         </li>
         
@@ -371,6 +375,21 @@
               
               <div class="pilwrap ">
                 <a class="pilcrow" href="#section-9">&#182;</a>
+              </div>
+              <p>create a new image to drag</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>			<span class="hljs-keyword">this</span>.contentObj = $(<span class="hljs-string">'&lt;img class="component responsive draggable-pan"/&gt;'</span>);</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-10">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-10">&#182;</a>
               </div>
               <p>this.contentObj = $(‘<img class="component responsive "/>‘);</p>
 
@@ -387,13 +406,16 @@
 			<span class="hljs-keyword">this</span>.contentObj.css(<span class="hljs-string">'position'</span>, <span class="hljs-string">'absolute'</span>);
 			<span class="hljs-keyword">this</span>.contentObj.css(<span class="hljs-string">'zIndex'</span>, <span class="hljs-number">100</span>);
 			<span class="hljs-keyword">this</span>.contentObj.css(<span class="hljs-string">'left'</span>, <span class="hljs-number">0</span>);
+			<span class="hljs-keyword">this</span>.contentObj.css(<span class="hljs-string">'right'</span>, <span class="hljs-number">0</span>);
 			<span class="hljs-keyword">this</span>.contentObj.css(<span class="hljs-string">'zIndex'</span>, <span class="hljs-number">100</span>);
+			<span class="hljs-keyword">this</span>.contentObj.hide();
 
 
 
 			<span class="hljs-keyword">this</span>.plugin.css(<span class="hljs-string">'position'</span>, <span class="hljs-string">'absolute'</span>);
 			<span class="hljs-keyword">this</span>.plugin.css(<span class="hljs-string">'zIndex'</span>, <span class="hljs-number">101</span>);
 			<span class="hljs-keyword">this</span>.plugin.css(<span class="hljs-string">'left'</span>, <span class="hljs-number">0</span>);
+			<span class="hljs-keyword">this</span>.plugin.css(<span class="hljs-string">'right'</span>, <span class="hljs-number">0</span>);
 
 		},
 
@@ -405,11 +427,11 @@
         </li>
         
         
-        <li id="section-10">
+        <li id="section-11">
             <div class="annotation">
               
               <div class="pilwrap ">
-                <a class="pilcrow" href="#section-10">&#182;</a>
+                <a class="pilcrow" href="#section-11">&#182;</a>
               </div>
               <p>uso il doubleclick perchè il click bubblea..</p>
 
@@ -418,6 +440,7 @@
             <div class="content"><div class='highlight'><pre>			<span class="hljs-keyword">this</span>.$el.hammer();
 			<span class="hljs-keyword">this</span>.$el.on(<span class="hljs-string">'doubletap'</span>, $.proxy(<span class="hljs-keyword">this</span>.toggleZoom, <span class="hljs-keyword">this</span>));
 			<span class="hljs-keyword">this</span>.$el.on(<span class="hljs-string">'pinch'</span>, $.proxy(<span class="hljs-keyword">this</span>.toggleZoom, <span class="hljs-keyword">this</span>));
+			<span class="hljs-keyword">this</span>.$el.addClass(<span class="hljs-string">"interactive"</span>);
 
 		},
 
@@ -436,11 +459,11 @@
         </li>
         
         
-        <li id="section-11">
+        <li id="section-12">
             <div class="annotation">
               
               <div class="pilwrap ">
-                <a class="pilcrow" href="#section-11">&#182;</a>
+                <a class="pilcrow" href="#section-12">&#182;</a>
               </div>
               <p>Toggle the zoom in the pan viewer</p>
 
@@ -451,11 +474,11 @@
         </li>
         
         
-        <li id="section-12">
+        <li id="section-13">
             <div class="annotation">
               
               <div class="pilwrap ">
-                <a class="pilcrow" href="#section-12">&#182;</a>
+                <a class="pilcrow" href="#section-13">&#182;</a>
               </div>
               <p>if($(event.target).hasClass(“draggable-pan”)){
 console.error(event.type, ‘delegateTarget’,event.delegateTarget,’target’, event.target,’currentTarget’, event.currentTarget);
@@ -465,6 +488,8 @@ return;
             </div>
             
             <div class="content"><div class='highlight'><pre>
+
+
 			console.error(event.target);
 			console.error(<span class="hljs-keyword">this</span>.elementId + <span class="hljs-string">' ComponentPan toggleZoom actually this.zoomIn? '</span>, <span class="hljs-keyword">this</span>.zoomIn);
 
@@ -478,6 +503,7 @@ return;
 				<span class="hljs-keyword">this</span>.zoomIn = <span class="hljs-literal">true</span>;
 
 				<span class="hljs-keyword">this</span>.plugin.hide();
+				<span class="hljs-keyword">this</span>.contentObj.show();
 
 				TweenMax.to(<span class="hljs-keyword">this</span>.contentObj, duration, {
 					alpha: <span class="hljs-number">1</span>,
@@ -518,6 +544,8 @@ return;
 					css: {
 						scaleX: <span class="hljs-number">1</span>,
 						scaleY: <span class="hljs-number">1</span>,
+						left:<span class="hljs-number">0</span>,
+						right:<span class="hljs-number">0</span>,
 						transformOrigin: <span class="hljs-string">"center center"</span>
 					},
 					onComplete: $.proxy(<span class="hljs-keyword">this</span>.detachDragEvents, <span class="hljs-keyword">this</span>)
@@ -538,11 +566,11 @@ return;
         </li>
         
         
-        <li id="section-13">
+        <li id="section-14">
             <div class="annotation">
               
               <div class="pilwrap ">
-                <a class="pilcrow" href="#section-13">&#182;</a>
+                <a class="pilcrow" href="#section-14">&#182;</a>
               </div>
               <p>apply mobile drag</p>
 
@@ -553,11 +581,11 @@ return;
         </li>
         
         
-        <li id="section-14">
+        <li id="section-15">
             <div class="annotation">
               
               <div class="pilwrap ">
-                <a class="pilcrow" href="#section-14">&#182;</a>
+                <a class="pilcrow" href="#section-15">&#182;</a>
               </div>
               <p>apply desktop drag</p>
 
@@ -593,11 +621,11 @@ return;
         </li>
         
         
-        <li id="section-15">
+        <li id="section-16">
             <div class="annotation">
               
               <div class="pilwrap ">
-                <a class="pilcrow" href="#section-15">&#182;</a>
+                <a class="pilcrow" href="#section-16">&#182;</a>
               </div>
               <p>remove click</p>
 

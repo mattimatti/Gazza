@@ -84,6 +84,11 @@
               </a>
             
               
+              <a class="source" href="components.video2.html">
+                components.video2.js
+              </a>
+            
+              
               <a class="source" href="main.html">
                 main.js
               </a>
@@ -271,6 +276,19 @@
 
 		setHash: <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(hash)</span> {</span>
 			window.location.hash = <span class="hljs-string">'/'</span> + hash;
+			<span class="hljs-keyword">this</span>.trackView(hash);
+		},
+
+
+		trackView: <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(hash)</span> {</span>
+
+			<span class="hljs-keyword">try</span> {
+				<span class="hljs-keyword">var</span> trackId = window.location.href + window.location.hash;
+				console.info(<span class="hljs-string">'tracking'</span>, trackId);
+				s.trackAjaxFotoGallery(trackId);
+			} <span class="hljs-keyword">catch</span> (trackingExc) {
+
+			}
 		},
 
 
@@ -416,7 +434,7 @@
 		garbageCollector: <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> {</span>
 
 			<span class="hljs-keyword">var</span> self = <span class="hljs-keyword">this</span>;
-			
+
 			console.info(instancesPool);
 
 			<span class="hljs-keyword">var</span> count = <span class="hljs-number">0</span>;

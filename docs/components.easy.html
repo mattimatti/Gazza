@@ -84,6 +84,11 @@
               </a>
             
               
+              <a class="source" href="components.video2.html">
+                components.video2.js
+              </a>
+            
+              
               <a class="source" href="main.html">
                 main.js
               </a>
@@ -126,10 +131,14 @@
 	<span class="hljs-keyword">var</span> console = window.muteConsole;
 
 	<span class="hljs-keyword">var</span> ComponentEasy = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(element, options)</span> {</span>
-		<span class="hljs-keyword">this</span>.options = options;
+		
 		<span class="hljs-keyword">this</span>.$el = $(element);
 		<span class="hljs-keyword">this</span>.elementId = <span class="hljs-keyword">this</span>.$el.attr(<span class="hljs-string">'id'</span>);
-	};</pre></div></div>
+
+		<span class="hljs-keyword">this</span>.defaults = {
+			interactive: <span class="hljs-literal">false</span>,
+			sound: <span class="hljs-literal">null</span>
+		};</pre></div></div>
             
         </li>
         
@@ -139,6 +148,23 @@
               
               <div class="pilwrap ">
                 <a class="pilcrow" href="#section-2">&#182;</a>
+              </div>
+              <p>merge default options with</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>		<span class="hljs-keyword">this</span>.options = $.extend(<span class="hljs-keyword">this</span>.defaults, options);
+
+	};</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-3">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-3">&#182;</a>
               </div>
               <p>MIXIN</p>
 
@@ -151,11 +177,11 @@
         </li>
         
         
-        <li id="section-3">
+        <li id="section-4">
             <div class="annotation">
               
               <div class="pilwrap ">
-                <a class="pilcrow" href="#section-3">&#182;</a>
+                <a class="pilcrow" href="#section-4">&#182;</a>
               </div>
               <p>extend prototype</p>
 
@@ -175,11 +201,16 @@
 			<span class="hljs-keyword">this</span>.initialized = <span class="hljs-literal">true</span>;
 			
 			console.info(<span class="hljs-keyword">this</span>.elementId + <span class="hljs-string">' ComponentEasy initialize'</span>);
-			
+
 
 			<span class="hljs-keyword">if</span>(<span class="hljs-keyword">this</span>.options.sound){
+				<span class="hljs-keyword">this</span>.options.interactive  = <span class="hljs-literal">true</span>;
+			}
+			
+
+			<span class="hljs-keyword">if</span>(<span class="hljs-keyword">this</span>.options.interactive){
 				<span class="hljs-keyword">this</span>.$el.hammer();
-				<span class="hljs-keyword">this</span>.$el.on(<span class="hljs-string">"tap"</span>,$.proxy(<span class="hljs-keyword">this</span>.clickComponent, <span class="hljs-keyword">this</span>));
+				<span class="hljs-keyword">this</span>.$el.on(<span class="hljs-string">"tap"</span>,$.proxy(<span class="hljs-keyword">this</span>.elementClick, <span class="hljs-keyword">this</span>));
 				<span class="hljs-keyword">this</span>.$el.on(<span class="hljs-string">"click"</span>, $.proxy(<span class="hljs-keyword">this</span>.elementClick,<span class="hljs-keyword">this</span>));
 				<span class="hljs-keyword">this</span>.$el.addClass(<span class="hljs-string">"interactive"</span>);
 			}
