@@ -63,14 +63,16 @@ require.config({
 	hammerjs: '../vendor/hammer',
 	hammer: '../vendor/jquery.hammer',
 	videojs: '../vendor/video-js-4.1.0/video.dev',
-	mediaelement: '../vendor/mediaelement/mediaelement-and-player'
+	mediaelement: '../vendor/mediaelement/mediaelement-and-player',
+	mecleaner: '../vendor/mecleaner',
 },
 
 	shim: {
 		"inview": ["jquery"],
 		"elevatezoom": ["jquery"],
 		"cloudzoom": ["jquery"],
-		"hammer": ["hammerjs"]
+		"hammer": ["hammerjs"],
+		"mecleaner" :["mediaelement"]
 	}
 
 });
@@ -81,7 +83,8 @@ require([
 	'jquery',
 	'app',
 	'tweenmax',
-	'hammer'
+	'hammer',
+	'mecleaner'
 ], function($, App) {
 	if (noConflict) {
 		$.noConflict(true);

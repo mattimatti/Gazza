@@ -16,6 +16,7 @@
 	bottom:0;
 	top:0;
 	
+	
 	}	
 	
 	
@@ -1077,3 +1078,21 @@ z-index:1000000000;
 	
 	display:none;
 	}
+	
+	
+
+
+ .videomodal {
+        z-index:4000;
+        width: 30%!important;
+        height: 30%!important;
+		 margin-left:-25%;
+		 left:35%;
+		 top:35%;
+		 margin-left:0;
+		 position:absolute;
+      }
+
+
+
+	

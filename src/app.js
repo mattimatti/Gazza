@@ -45,6 +45,8 @@ define([
 					var obj = new ComponentVideo(a, b);
 					obj.preload();
 					instancesPool[a.id] = obj;
+				}else{
+					console.error(a.id , "already initilaized");
 				}
 			},
 			remove: function(a, b) {

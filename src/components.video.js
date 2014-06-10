@@ -77,7 +77,7 @@ define(['jquery', 'mixins.preloader', 'mixins.sound', 'mediaelement'], function(
 		disposeIfOffScreen: function() {
 			if (this.$el) {
 				if (!this.$el.isOnScreen()) {
-					console.error("GARBAGE COLLECT");
+					console.warn("this video is out of viewport will be disposed and marked for garbage collector");
 					this.dispose();
 					this.readyForGrabageCollection = true;
 				}
@@ -124,6 +124,14 @@ define(['jquery', 'mixins.preloader', 'mixins.sound', 'mediaelement'], function(
 			}
 
 
+			// force videoOver at false in mobile browsers
+			if(this.isMobileBrowser()){
+				this.options.videoOver = false;
+			}
+
+
+
+
 			// toggle visibility
 			var playerStyle = 'hide';
 
@@ -146,14 +154,12 @@ define(['jquery', 'mixins.preloader', 'mixins.sound', 'mediaelement'], function(
 
 			this.plugin = document.getElementById(this.options.id);
 
-			// 
-			if(this.options.videoOver){
-				$(this.plugin).addClass('videomodal');
-			}
+			
 
 			this.objWrapper = $(".videoWrapper");
 
 			this.showPoster();
+
 
 			// You have to set preload true once intilized otherwise in safari or firefox will not load the video
 			this.plugin.preload = true;
@@ -163,9 +169,26 @@ define(['jquery', 'mixins.preloader', 'mixins.sound', 'mediaelement'], function(
 		},
 
 
+		initVideoOver: function(){
+
+			if(this.options.videoOver){
+				this.videoOverObj = $(this.plugin);
+				this.videoOverObj.addClass('videomodal');
+			}
+		},
+
+
+		disposeVideoOver: function(){
+			if(this.videoOverObj){
+				this.videoOverObj.removeClass('videomodal');
+				delete this.videoOverObj;
+			}
+		},
+
+
 		initLoadCheck: function() {
 			console.debug(this.elementId + " initLoadCheck");
-			this.videoloadInterval = setInterval($.proxy(this.checkVideoIsReadyToPlay, this), 200);
+			this.videoloadInterval = setInterval($.proxy(this.checkVideoIsReadyToPlay, this), 1000);
 		},
 
 
@@ -173,7 +196,7 @@ define(['jquery', 'mixins.preloader', 'mixins.sound', 'mediaelement'], function(
 			
 			
 			this.disposeIfOffScreen();
-			console.debug(this.elementId + ' checkVideoIsReadyToPlay');
+			//console.debug(this.elementId + ' checkVideoIsReadyToPlay');
 
 			if (this.isPlayable()) {
 				this.disposeLoadCheck();
@@ -189,18 +212,28 @@ define(['jquery', 'mixins.preloader', 'mixins.sound', 'mediaelement'], function(
 
 
 		showPoster: function() {
+
+
+
+			if(this.isMobileBrowser()){
+				return;
+			}
+
 			console.debug(this.elementId + " showPoster");
 			this.objWrapper.find('img').showVisible();
 		},
 
 		hidePoster: function() {
 			console.debug(this.elementId + " hidePoster");
+			if(this.options.videoOver){
+				return;
+			}
 			this.objWrapper.find('img').hideVisible();
 		},
 
 		// video click interactivity
 		checkInteract: function() {
-
+			console.info(this.elementId + " checkInteract assign events");
 			this.$el.off();
 			if (this.options.interactive) {
 				this.$el.on("click", $.proxy(this.toggleVideoPlayback, this));
@@ -235,6 +268,7 @@ define(['jquery', 'mixins.preloader', 'mixins.sound', 'mediaelement'], function(
 			} else {
 				this.play();
 				this.hidePoster();
+				this.initVideoOver();
 			}
 
 		},
@@ -390,14 +424,14 @@ define(['jquery', 'mixins.preloader', 'mixins.sound', 'mediaelement'], function(
 				return;
 			}
 
-
-
 			console.info(this.options.id + ' ComponentVideo dispose');
 
 			if (this.plugin) {
 				this.disposeSound();
 				this.stop();
 			}
+
+			this.disposeVideoOver();
 
 			clearInterval(this.garbageInterval);
 

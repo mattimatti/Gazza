@@ -18704,7 +18704,7 @@ define('components.video',['jquery', 'mixins.preloader', 'mixins.sound', 'mediae
 		disposeIfOffScreen: function() {
 			if (this.$el) {
 				if (!this.$el.isOnScreen()) {
-					console.error("GARBAGE COLLECT");
+					console.warn("this video is out of viewport will be disposed and marked for garbage collector");
 					this.dispose();
 					this.readyForGrabageCollection = true;
 				}
@@ -18751,6 +18751,14 @@ define('components.video',['jquery', 'mixins.preloader', 'mixins.sound', 'mediae
 			}
 
 
+			// force videoOver at false in mobile browsers
+			if(this.isMobileBrowser()){
+				this.options.videoOver = false;
+			}
+
+
+
+
 			// toggle visibility
 			var playerStyle = 'hide';
 
@@ -18773,14 +18781,12 @@ define('components.video',['jquery', 'mixins.preloader', 'mixins.sound', 'mediae
 
 			this.plugin = document.getElementById(this.options.id);
 
-			// 
-			if(this.options.videoOver){
-				$(this.plugin).addClass('videomodal');
-			}
+			
 
 			this.objWrapper = $(".videoWrapper");
 
 			this.showPoster();
+
 
 			// You have to set preload true once intilized otherwise in safari or firefox will not load the video
 			this.plugin.preload = true;
@@ -18790,9 +18796,26 @@ define('components.video',['jquery', 'mixins.preloader', 'mixins.sound', 'mediae
 		},
 
 
+		initVideoOver: function(){
+
+			if(this.options.videoOver){
+				this.videoOverObj = $(this.plugin);
+				this.videoOverObj.addClass('videomodal');
+			}
+		},
+
+
+		disposeVideoOver: function(){
+			if(this.videoOverObj){
+				this.videoOverObj.removeClass('videomodal');
+				delete this.videoOverObj;
+			}
+		},
+
+
 		initLoadCheck: function() {
 			console.debug(this.elementId + " initLoadCheck");
-			this.videoloadInterval = setInterval($.proxy(this.checkVideoIsReadyToPlay, this), 200);
+			this.videoloadInterval = setInterval($.proxy(this.checkVideoIsReadyToPlay, this), 1000);
 		},
 
 
@@ -18800,7 +18823,7 @@ define('components.video',['jquery', 'mixins.preloader', 'mixins.sound', 'mediae
 			
 			
 			this.disposeIfOffScreen();
-			console.debug(this.elementId + ' checkVideoIsReadyToPlay');
+			//console.debug(this.elementId + ' checkVideoIsReadyToPlay');
 
 			if (this.isPlayable()) {
 				this.disposeLoadCheck();
@@ -18816,18 +18839,28 @@ define('components.video',['jquery', 'mixins.preloader', 'mixins.sound', 'mediae
 
 
 		showPoster: function() {
+
+
+
+			if(this.isMobileBrowser()){
+				return;
+			}
+
 			console.debug(this.elementId + " showPoster");
 			this.objWrapper.find('img').showVisible();
 		},
 
 		hidePoster: function() {
 			console.debug(this.elementId + " hidePoster");
+			if(this.options.videoOver){
+				return;
+			}
 			this.objWrapper.find('img').hideVisible();
 		},
 
 		// video click interactivity
 		checkInteract: function() {
-
+			console.info(this.elementId + " checkInteract assign events");
 			this.$el.off();
 			if (this.options.interactive) {
 				this.$el.on("click", $.proxy(this.toggleVideoPlayback, this));
@@ -18862,6 +18895,7 @@ define('components.video',['jquery', 'mixins.preloader', 'mixins.sound', 'mediae
 			} else {
 				this.play();
 				this.hidePoster();
+				this.initVideoOver();
 			}
 
 		},
@@ -19025,6 +19059,8 @@ define('components.video',['jquery', 'mixins.preloader', 'mixins.sound', 'mediae
 				this.disposeSound();
 				this.stop();
 			}
+
+			this.disposeVideoOver();
 
 			clearInterval(this.garbageInterval);
 
@@ -22352,6 +22388,8 @@ define('app',[
 					var obj = new ComponentVideo(a, b);
 					obj.preload();
 					instancesPool[a.id] = obj;
+				}else{
+					console.error(a.id , "already initilaized");
 				}
 			},
 			remove: function(a, b) {
@@ -29447,6 +29485,141 @@ define('app',[
 })(window);
 define("tweenmax", function(){});
 
+/**
+ * MediaElement Cleaner
+ * 1. Expand MediaElementPlayer class, add dispose() method which allows you properly
+ * remove media element from DOM tree, delete the reference in mejs.players 
+ * 2. Automatically call to dispose method when audio player is removed from dom tree.
+ */
+
+
+(function(global, factory) {
+  // AMD
+  if (typeof define === 'function' && define.amd) {
+    define('mecleaner',[ 'jquery' ], function(jQuery) {
+      return factory(global, jQuery);
+    });
+  // CommonJS/Browserify
+  } else if (typeof exports === 'object') {
+    factory(global, require('jquery'));
+  // Global
+  } else {
+    factory(global, global.jQuery);
+  }
+}(typeof window !== 'undefined' ? window : this, function(window, $) {
+
+(function(mejs, $){
+
+    var ARRAY_PROTO = Array.prototype;
+    var SLICE = ARRAY_PROTO.slice;
+
+    if (!mejs){
+        return;
+    }
+    
+    /**
+     * Dispose current media element
+     */
+    mejs.MediaElementPlayer.prototype.dispose = function(){
+        var me = this;
+        
+        if (me.__disposed){
+            return;
+        }
+        
+        var players = mejs.players, divParent;
+        
+        if (me.media.pluginType == 'flash'){
+            // properly dispose the <object /> wrapping div
+            divParent = me.media.pluginElement.parentNode;
+        }
+        
+        try{
+            me.remove();
+        }
+        catch(ex){}
+        
+        for(var l = players.length; l--;){
+            if (players[l] === this){ 
+                players.splice(l, 1);
+                break;
+            }
+        }
+        
+        if (divParent && divParent.parentNode){
+            divParent.parentNode.removeChild(divParent);
+        }
+        
+        // check if the empty wrapp element is there
+        if (this.media && this.media.parentNode){
+            this.media.parentNode.removeChild(this.media);
+        }
+        
+        if (this.node){
+            try{
+                this.node.removeAttribute('player');
+            }
+            catch(ex){}
+        }
+        
+        me.__disposed = true;
+    };
+     
+    // expand jQuery only if it is available   
+    if (!$){
+        return; 
+    }
+ 
+    var eventName = '__mejs_hack_dispose_on_removal';     
+    var pluginMethod = $.fn.mediaelementplayer;
+    var MediaElementPlayer = mejs.MediaElementPlayer;
+
+    mejs.MediaElementPlayer = function MediaElementPlayerWrapper(){
+        
+        mejs.MediaElementPlayer = MediaElementPlayer;
+        var ret = MediaElementPlayer.apply(null, arguments);
+        mejs.MediaElementPlayer = MediaElementPlayerWrapper;
+
+        if (ret.node){
+            $(ret.node).bind(eventName, $.noop);
+        }
+
+        return ret;
+    };
+ 
+    $.event.special[eventName] = {
+        /**
+         * @param data (Anything) Whatever eventData (optional) was passed in
+         *        when binding the event.
+         * @param namespaces (Array) An array of namespaces specified when
+         *        binding the event.
+         * @param eventHandle (Function) The actual function that will be bound
+         *        to the browser’s native event (this is used internally for the
+         *        beforeunload event, you’ll never use it).
+         */
+        setup : function onActionSetup(data, namespaces, eventHandle) {
+        },
+        
+        /**
+         * @param namespaces (Array) An array of namespaces specified when
+         *        binding the event.
+         */
+        teardown : function onActionTeardown(namespaces) {
+            var player = this.player; 
+            if (player){
+                // settimeout to make sure the disposing happen after
+                // the traversing of jquery, so it doesn't interfere 
+                setTimeout(function(){
+                    player.dispose();
+                },0);
+            }
+        }         
+    };
+    
+    
+})(window.mejs, window.jQuery);
+
+}));
 
 var noConflict = false;
 
@@ -29512,14 +29685,16 @@ require.config({
 	hammerjs: '../vendor/hammer',
 	hammer: '../vendor/jquery.hammer',
 	videojs: '../vendor/video-js-4.1.0/video.dev',
-	mediaelement: '../vendor/mediaelement/mediaelement-and-player'
+	mediaelement: '../vendor/mediaelement/mediaelement-and-player',
+	mecleaner: '../vendor/mecleaner',
 },
 
 	shim: {
 		"inview": ["jquery"],
 		"elevatezoom": ["jquery"],
 		"cloudzoom": ["jquery"],
-		"hammer": ["hammerjs"]
+		"hammer": ["hammerjs"],
+		"mecleaner" :["mediaelement"]
 	}
 
 });
@@ -29530,7 +29705,8 @@ require([
 	'jquery',
 	'app',
 	'tweenmax',
-	'hammer'
+	'hammer',
+	'mecleaner'
 ], function($, App) {
 	if (noConflict) {
 		$.noConflict(true);
