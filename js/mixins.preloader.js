@@ -134,6 +134,14 @@ define(['jquery'], function($){
 			this.preloadAjaxPool = $.grep(this.preloadAjaxPool, function(value) {
 				return value !== xhr;
 			});
+		},
+
+		getMyPos: function(xhr) {
+			return this.$el.offset().top;
+		},
+
+		getHeight: function(xhr) {
+			return this.$el.height();
 		}
 
 	};

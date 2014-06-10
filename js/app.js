@@ -56,7 +56,6 @@ define([
 				if (instancesPool[a.id]) {
 					instancesPool[a.id].dispose();
 					instancesPool[a.id].preloadAbort();
-					instancesPool[a.id] = null;
 					delete instancesPool[a.id];
 				}
 
@@ -76,7 +75,6 @@ define([
 				if (instancesPool[a.id]) {
 					instancesPool[a.id].dispose();
 					instancesPool[a.id].preloadAbort();
-					instancesPool[a.id] = null;
 					delete instancesPool[a.id];
 				}
 
@@ -96,7 +94,6 @@ define([
 				if (instancesPool[a.id]) {
 					instancesPool[a.id].dispose();
 					instancesPool[a.id].preloadAbort();
-					instancesPool[a.id] = null;
 					delete instancesPool[a.id];
 				}
 
@@ -118,7 +115,6 @@ define([
 				if (instancesPool[a.id]) {
 					instancesPool[a.id].dispose();
 					instancesPool[a.id].preloadAbort();
-					instancesPool[a.id] = null;
 					delete instancesPool[a.id];
 				}
 
@@ -141,7 +137,6 @@ define([
 				if (instancesPool[a.id]) {
 					instancesPool[a.id].dispose();
 					instancesPool[a.id].preloadAbort();
-					instancesPool[a.id] = null;
 					delete instancesPool[a.id];
 				}
 
@@ -188,64 +183,12 @@ define([
 
 		removeElement: function(element) {
 			var elm = Modules[element.getAttribute('obj-type')];
-			var id = element.getAttribute('id');
-			var cfg = (element.getAttribute('obj-config'));
-			var json = {};
-			try {
-				json = $.parseJSON(cfg);
-			} catch (e) {
-				console.error("Error parsing json", cfg);
-			}
-
-			//console.debug("removeElement", id, json);
+			
 			if (elm) {
-				elm.remove(element, json);
+				elm.remove(element);
 			}
 
 		},
-
-		onKeyFrame: function(element, name, direction) {
-
-			var item = $(element);
-			var itemId = item.attr("id");
-
-			//if(item.hasClass("anno")){
-			//	this.refreshScroller(item);
-			//	return;
-			//}
-
-			//console.error(itemId, name, direction);
-
-			if (direction === 'down') {
-				switch (name) {
-					case 'dataTopBottom':
-						//console.info(itemId + " DESTROY");
-						this.removeElement(element);
-						//this.refreshScroller();
-						break;
-					case 'dataBottomTop':
-						//console.info(itemId + " INIT");
-						this.initElement(element);
-						this.setHash(itemId);
-						break;
-				}
-			} else {
-				switch (name) {
-					case 'dataTopBottom':
-						//console.info(itemId + " INIT");
-						this.initElement(element);
-
-						this.setHash(itemId);
-						break;
-					case 'dataBottomTop':
-						//console.info(itemId + " DESTROY");
-						this.removeElement(element);
-						//this.refreshScroller();
-						break;
-				}
-			}
-		},
-
 
 		refreshScroller: function(item) {
 			//	if(this.objScroller){
@@ -318,6 +261,51 @@ define([
 			$('.box').bind('inview', $.proxy(this.onInviewTimer, this));
 		},
 
+
+		garbageCollector: function(){
+
+			console.info(instancesPool);
+
+			var count = 0;
+			for (var pepe in instancesPool){
+				count++;
+			}
+
+			if(count < 3){
+				return;
+			}
+
+			
+
+
+			var actualScrollTop = $(window).scrollTop();
+			var screenHeight = $( window ).height();
+
+			console.error("passa garbageCollector", count, 'elementi','actualScrollTop',actualScrollTop,'screenHeight',screenHeight);
+
+			for (var name in instancesPool){
+				var objInPool = instancesPool[name];
+				console.error(name, "item",objInPool.getMyPos());
+
+				var myPos = objInPool.getMyPos();
+				var myHeight = objInPool.getHeight();
+
+				// if(  myPos + myHeight - actualScrollTop >  screenHeight){
+				// 	console.error(name, 'sono fuori schermo piuuuuu');
+				// }
+
+				if(  myPos + myHeight - actualScrollTop <  0){
+					console.error(name, 'devo essere pulito');
+					var obj = {id: name};
+					self.removeElement(obj);
+				}
+
+			}
+			
+
+		},
+
+
 		lastScrollPosition: 0,
 
 		onInviewTimer: function(e, isInView, visiblePartX, visiblePartY) {
@@ -344,7 +332,10 @@ define([
 			var itemId = item.attr("id");
 
 
-			//console.error('onInviewTimer', itemId, isInView, visiblePartY);
+			//console.error('onInviewTimer', itemId, isInView);
+			
+			
+			
 
 			if (item.data('inviewtimer')) {
 				clearTimeout(item.data('inviewtimer'));
@@ -354,27 +345,63 @@ define([
 			var self = this;
 
 
+
+			if(!isInView){
+				self.removeElement(element);
+			}
+
+
+
+
+
 			item.data('inviewtimer', setTimeout(function() {
+
+
+
+				// if(!isInView){
+				// 	console.info(itemId + " DESTROY", visiblePartY,direction);
+				// 	self.removeElement(element);
+				// }else{
+				// 	console.info(itemId + " INIT", visiblePartY, direction);
+				// 	self.initElement(element);
+				// }
+
+				// if(isInView === true){
+				// 	console.info(itemId + " INIT", visiblePartY, direction);
+				// 	self.initElement(element);
+				// }else{
+				// 	console.info(itemId + " DESTROY", visiblePartY,direction);
+				// 	self.removeElement(element);
+				// }
+
+
+				//console.info("instancesPool", instancesPool);
+
 
 
 
 				if (visiblePartY && element) {
 
-					//console.debug("gestione",  item.attr("id"), visiblePartY);
+					
+
+
+
 
 					if (direction === 'topTObottom') {
 
 						switch (visiblePartY) {
 
 							case 'bottom':
-								console.info(itemId + " DESTROY", visiblePartY, direction);
+								console.info(itemId + " DESTROY", visiblePartY, direction );
 								self.removeElement(element);
-								break;
+							break;
 							case 'top':
 							case 'both':
 								console.info(itemId + " INIT", visiblePartY, direction);
+								//element.setAttribute('isInit',true);
 								self.initElement(element);
 								self.setHash(itemId);
+								//self.garbageCollector();
 								break;
 							default:
 
@@ -396,6 +423,7 @@ define([
 								console.info(itemId + " INIT", visiblePartY,direction);
 								self.initElement(element);
 								self.setHash(itemId);
+								//self.garbageCollector();
 								break;
 							default:
 
@@ -406,8 +434,11 @@ define([
 
 				}
 
+				
+				
 
-			}, 700));
+
+			}, 1000));
 		},
 
 

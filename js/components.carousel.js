@@ -3,7 +3,7 @@ define(['jquery', 'mixins.preloader', 'mixins.sound', 'hammer'], function($, Mix
 	var console = window.muteConsole;
 
 
-	var Component = function(element, options) {
+	var ComponentCarousel = function(element, options) {
 		this.$el = $(element);
 
 		this.elementId = this.$el.attr('id');
@@ -25,12 +25,12 @@ define(['jquery', 'mixins.preloader', 'mixins.sound', 'hammer'], function($, Mix
 
 	// MIXIN
 
-	$.extend(Component.prototype, MixinPreloader);
-	$.extend(Component.prototype, MixinSound);
+	$.extend(ComponentCarousel.prototype, MixinPreloader);
+	$.extend(ComponentCarousel.prototype, MixinSound);
 
 	//extend prototype
 
-	$.extend(Component.prototype, {
+	$.extend(ComponentCarousel.prototype, {
 
 		transitioning: false,
 
@@ -281,6 +281,6 @@ define(['jquery', 'mixins.preloader', 'mixins.sound', 'hammer'], function($, Mix
 
 	});
 
-	return Component;
+	return ComponentCarousel;
 
 });

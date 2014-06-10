@@ -2,7 +2,7 @@ define(['jquery','mixins.preloader','mixins.sound'], function($,MixinPreloader,M
 	
 	var console = window.console;
 
-	var Component = function(element, options) {
+	var ComponentEasy = function(element, options) {
 		this.options = options;
 		this.$el = $(element);
 		this.elementId = this.$el.attr('id');
@@ -10,12 +10,12 @@ define(['jquery','mixins.preloader','mixins.sound'], function($,MixinPreloader,M
 
 	// MIXIN
 	
-	$.extend(Component.prototype, MixinPreloader);
-	$.extend(Component.prototype, MixinSound);
+	$.extend(ComponentEasy.prototype, MixinPreloader);
+	$.extend(ComponentEasy.prototype, MixinSound);
 
 	//extend prototype
 
-	$.extend(Component.prototype, {
+	$.extend(ComponentEasy.prototype, {
 
 
 
@@ -62,6 +62,6 @@ define(['jquery','mixins.preloader','mixins.sound'], function($,MixinPreloader,M
 
 	});
 
-	return Component;
+	return ComponentEasy;
 
 });
