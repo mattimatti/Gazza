@@ -213,8 +213,6 @@ define(['jquery', 'mixins.preloader', 'mixins.sound', 'mediaelement'], function(
 
 		showPoster: function() {
 
-
-
 			if(this.isMobileBrowser()){
 				return;
 			}
