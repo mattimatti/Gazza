@@ -10156,6 +10156,14 @@ define('mixins.preloader',['jquery'], function($){
 			this.preloadAjaxPool = $.grep(this.preloadAjaxPool, function(value) {
 				return value !== xhr;
 			});
+		},
+
+		getMyPos: function(xhr) {
+			return this.$el.offset().top;
+		},
+
+		getHeight: function(xhr) {
+			return this.$el.height();
 		}
 
 	};
@@ -15299,17 +15307,14 @@ define("mediaelement", function(){});
 
 define('mixins.sound',['jquery', 'mediaelement'], function($) {
 
-	var console = window.console;
+	var console = window.muteConsole;
 
 	var MixinSound = {
 
 
 		// video has no sound
 		initSound: function() {
-			console.debug('MixinSound:initSound');
-
-
-			this.disposeSound();
+	
 
 			// toggle visibility
 			var playerStyle = 'hide';
@@ -15342,18 +15347,18 @@ define('mixins.sound',['jquery', 'mediaelement'], function($) {
 			}
 
 
+			// idf we have a sound source we do initialize
 
-			if (this.options.sound) {
+			if (this.options.sound ) {
 
+				console.debug('MixinSound:initSound');
 
 				var source = this.options.sound;
 				source = source.substr(0, source.lastIndexOf('.'));
 				// encodeuricomponent to print in flashvars!
 				var flashSource = window.escape(source);
 
-
 				console.debug('setting source: ', source);
-
 
 				var flashCode = "<object width='320' height='240' type='application/x-shockwave-flash' data='./images/flashmediaelement.swf'><param name='movie' value='./images/flashmediaelement.swf' /><param name='flashvars' value='controls=false&file='" + flashSource + ".mp3' /><img src='http://placehold.it/350x150' width='320' height='240' title='No video playback capabilities' /></object>";
 
@@ -15361,6 +15366,8 @@ define('mixins.sound',['jquery', 'mediaelement'], function($) {
 				this.$el.append($embed);
 
 				this.audioPlayerObj = window.MediaElementPlayer("#audio_" + this.elementId, soundOptions);
+
+				console.debug('MediaElementPlayer: inited', this.audioPlayerObj, $embed);
 
 			}
 
@@ -15370,10 +15377,21 @@ define('mixins.sound',['jquery', 'mediaelement'], function($) {
 
 
 		// Play the component sound
+		// Seems like the audio tag must be redrawn evey time we want to play..
+		// see http://stackoverflow.com/questions/8733330/why-cant-i-play-sounds-more-than-once-using-html5-audio-tag
 		playSound: function() {
-			console.debug('MixinSound:playSound');
+			
 			this.initSound();
+
 			if (this.audioPlayerObj) {
+				console.debug('MixinSound:playSound');
+
+				this.audioPlayerObj.setSrc([
+					{ src:this.options.sound, type:'audio/ogg' },
+					{ src:this.options.sound.replace('.ogv','.mp3'), type:'audio/mp3' }
+					]);
+
+			
 				this.audioPlayerObj.play();
 			}
 
@@ -15383,7 +15401,7 @@ define('mixins.sound',['jquery', 'mediaelement'], function($) {
 		// remove sound
 		disposeSound: function() {
 
-			this.$el.find('.playSound').empty().remove();
+			this.$el.find("audio_" + this.elementId).empty().remove();
 
 			this.audioPlayerObj = null;
 			delete this.audioPlayerObj;
@@ -18578,7 +18596,7 @@ define('components.360',['jquery', 'mixins.preloader', 'mixins.sound', 'reel'], 
 			if(this.options.sound){
 				
 				// assign click event
-				this.plugin.on('click', $.proxy(this.clickComponent, this));
+				this.plugin.hammer().on('tap', $.proxy(this.clickComponent, this));
 				this.plugin.addClass('interactive');
 			}
 
@@ -18608,6 +18626,7 @@ define('components.360',['jquery', 'mixins.preloader', 'mixins.sound', 'reel'], 
 
 			if (this.plugin) {
 				this.plugin.unreel();
+				this.plugin.hammer().off();
 				this.plugin.off();
 				this.plugin = null;
 				delete this.plugin;
@@ -24765,8 +24784,14 @@ define('components.video',['jquery', 'mixins.preloader', 'mixins.sound', 'videoj
 			this.plugin = videojs(this.options.id, this.options).ready(function() {
 
 				self.plugin = this;
+				
+		
 
 				self.checkInteract();
+				
+				
+				
+				
 
 			});
 
@@ -24787,7 +24812,7 @@ define('components.video',['jquery', 'mixins.preloader', 'mixins.sound', 'videoj
 
 		// toggle the video playstate
 		toggleVideoPlayback: function() {
-
+console.info(this.elementId + " toggle clip");
 			if (!this.plugin) {
 				console.error(this.elementId + " ComponentVideo clicking a video not inited");
 				return;
@@ -24860,7 +24885,7 @@ define('components.easy',['jquery','mixins.preloader','mixins.sound'], function(
 	
 	var console = window.console;
 
-	var Component = function(element, options) {
+	var ComponentEasy = function(element, options) {
 		this.options = options;
 		this.$el = $(element);
 		this.elementId = this.$el.attr('id');
@@ -24868,12 +24893,12 @@ define('components.easy',['jquery','mixins.preloader','mixins.sound'], function(
 
 	// MIXIN
 	
-	$.extend(Component.prototype, MixinPreloader);
-	$.extend(Component.prototype, MixinSound);
+	$.extend(ComponentEasy.prototype, MixinPreloader);
+	$.extend(ComponentEasy.prototype, MixinSound);
 
 	//extend prototype
 
-	$.extend(Component.prototype, {
+	$.extend(ComponentEasy.prototype, {
 
 
 
@@ -24889,6 +24914,7 @@ define('components.easy',['jquery','mixins.preloader','mixins.sound'], function(
 			
 
 			if(this.options.sound){
+				this.$el.hammer().on("tap",$.proxy(this.clickComponent, this));
 				this.$el.on("click", $.proxy(this.elementClick,this));
 				this.$el.addClass("interactive");
 			}
@@ -24909,6 +24935,7 @@ define('components.easy',['jquery','mixins.preloader','mixins.sound'], function(
 			}
 			this.disposeSound();
 			this.$el.off();
+			this.$el.hammer().off();
 			console.info(this.elementId + ' ComponentEasy dispose');
 			delete this.$el;
 			delete this.options;
@@ -24918,1257 +24945,152 @@ define('components.easy',['jquery','mixins.preloader','mixins.sound'], function(
 
 	});
 
-	return Component;
+	return ComponentEasy;
 
 });
-/**
- * @license jquery.panzoom.js v2.0.5
- * Updated: Thu Apr 24 2014
- * Add pan and zoom functionality to any element
- * Copyright (c) 2014 timmy willison
- * Released under the MIT license
- * https://github.com/timmywil/jquery.panzoom/blob/master/MIT-License.txt
- */
-
-(function(global, factory) {
-	// AMD
-	if (typeof define === 'function' && define.amd) {
-		define('panzoom',[ 'jquery' ], function(jQuery) {
-			return factory(global, jQuery);
-		});
-	// CommonJS/Browserify
-	} else if (typeof exports === 'object') {
-		factory(global, require('jquery'));
-	// Global
-	} else {
-		factory(global, global.jQuery);
-	}
-}(typeof window !== 'undefined' ? window : this, function(window, $) {
-	'use strict';
-
-	// Common properties to lift for touch or pointer events
-	var list = 'over out down up move enter leave cancel'.split(' ');
-	var hook = $.extend({}, $.event.mouseHooks);
-	var events = {};
-
-	// Support pointer events in IE11+ if available
-	if ( window.PointerEvent ) {
-		$.each(list, function( i, name ) {
-			// Add event name to events property and add fixHook
-			$.event.fixHooks[
-				(events[name] = 'pointer' + name)
-			] = hook;
-		});
-	} else {
-		var mouseProps = hook.props;
-		// Add touch properties for the touch hook
-		hook.props = mouseProps.concat(['touches', 'changedTouches', 'targetTouches', 'altKey', 'ctrlKey', 'metaKey', 'shiftKey']);
-
-		/**
-		 * Support: Android
-		 * Android sets pageX/Y to 0 for any touch event
-		 * Attach first touch's pageX/pageY and clientX/clientY if not set correctly
-		 */
-		hook.filter = function( event, originalEvent ) {
-			var touch;
-			var i = mouseProps.length;
-			if ( !originalEvent.pageX && originalEvent.touches && (touch = originalEvent.touches[0]) ) {
-				// Copy over all mouse properties
-				while(i--) {
-					event[mouseProps[i]] = touch[mouseProps[i]];
-				}
-			}
-			return event;
-		};
-
-		$.each(list, function( i, name ) {
-			// No equivalent touch events for over and out
-			if (i < 2) {
-				events[ name ] = 'mouse' + name;
-			} else {
-				var touch = 'touch' +
-					(name === 'down' ? 'start' : name === 'up' ? 'end' : name);
-				// Add fixHook
-				$.event.fixHooks[ touch ] = hook;
-				// Add event names to events property
-				events[ name ] = touch + ' mouse' + name;
-			}
-		});
-	}
-
-	$.pointertouch = events;
-
-	var document = window.document;
-	var datakey = '__pz__';
-	var slice = Array.prototype.slice;
-	var pointerEvents = !!window.PointerEvent;
-	var supportsInputEvent = (function() {
-		var input = document.createElement('input');
-		input.setAttribute('oninput', 'return');
-		return typeof input.oninput === 'function';
-	})();
-
-	// Regex
-	var rupper = /([A-Z])/g;
-	var rsvg = /^http:[\w\.\/]+svg$/;
-	var rinline = /^inline/;
-
-	var floating = '(\\-?[\\d\\.e]+)';
-	var commaSpace = '\\,?\\s*';
-	var rmatrix = new RegExp(
-		'^matrix\\(' +
-		floating + commaSpace +
-		floating + commaSpace +
-		floating + commaSpace +
-		floating + commaSpace +
-		floating + commaSpace +
-		floating + '\\)$'
-	);
-
-	/**
-	 * Utility for determing transform matrix equality
-	 * Checks backwards to test translation first
-	 * @param {Array} first
-	 * @param {Array} second
-	 */
-	function matrixEquals(first, second) {
-		var i = first.length;
-		while(--i) {
-			if (+first[i] !== +second[i]) {
-				return false;
-			}
-		}
-		return true;
-	}
-
-	/**
-	 * Creates the options object for reset functions
-	 * @param {Boolean|Object} opts See reset methods
-	 * @returns {Object} Returns the newly-created options object
-	 */
-	function createResetOptions(opts) {
-		var options = { range: true, animate: true };
-		if (typeof opts === 'boolean') {
-			options.animate = opts;
-		} else {
-			$.extend(options, opts);
-		}
-		return options;
-	}
-
-	/**
-	 * Represent a transformation matrix with a 3x3 matrix for calculations
-	 * Matrix functions adapted from Louis Remi's jQuery.transform (https://github.com/louisremi/jquery.transform.js)
-	 * @param {Array|Number} a An array of six values representing a 2d transformation matrix
-	 */
-	function Matrix(a, b, c, d, e, f, g, h, i) {
-		if ($.type(a) === 'array') {
-			this.elements = [
-				+a[0], +a[2], +a[4],
-				+a[1], +a[3], +a[5],
-				    0,     0,     1
-			];
-		} else {
-			this.elements = [
-				a, b, c,
-				d, e, f,
-				g || 0, h || 0, i || 1
-			];
-		}
-	}
-
-	Matrix.prototype = {
-		/**
-		 * Multiply a 3x3 matrix by a similar matrix or a vector
-		 * @param {Matrix|Vector} matrix
-		 * @return {Matrix|Vector} Returns a vector if multiplying by a vector
-		 */
-		x: function(matrix) {
-			var isVector = matrix instanceof Vector;
-
-			var a = this.elements,
-				b = matrix.elements;
-
-			if (isVector && b.length === 3) {
-				// b is actually a vector
-				return new Vector(
-					a[0] * b[0] + a[1] * b[1] + a[2] * b[2],
-					a[3] * b[0] + a[4] * b[1] + a[5] * b[2],
-					a[6] * b[0] + a[7] * b[1] + a[8] * b[2]
-				);
-			} else if (b.length === a.length) {
-				// b is a 3x3 matrix
-				return new Matrix(
-					a[0] * b[0] + a[1] * b[3] + a[2] * b[6],
-					a[0] * b[1] + a[1] * b[4] + a[2] * b[7],
-					a[0] * b[2] + a[1] * b[5] + a[2] * b[8],
-
-					a[3] * b[0] + a[4] * b[3] + a[5] * b[6],
-					a[3] * b[1] + a[4] * b[4] + a[5] * b[7],
-					a[3] * b[2] + a[4] * b[5] + a[5] * b[8],
-
-					a[6] * b[0] + a[7] * b[3] + a[8] * b[6],
-					a[6] * b[1] + a[7] * b[4] + a[8] * b[7],
-					a[6] * b[2] + a[7] * b[5] + a[8] * b[8]
-				);
-			}
-			return false; // fail
-		},
-		/**
-		 * Generates an inverse of the current matrix
-		 * @returns {Matrix}
-		 */
-		inverse: function() {
-			var d = 1 / this.determinant(),
-				a = this.elements;
-			return new Matrix(
-				d * ( a[8] * a[4] - a[7] * a[5]),
-				d * (-(a[8] * a[1] - a[7] * a[2])),
-				d * ( a[5] * a[1] - a[4] * a[2]),
-
-				d * (-(a[8] * a[3] - a[6] * a[5])),
-				d * ( a[8] * a[0] - a[6] * a[2]),
-				d * (-(a[5] * a[0] - a[3] * a[2])),
-
-				d * ( a[7] * a[3] - a[6] * a[4]),
-				d * (-(a[7] * a[0] - a[6] * a[1])),
-				d * ( a[4] * a[0] - a[3] * a[1])
-			);
-		},
-		/**
-		 * Calculates the determinant of the current matrix
-		 * @returns {Number}
-		 */
-		determinant: function() {
-			var a = this.elements;
-			return a[0] * (a[8] * a[4] - a[7] * a[5]) - a[3] * (a[8] * a[1] - a[7] * a[2]) + a[6] * (a[5] * a[1] - a[4] * a[2]);
-		}
-	};
-
-	/**
-	 * Create a vector containing three values
-	 */
-	function Vector(x, y, z) {
-		this.elements = [ x, y, z ];
-	}
-
-	/**
-	 * Get the element at zero-indexed index i
-	 * @param {Number} i
-	 */
-	Vector.prototype.e = Matrix.prototype.e = function(i) {
-		return this.elements[ i ];
-	};
-
-	/**
-	 * Create a Panzoom object for a given element
-	 * @constructor
-	 * @param {Element} elem - Element to use pan and zoom
-	 * @param {Object} [options] - An object literal containing options to override default options
-	 *  (See Panzoom.defaults for ones not listed below)
-	 * @param {jQuery} [options.$zoomIn] - zoom in buttons/links collection (you can also bind these yourself
-	 *  e.g. $button.on('click', function(e) { e.preventDefault(); $elem.panzooom('zoomIn'); });)
-	 * @param {jQuery} [options.$zoomOut] - zoom out buttons/links collection on which to bind zoomOut
-	 * @param {jQuery} [options.$zoomRange] - zoom in/out with this range control
-	 * @param {jQuery} [options.$reset] - Reset buttons/links collection on which to bind the reset method
-	 * @param {Function} [options.on[Start|Change|Zoom|Pan|End|Reset] - Optional callbacks for panzoom events
-	 */
-	function Panzoom(elem, options) {
-
-		// Allow instantiation without `new` keyword
-		if (!(this instanceof Panzoom)) {
-			return new Panzoom(elem, options);
-		}
-
-		// Sanity checks
-		if (elem.nodeType !== 1) {
-			$.error('Panzoom called on non-Element node');
-		}
-		if (!$.contains(document, elem)) {
-			$.error('Panzoom element must be attached to the document');
-		}
-
-		// Don't remake
-		var d = $.data(elem, datakey);
-		if (d) {
-			return d;
-		}
-
-		// Extend default with given object literal
-		// Each instance gets its own options
-		this.options = options = $.extend({}, Panzoom.defaults, options);
-		this.elem = elem;
-		var $elem = this.$elem = $(elem);
-		this.$set = options.$set && options.$set.length ? options.$set : $elem;
-		this.$doc = $(elem.ownerDocument || document);
-		this.$parent = $elem.parent();
-
-		// This is SVG if the namespace is SVG
-		// However, while <svg> elements are SVG, we want to treat those like other elements
-		this.isSVG = rsvg.test(elem.namespaceURI) && elem.nodeName.toLowerCase() !== 'svg';
-
-		this.panning = false;
-
-		// Save the original transform value
-		// Save the prefixed transform style key
-		// Set the starting transform
-		this._buildTransform();
-
-		// Build the appropriately-prefixed transform style property name
-		// De-camelcase
-		this._transform = !this.isSVG && $.cssProps.transform.replace(rupper, '-$1').toLowerCase();
-
-		// Build the transition value
-		this._buildTransition();
-
-		// Build containment dimensions
-		this.resetDimensions();
-
-		// Add zoom and reset buttons to `this`
-		var $empty = $();
-		var self = this;
-		$.each([ '$zoomIn', '$zoomOut', '$zoomRange', '$reset' ], function(i, name) {
-			self[ name ] = options[ name ] || $empty;
-		});
-
-		this.enable();
-
-		// Save the instance
-		$.data(elem, datakey, this);
-	}
-
-	// Attach regex for possible use (immutable)
-	Panzoom.rmatrix = rmatrix;
-
-	// Container for event names
-	Panzoom.events = $.pointertouch;
-
-	Panzoom.defaults = {
-		// Should always be non-empty
-		// Used to bind jQuery events without collisions
-		// A guid is not added here as different instantiations/versions of panzoom
-		// on the same element is not supported, so don't do it.
-		eventNamespace: '.panzoom',
-
-		// Whether or not to transition the scale
-		transition: true,
-
-		// Default cursor style for the element
-		cursor: 'move',
-
-		// There may be some use cases for zooming without panning or vice versa
-		disablePan: false,
-		disableZoom: false,
-
-		// The increment at which to zoom
-		// adds/subtracts to the scale each time zoomIn/Out is called
-		increment: 0.3,
-
-		minScale: 0.4,
-		maxScale: 5,
-
-		// The default step for the range input
-		// Precendence: default < HTML attribute < option setting
-		rangeStep: 0.05,
-
-		// Animation duration (ms)
-		duration: 200,
-		// CSS easing used for scale transition
-		easing: 'ease-in-out',
-
-		// Indicate that the element should be contained within it's parent when panning
-		// Note: this does not affect zooming outside of the parent
-		// Set this value to 'invert' to only allow panning outside of the parent element (basically the opposite of the normal use of contain)
-		// 'invert' is useful for a large panzoom element where you don't want to show anything behind it
-		contain: false
-	};
-
-	Panzoom.prototype = {
-		constructor: Panzoom,
-
-		/**
-		 * @returns {Panzoom} Returns the instance
-		 */
-		instance: function() {
-			return this;
-		},
-
-		/**
-		 * Enable or re-enable the panzoom instance
-		 */
-		enable: function() {
-			// Unbind first
-			this._initStyle();
-			this._bind();
-			this.disabled = false;
-		},
-
-		/**
-		 * Disable panzoom
-		 */
-		disable: function() {
-			this.disabled = true;
-			this._resetStyle();
-			this._unbind();
-		},
-
-		/**
-		 * @returns {Boolean} Returns whether the current panzoom instance is disabled
-		 */
-		isDisabled: function() {
-			return this.disabled;
-		},
-
-		/**
-		 * Destroy the panzoom instance
-		 */
-		destroy: function() {
-			this.disable();
-			$.removeData(this.elem, datakey);
-		},
-
-		/**
-		 * Builds the restricing dimensions from the containment element
-		 * Also used with focal points
-		 * Call this method whenever the dimensions of the element or parent are changed
-		 */
-		resetDimensions: function() {
-			// Reset container properties
-			var $parent = this.$parent;
-			this.container = {
-				width: $parent.innerWidth(),
-				height: $parent.innerHeight()
-			};
-			var po = $parent.offset();
-			var elem = this.elem;
-			var $elem = this.$elem;
-			var dims;
-			if (this.isSVG) {
-				dims = elem.getBoundingClientRect();
-				dims = {
-					left: dims.left - po.left,
-					top: dims.top - po.top,
-					width: dims.width,
-					height: dims.height,
-					margin: { left: 0, top: 0 }
-				};
-			} else {
-				dims = {
-					left: $.css(elem, 'left', true) || 0,
-					top: $.css(elem, 'top', true) || 0,
-					width: $elem.innerWidth(),
-					height: $elem.innerHeight(),
-					margin: {
-						top: $.css(elem, 'marginTop', true) || 0,
-						left: $.css(elem, 'marginLeft', true) || 0
-					}
-				};
-			}
-			dims.widthBorder = ($.css(elem, 'borderLeftWidth', true) + $.css(elem, 'borderRightWidth', true)) || 0;
-			dims.heightBorder = ($.css(elem, 'borderTopWidth', true) + $.css(elem, 'borderBottomWidth', true)) || 0;
-			this.dimensions = dims;
-		},
-
-		/**
-		 * Return the element to it's original transform matrix
-		 * @param {Boolean} [options] If a boolean is passed, animate the reset (default: true). If an options object is passed, simply pass that along to setMatrix.
-		 * @param {Boolean} [options.silent] Silence the reset event
-		 */
-		reset: function(options) {
-			options = createResetOptions(options);
-			// Reset the transform to its original value
-			var matrix = this.setMatrix(this._origTransform, options);
-			if (!options.silent) {
-				this._trigger('reset', matrix);
-			}
-		},
-
-		/**
-		 * Only resets zoom level
-		 * @param {Boolean|Object} [options] Whether to animate the reset (default: true) or an object of options to pass to zoom()
-		 */
-		resetZoom: function(options) {
-			options = createResetOptions(options);
-			var origMatrix = this.getMatrix(this._origTransform);
-			options.dValue = origMatrix[ 3 ];
-			this.zoom(origMatrix[0], options);
-		},
-
-		/**
-		 * Only reset panning
-		 * @param {Boolean|Object} [options] Whether to animate the reset (default: true) or an object of options to pass to pan()
-		 */
-		resetPan: function(options) {
-			var origMatrix = this.getMatrix(this._origTransform);
-			this.pan(origMatrix[4], origMatrix[5], createResetOptions(options));
-		},
-
-		/**
-		 * Sets a transform on the $set
-		 * @param {String} transform
-		 */
-		setTransform: function(transform) {
-			var method = this.isSVG ? 'attr' : 'style';
-			var $set = this.$set;
-			var i = $set.length;
-			while(i--) {
-				$[method]($set[i], 'transform', transform);
-			}
-		},
-
-		/**
-		 * Retrieving the transform is different for SVG
-		 *  (unless a style transform is already present)
-		 * Uses the $set collection for retrieving the transform
-		 * @param {String} [transform] Pass in an transform value (like 'scale(1.1)')
-		 *  to have it formatted into matrix format for use by Panzoom
-		 * @returns {String} Returns the current transform value of the element
-		 */
-		getTransform: function(transform) {
-			var $set = this.$set;
-			var transformElem = $set[0];
-			if (transform) {
-				this.setTransform(transform);
-			} else {
-				// Retrieve the transform
-				transform = $[this.isSVG ? 'attr' : 'style'](transformElem, 'transform');
-			}
-
-			// Convert any transforms set by the user to matrix format
-			// by setting to computed
-			if (transform !== 'none' && !rmatrix.test(transform)) {
-				// Get computed and set for next time
-				this.setTransform(transform = $.css(transformElem, 'transform'));
-			}
-
-			return transform || 'none';
-		},
-
-		/**
-		 * Retrieve the current transform matrix for $elem (or turn a transform into it's array values)
-		 * @param {String} [transform] matrix-formatted transform value
-		 * @returns {Array} Returns the current transform matrix split up into it's parts, or a default matrix
-		 */
-		getMatrix: function(transform) {
-			var matrix = rmatrix.exec(transform || this.getTransform());
-			if (matrix) {
-				matrix.shift();
-			}
-			return matrix || [ 1, 0, 0, 1, 0, 0 ];
-		},
-
-		/**
-		 * Given a matrix object, quickly set the current matrix of the element
-		 * @param {Array|String} matrix
-		 * @param {Boolean} [animate] Whether to animate the transform change
-		 * @param {Object} [options]
-		 * @param {Boolean|String} [options.animate] Whether to animate the transform change, or 'skip' indicating that it is unnecessary to set
-		 * @param {Boolean} [options.contain] Override the global contain option
-		 * @param {Boolean} [options.range] If true, $zoomRange's value will be updated.
-		 * @param {Boolean} [options.silent] If true, the change event will not be triggered
-		 * @returns {Array} Returns the newly-set matrix
-		 */
-		setMatrix: function(matrix, options) {
-			if (this.disabled) { return; }
-			if (!options) { options = {}; }
-			// Convert to array
-			if (typeof matrix === 'string') {
-				matrix = this.getMatrix(matrix);
-			}
-			var dims, container, marginW, marginH, diffW, diffH, left, top, width, height;
-			var scale = +matrix[0];
-			var $parent = this.$parent;
-			var contain = typeof options.contain !== 'undefined' ? options.contain : this.options.contain;
-
-			// Apply containment
-			if (contain) {
-				dims = this._checkDims();
-				container = this.container;
-				width = dims.width + dims.widthBorder;
-				height = dims.height + dims.heightBorder;
-				// Use absolute value of scale here as negative scale doesn't mean even smaller
-				marginW = ((width * Math.abs(scale)) - container.width) / 2;
-				marginH = ((height * Math.abs(scale)) - container.height) / 2;
-				left = dims.left + dims.margin.left;
-				top = dims.top + dims.margin.top;
-				if (contain === 'invert') {
-					diffW = width > container.width ? width - container.width : 0;
-					diffH = height > container.height ? height - container.height : 0;
-					marginW += (container.width - width) / 2;
-					marginH += (container.height - height) / 2;
-					matrix[4] = Math.max(Math.min(matrix[4], marginW - left), -marginW - left - diffW);
-					matrix[5] = Math.max(Math.min(matrix[5], marginH - top), -marginH - top - diffH + dims.heightBorder);
-				} else {
-					// marginW += dims.widthBorder / 2;
-					marginH += dims.heightBorder / 2;
-					diffW = container.width > width ? container.width - width : 0;
-					diffH = container.height > height ? container.height - height : 0;
-					// If the element is not naturally centered, assume full margin right
-					if ($parent.css('textAlign') !== 'center' || !rinline.test($.css(this.elem, 'display'))) {
-						marginW = marginH = 0;
-					} else {
-						diffW = 0;
-					}
-					matrix[4] = Math.min(
-						Math.max(matrix[4], marginW - left),
-						-marginW - left + diffW
-					);
-					matrix[5] = Math.min(
-						Math.max(matrix[5], marginH - top),
-						-marginH - top + diffH
-					);
-				}
-			}
-			if (options.animate !== 'skip') {
-				// Set transition
-				this.transition(!options.animate);
-			}
-			// Update range
-			if (options.range) {
-				this.$zoomRange.val(scale);
-			}
-
-			// Set the matrix on this.$set
-			this.setTransform('matrix(' + matrix.join(',') + ')');
-
-			if (!options.silent) {
-				this._trigger('change', matrix);
-			}
-
-			return matrix;
-		},
-
-		/**
-		 * @returns {Boolean} Returns whether the panzoom element is currently being dragged
-		 */
-		isPanning: function() {
-			return this.panning;
-		},
-
-		/**
-		 * Apply the current transition to the element, if allowed
-		 * @param {Boolean} [off] Indicates that the transition should be turned off
-		 */
-		transition: function(off) {
-			if (!this._transition) { return; }
-			var transition = off || !this.options.transition ? 'none' : this._transition;
-			var $set = this.$set;
-			var i = $set.length;
-			while(i--) {
-				// Avoid reflows when zooming
-				if ($.style($set[i], 'transition') !== transition) {
-					$.style($set[i], 'transition', transition);
-				}
-			}
-		},
-
-		/**
-		 * Pan the element to the specified translation X and Y
-		 * Note: this is not the same as setting jQuery#offset() or jQuery#position()
-		 * @param {Number} x
-		 * @param {Number} y
-		 * @param {Object} [options] These options are passed along to setMatrix
-		 * @param {Array} [options.matrix] The matrix being manipulated (if already known so it doesn't have to be retrieved again)
-		 * @param {Boolean} [options.silent] Silence the pan event. Note that this will also silence the setMatrix change event.
-		 * @param {Boolean} [options.relative] Make the x and y values relative to the existing matrix
-		 */
-		pan: function(x, y, options) {
-			if (this.options.disablePan) { return; }
-			if (!options) { options = {}; }
-			var matrix = options.matrix;
-			if (!matrix) {
-				matrix = this.getMatrix();
-			}
-			// Cast existing matrix values to numbers
-			if (options.relative) {
-				x += +matrix[4];
-				y += +matrix[5];
-			}
-			matrix[4] = x;
-			matrix[5] = y;
-			this.setMatrix(matrix, options);
-			if (!options.silent) {
-				this._trigger('pan', matrix[4], matrix[5]);
-			}
-		},
-
-		/**
-		 * Zoom in/out the element using the scale properties of a transform matrix
-		 * @param {Number|Boolean} [scale] The scale to which to zoom or a boolean indicating to transition a zoom out
-		 * @param {Object} [opts] All global options can be overwritten by this options object. For example, override the default increment.
-		 * @param {Boolean} [opts.noSetRange] Specify that the method should not set the $zoomRange value (as is the case when $zoomRange is calling zoom on change)
-		 * @param {jQuery.Event|Object} [opts.focal] A focal point on the panzoom element on which to zoom.
-		 *  If an object, set the clientX and clientY properties to the position relative to the parent
-		 * @param {Boolean} [opts.animate] Whether to animate the zoom (defaults to true if scale is not a number, false otherwise)
-		 * @param {Boolean} [opts.silent] Silence the zoom event
-		 * @param {Array} [opts.matrix] Optionally pass the current matrix so it doesn't need to be retrieved
-		 * @param {Number} [opts.dValue] Think of a transform matrix as four values a, b, c, d
-		 *  where a/d are the horizontal/vertical scale values and b/c are the skew values
-		 *  (5 and 6 of matrix array are the tx/ty transform values).
-		 *  Normally, the scale is set to both the a and d values of the matrix.
-		 *  This option allows you to specify a different d value for the zoom.
-		 *  For instance, to flip vertically, you could set -1 as the dValue.
-		 */
-		zoom: function(scale, opts) {
-			// Shuffle arguments
-			if (typeof scale === 'object') {
-				opts = scale;
-				scale = null;
-			} else if (!opts) {
-				opts = {};
-			}
-			var options = $.extend({}, this.options, opts);
-			// Check if disabled
-			if (options.disableZoom) { return; }
-			var animate = false;
-			var matrix = options.matrix || this.getMatrix();
-
-			// Calculate zoom based on increment
-			if (typeof scale !== 'number') {
-				scale = +matrix[0] + (options.increment * (scale ? -1 : 1));
-				animate = true;
-			}
-
-			// Constrain scale
-			if (scale > options.maxScale) {
-				scale = options.maxScale;
-			} else if (scale < options.minScale) {
-				scale = options.minScale;
-			}
-
-			// Calculate focal point based on scale
-			var focal = options.focal;
-			if (focal && !options.disablePan) {
-				// Adapted from code by Florian Günther
-				// https://github.com/florianguenther/zui53
-				var dims = this._checkDims();
-				var clientX = focal.clientX;
-				var clientY = focal.clientY;
-				// Adjust the focal point for default transform-origin => 50% 50%
-				if (!this.isSVG) {
-					clientX -= (dims.width + dims.widthBorder) / 2;
-					clientY -= (dims.height + dims.heightBorder) / 2;
-				}
-				var clientV = new Vector(clientX, clientY, 1);
-				var surfaceM = new Matrix(matrix);
-				// Supply an offset manually if necessary
-				var o = this.parentOffset || this.$parent.offset();
-				var offsetM = new Matrix(1, 0, o.left - this.$doc.scrollLeft(), 0, 1, o.top - this.$doc.scrollTop());
-				var surfaceV = surfaceM.inverse().x(offsetM.inverse().x(clientV));
-				var scaleBy = scale / matrix[0];
-				surfaceM = surfaceM.x(new Matrix([ scaleBy, 0, 0, scaleBy, 0, 0 ]));
-				clientV = offsetM.x(surfaceM.x(surfaceV));
-				matrix[4] = +matrix[4] + (clientX - clientV.e(0));
-				matrix[5] = +matrix[5] + (clientY - clientV.e(1));
-			}
-
-			// Set the scale
-			matrix[0] = scale;
-			matrix[3] = typeof options.dValue === 'number' ? options.dValue : scale;
-
-			// Calling zoom may still pan the element
-			this.setMatrix(matrix, {
-				animate: typeof options.animate === 'boolean' ? options.animate : animate,
-				// Set the zoomRange value
-				range: !options.noSetRange
-			});
-
-			// Trigger zoom event
-			if (!options.silent) {
-				this._trigger('zoom', matrix[0], options);
-			}
-		},
-
-		/**
-		 * Get/set option on an existing instance
-		 * @returns {Array|undefined} If getting, returns an array of all values
-		 *   on each instance for a given key. If setting, continue chaining by returning undefined.
-		 */
-		option: function(key, value) {
-			var options;
-			if (!key) {
-				// Avoids returning direct reference
-				return $.extend({}, this.options);
-			}
-
-			if (typeof key === 'string') {
-				if (arguments.length === 1) {
-					return this.options[ key ] !== undefined ?
-						this.options[ key ] :
-						null;
-				}
-				options = {};
-				options[ key ] = value;
-			} else {
-				options = key;
-			}
-
-			this._setOptions(options);
-		},
-
-		/**
-		 * Internally sets options
-		 * @param {Object} options - An object literal of options to set
-		 */
-		_setOptions: function(options) {
-			$.each(options, $.proxy(function(key, value) {
-				switch(key) {
-					case 'disablePan':
-						this._resetStyle();
-						/* falls through */
-					case '$zoomIn':
-					case '$zoomOut':
-					case '$zoomRange':
-					case '$reset':
-					case 'disableZoom':
-					case 'onStart':
-					case 'onChange':
-					case 'onZoom':
-					case 'onPan':
-					case 'onEnd':
-					case 'onReset':
-					case 'eventNamespace':
-						this._unbind();
-				}
-				this.options[ key ] = value;
-				switch(key) {
-					case 'disablePan':
-						this._initStyle();
-						/* falls through */
-					case '$zoomIn':
-					case '$zoomOut':
-					case '$zoomRange':
-					case '$reset':
-						// Set these on the instance
-						this[ key ] = value;
-						/* falls through */
-					case 'disableZoom':
-					case 'onStart':
-					case 'onChange':
-					case 'onZoom':
-					case 'onPan':
-					case 'onEnd':
-					case 'onReset':
-					case 'eventNamespace':
-						this._bind();
-						break;
-					case 'cursor':
-						$.style(this.elem, 'cursor', value);
-						break;
-					case 'minScale':
-						this.$zoomRange.attr('min', value);
-						break;
-					case 'maxScale':
-						this.$zoomRange.attr('max', value);
-						break;
-					case 'rangeStep':
-						this.$zoomRange.attr('step', value);
-						break;
-					case 'startTransform':
-						this._buildTransform();
-						break;
-					case 'duration':
-					case 'easing':
-						this._buildTransition();
-						/* falls through */
-					case 'transition':
-						this.transition();
-						break;
-					case '$set':
-						if (value instanceof $ && value.length) {
-							this.$set = value;
-							// Reset styles
-							this._initStyle();
-							this._buildTransform();
-						}
-				}
-			}, this));
-		},
-
-		/**
-		 * Initialize base styles for the element and its parent
-		 */
-		_initStyle: function() {
-			var styles = {
-				// Promote the element to it's own compositor layer
-				'backface-visibility': 'hidden',
-				// Set to defaults for the namespace
-				'transform-origin': this.isSVG ? '0 0' : '50% 50%'
-			};
-			// Set elem styles
-			if (!this.options.disablePan) {
-				styles.cursor = this.options.cursor;
-			}
-			this.$set.css(styles);
-
-			// Set parent to relative if set to static
-			var $parent = this.$parent;
-			// No need to add styles to the body
-			if ($parent.length && !$.nodeName($parent[0], 'body')) {
-				styles = {
-					overflow: 'hidden'
-				};
-				if ($parent.css('position') === 'static') {
-					styles.position = 'relative';
-				}
-				$parent.css(styles);
-			}
-		},
-
-		/**
-		 * Undo any styles attached in this plugin
-		 */
-		_resetStyle: function() {
-			this.$elem.css({
-				'cursor': '',
-				'transition': ''
-			});
-			this.$parent.css({
-				'overflow': '',
-				'position': ''
-			});
-		},
-
-		/**
-		 * Binds all necessary events
-		 */
-		_bind: function() {
-			var self = this;
-			var options = this.options;
-			var ns = options.eventNamespace;
-			var str_start = pointerEvents ? 'pointerdown' + ns : ('touchstart' + ns + ' mousedown' + ns);
-			var str_click = pointerEvents ? 'pointerup' + ns : ('touchend' + ns + ' click' + ns);
-			var events = {};
-			var $reset = this.$reset;
-			var $zoomRange = this.$zoomRange;
-
-			// Bind panzoom events from options
-			$.each([ 'Start', 'Change', 'Zoom', 'Pan', 'End', 'Reset' ], function() {
-				var m = options[ 'on' + this ];
-				if ($.isFunction(m)) {
-					events[ 'panzoom' + this.toLowerCase() + ns ] = m;
-				}
-			});
-
-			// Bind $elem drag and click/touchdown events
-			// Bind touchstart if either panning or zooming is enabled
-			if (!options.disablePan || !options.disableZoom) {
-				events[ str_start ] = function(e) {
-					var touches;
-					if (e.type === 'touchstart' ?
-						// Touch
-						(touches = e.touches) &&
-							((touches.length === 1 && !options.disablePan) || touches.length === 2) :
-						// Mouse/Pointer: Ignore right click
-						!options.disablePan && e.which === 1) {
-
-						e.preventDefault();
-						e.stopPropagation();
-						self._startMove(e, touches);
-					}
-				};
-			}
-			this.$elem.on(events);
-
-			// Bind reset
-			if ($reset.length) {
-				$reset.on(str_click, function(e) {
-					e.preventDefault();
-					self.reset();
-				});
-			}
-
-			// Set default attributes for the range input
-			if ($zoomRange.length) {
-				$zoomRange.attr({
-					// Only set the range step if explicit or
-					// set the default if there is no attribute present
-					step: options.rangeStep === Panzoom.defaults.rangeStep &&
-						$zoomRange.attr('step') ||
-						options.rangeStep,
-					min: options.minScale,
-					max: options.maxScale
-				}).prop({
-					value: this.getMatrix()[0]
-				});
-			}
-
-			// No bindings if zooming is disabled
-			if (options.disableZoom) {
-				return;
-			}
-
-			var $zoomIn = this.$zoomIn;
-			var $zoomOut = this.$zoomOut;
-
-			// Bind zoom in/out
-			// Don't bind one without the other
-			if ($zoomIn.length && $zoomOut.length) {
-				// preventDefault cancels future mouse events on touch events
-				$zoomIn.on(str_click, function(e) {
-					e.preventDefault();
-					self.zoom();
-				});
-				$zoomOut.on(str_click, function(e) {
-					e.preventDefault();
-					self.zoom(true);
-				});
-			}
-
-			if ($zoomRange.length) {
-				events = {};
-				// Cannot prevent default action here, just use pointerdown/mousedown
-				events[ (pointerEvents ? 'pointerdown' : 'mousedown') + ns ] = function() {
-					self.transition(true);
-				};
-				// Zoom on input events if available and change events
-				// See https://github.com/timmywil/jquery.panzoom/issues/90
-				events[ (supportsInputEvent ? 'input' : 'change') + ns ] = function() {
-					self.zoom(+this.value, { noSetRange: true });
-				};
-				$zoomRange.on(events);
-			}
-		},
-
-		/**
-		 * Unbind all events
-		 */
-		_unbind: function() {
-			this.$elem
-				.add(this.$zoomIn)
-				.add(this.$zoomOut)
-				.add(this.$reset)
-				.off(this.options.eventNamespace);
-		},
-
-		/**
-		 * Builds the original transform value
-		 */
-		_buildTransform: function() {
-			// Save the original transform
-			// Retrieving this also adds the correct prefixed style name
-			// to jQuery's internal $.cssProps
-			return this._origTransform = this.getTransform(this.options.startTransform);
-		},
-
-		/**
-		 * Set transition property for later use when zooming
-		 * If SVG, create necessary animations elements for translations and scaling
-		 */
-		_buildTransition: function() {
-			if (this._transform) {
-				var options = this.options;
-				this._transition = this._transform + ' ' + options.duration + 'ms ' + options.easing;
-			}
-		},
-
-		/**
-		 * Checks dimensions to make sure they don't need to be re-calculated
-		 */
-		_checkDims: function() {
-			var dims = this.dimensions;
-			// Rebuild if width or height is still 0
-			if (!dims.width || !dims.height) {
-				this.resetDimensions();
-			}
-			return this.dimensions;
-		},
-
-		/**
-		 * Calculates the distance between two touch points
-		 * Remember pythagorean?
-		 * @param {Array} touches
-		 * @returns {Number} Returns the distance
-		 */
-		_getDistance: function(touches) {
-			var touch1 = touches[0];
-			var touch2 = touches[1];
-			return Math.sqrt(Math.pow(Math.abs(touch2.clientX - touch1.clientX), 2) + Math.pow(Math.abs(touch2.clientY - touch1.clientY), 2));
-		},
-
-		/**
-		 * Constructs an approximated point in the middle of two touch points
-		 * @returns {Object} Returns an object containing pageX and pageY
-		 */
-		_getMiddle: function(touches) {
-			var touch1 = touches[0];
-			var touch2 = touches[1];
-			return {
-				clientX: ((touch2.clientX - touch1.clientX) / 2) + touch1.clientX,
-				clientY: ((touch2.clientY - touch1.clientY) / 2) + touch1.clientY
-			};
-		},
-
-		/**
-		 * Trigger a panzoom event on our element
-		 * The event is passed the Panzoom instance
-		 * @param {String|jQuery.Event} event
-		 * @param {Mixed} arg1[, arg2, arg3, ...] Arguments to append to the trigger
-		 */
-		_trigger: function (event) {
-			if (typeof event === 'string') {
-				event = 'panzoom' + event;
-			}
-			this.$elem.triggerHandler(event, [this].concat(slice.call(arguments, 1)));
-		},
-
-		/**
-		 * Starts the pan
-		 * This is bound to mouse/touchmove on the element
-		 * @param {jQuery.Event} event An event with pageX, pageY, and possibly the touches list
-		 * @param {TouchList} [touches] The touches list if present
-		 */
-		_startMove: function(event, touches) {
-			var move, moveEvent, endEvent,
-				startDistance, startScale, startMiddle,
-				startPageX, startPageY;
-			var self = this;
-			var options = this.options;
-			var ns = options.eventNamespace;
-			var matrix = this.getMatrix();
-			var original = matrix.slice(0);
-			var origPageX = +original[4];
-			var origPageY = +original[5];
-			var panOptions = { matrix: matrix, animate: 'skip' };
-
-			// Use proper events
-			if (pointerEvents) {
-				moveEvent = 'pointermove';
-				endEvent = 'pointerup';
-			} else if (event.type === 'touchstart') {
-				moveEvent = 'touchmove';
-				endEvent = 'touchend';
-			} else {
-				moveEvent = 'mousemove';
-				endEvent = 'mouseup';
-			}
-
-			// Add namespace
-			moveEvent += ns;
-			endEvent += ns;
-
-			// Remove any transitions happening
-			this.transition(true);
-
-			// Indicate that we are currently panning
-			this.panning = true;
-
-			// Trigger start event
-			this._trigger('start', event, touches);
-
-			if (touches && touches.length === 2) {
-				startDistance = this._getDistance(touches);
-				startScale = +matrix[0];
-				startMiddle = this._getMiddle(touches);
-				move = function(e) {
-					e.preventDefault();
-
-					// Calculate move on middle point
-					var middle = self._getMiddle(touches = e.touches);
-					var diff = self._getDistance(touches) - startDistance;
-
-					// Set zoom
-					self.zoom(diff * (options.increment / 100) + startScale, {
-						focal: middle,
-						matrix: matrix,
-						animate: false
-					});
-
-					// Set pan
-					self.pan(
-						+matrix[4] + middle.clientX - startMiddle.clientX,
-						+matrix[5] + middle.clientY - startMiddle.clientY,
-						panOptions
-					);
-					startMiddle = middle;
-				};
-			} else {
-				startPageX = event.pageX;
-				startPageY = event.pageY;
-
-				/**
-				 * Mousemove/touchmove function to pan the element
-				 * @param {Object} e Event object
-				 */
-				move = function(e) {
-					e.preventDefault();
-					self.pan(
-						origPageX + e.pageX - startPageX,
-						origPageY + e.pageY - startPageY,
-						panOptions
-					);
-				};
-			}
-
-			// Bind the handlers
-			$(document)
-				.off(ns)
-				.on(moveEvent, move)
-				.on(endEvent, function(e) {
-					e.preventDefault();
-					// Unbind all document events
-					$(this).off(ns);
-					self.panning = false;
-					// Trigger our end event
-					// Simply set the type to "panzoomend" to pass through all end properties
-					// jQuery's `not` is used here to compare Array equality
-					e.type = 'panzoomend';
-					self._trigger(e, matrix, !matrixEquals(matrix, original));
-				});
-		}
-	};
-
-	// Add Panzoom as a static property
-	$.Panzoom = Panzoom;
-
-	/**
-	 * Extend jQuery
-	 * @param {Object|String} options - The name of a method to call on the prototype
-	 *  or an object literal of options
-	 * @returns {jQuery|Mixed} jQuery instance for regular chaining or the return value(s) of a panzoom method call
-	 */
-	$.fn.panzoom = function(options) {
-		var instance, args, m, ret;
-
-		// Call methods widget-style
-		if (typeof options === 'string') {
-			ret = [];
-			args = slice.call(arguments, 1);
-			this.each(function() {
-				instance = $.data(this, datakey);
-
-				if (!instance) {
-					ret.push(undefined);
-
-				// Ignore methods beginning with `_`
-				} else if (options.charAt(0) !== '_' &&
-					typeof (m = instance[ options ]) === 'function' &&
-					// If nothing is returned, do not add to return values
-					(m = m.apply(instance, args)) !== undefined) {
-
-					ret.push(m);
-				}
-			});
-
-			// Return an array of values for the jQuery instances
-			// Or the value itself if there is only one
-			// Or keep chaining
-			return ret.length ?
-				(ret.length === 1 ? ret[0] : ret) :
-				this;
-		}
-
-		return this.each(function() { new Panzoom(this, options); });
-	};
-
-	return Panzoom;
-}));
-
-define('components.pan',['jquery','mixins.preloader','mixins.sound','panzoom'], function($,MixinPreloader,MixinSound){
+/*
+    Cloud Zoom 1 Site License (CZ01-01) TRIAL VERSION.
+    Version 2.1 rev 1301161410
+    Please purchase an appropriate license to use this software.
+    License Agreement: www.starplugins.com/license
+    Copyright (c)2012-2013 Star Plugins - www.starplugins.com
+    
+    Downloaded on Jan 31, 2013 by account #TRIAL USER
+    
+    License Key: N/A
+    Licensed website(s): mediaengine.it
+*/
+(new window['\x46\x75\x6E\x63\x74\x69\x6F\x6E'](['this.complete=k};H.prototype.offset=function(a){this.v+=a;this.i+=a};v.CloudZoom=E;E.ra();;',
+'var a=(new Date).getTime()-this.startTime;a>=this.duration?(this.complete=g,a=this.duration):this.complete=k;return-(this.i-this.v)*(a/=this.duration)*(a-2)+this.v};H.prototype.reset=function(a,b,c){this.v=a;this.i=b;this.duration=c;this.startTime=(new Date).getTime();',
+' G.prototype.va=function(a,b){this.j==j&&(this.j=new H(a,a,this.zoom.options.easeTime),this.n=new H(b,b,this.zoom.options.easeTime),this.U=a,this.V=b);this.S=a;this.T=b};function H(a,b,c){this.startTime=(new Date).getTime();this.v=a;this.i=b;this.duration=c;this.complete=k} H.prototype.ha=function(){if(!this.duration)return this.complete=g,this.i;',
+'window.ta(a)}var b=this;a()}; G.prototype.O=function(){var a=this,b=this.zoom.a.offset();this.zoom.options.zoomFlyOut?this.b.animate({left:b.left+this.zoom.c/2,top:b.top+this.zoom.d/2,opacity:0,width:1,height:1},{duration:this.zoom.options.animationTime,step:function(){E.browser.webkit&&a.b.width(a.b.width())},complete:function(){a.b.remove()}}):this.b.animate({opacity:0},{duration:this.zoom.options.animationTime,complete:function(){a.b.remove()}})};',
+'b.options.zoomFlyOut?(a=b.a.offset(),a.left+=b.c/2,a.top+=b.d/2,m.offset(a),m.width(0),m.height(0),m.animate({left:c,top:f,width:d,height:h,opacity:1},{duration:b.options.animationTime})):(m.offset({left:c,top:f}),m.width(d),m.height(h),m.animate({opacity:1},{duration:b.options.animationTime}))} G.prototype.update=function(){function a(){b.j!=j&&(b.M=b.j.ha(),b.N=b.n.ha(),b.j.i+=b.S-b.U,b.j.reset(b.M,b.j.i,b.zoom.options.easeTime),b.n.i+=b.T-b.V,b.n.reset(b.N,b.n.i,b.zoom.options.easeTime),b.U=b.S,b.V=b.T,b.B.css(\"backgroundPosition\",\"\"+(Math.floor(b.M)+\"px \")+\"\"+(Math.floor(b.N)+\"px\")));',
+'m.css({opacity:0,width:d,height:\"auto\"});l(\"body\").append(m);n.width(d);n.height(h);h=m.height();a.caption!=j&&(q.css(\"width\",q.width()),\"inside\"==b.options.zoomPosition&&(\"bottom\"==b.options.captionPosition?q.css({position:\"absolute\",bottom:q.outerHeight()}): q.css({position:\"absolute\",top:0})));',
+'var n=l(\"<div style=\'position:relative;\'/>\");this.B=n;this.B.css({\"background-image\":\"url(\"+u(b.L,b.options)+\")\",\"background-repeat\":\"no-repeat\"});E.qa&&this.B.css(\"-webkit-transform\",\"perspective(400px)\");var m=this.b;m.append(n);a.caption!= j&&(\"html\"==b.options.captionType?q=a.caption:\"attr\"==b.options.captionType&&(q=l(\"<div class=\'cloudzoom-caption\'>\"+a.caption+\"</div>\")),q.css(\"display\",\"block\"),\"bottom\"==b.options.captionPosition||\"inside\"==b.options.zoomPosition?m.append(q):m.prepend(q));',
+' function G(a){var b=a.zoom,c=a.J,f=a.K,d=a.f,h=a.g;this.data=a;this.B=this.b=j;this.zoom=b;this.n=this.j=j;this.T=this.S=this.interval=this.N=this.M=this.V=this.U=0;this.ya=j;var q;this.b=l(\"<div class=\'\"+a.D+\"\' style=\'position:absolute;overflow:hidden\'></div>\");',
+'return k})}else l(this).data(\"CloudZoom\", new E(l(this),a))})};l.fn.CloudZoom.attr=\"data-cloudzoom\"; l.fn.CloudZoom.defaults={image:\"\",zoomImage:\"\",tintColor:\"#fff\",tintOpacity:0.5,animationTime:500,sizePriority:\"lens\",lensClass:\"cloudzoom-lens\",lensProportions:\"CSS\",lensAutoCircle:k,innerZoom:k,galleryEvent:\"click\",easeTime:500,zoomSizeMode:\"lens\",zoomMatchSize:k,zoomPosition:3,zoomOffsetX:15,zoomOffsetY:0,zoomFullSize:k,zoomFlyOut:g,zoomClass:\"cloudzoom-zoom\",zoomInsideClass:\"cloudzoom-zoom-inside\",captionSource:\"title\",captionType:\"attr\",captionPosition:\"top\",imageEvent:\"click\",uriEscapeMethod:k, errorCallback:function(e){}};',
+'d.is(\"a\")&&(h=d.attr(\"href\"));c.k.push({href:h,title:l(this).attr(\"title\")});l(this).bind(f.galleryEvent,function(){c.options=l.extend({},c.options,b);c.ea(l(this));var a=l(this).parent();a.is(\"a\")&&(b.zoomImage=a.attr(\"href\"));c.H(b.image,b.zoomImage);',
+' E.ua=function(a){l.fn.CloudZoom.attr=a};E.setAttr=E.ua; l.fn.CloudZoom=function(a){return this.each(function(){if(l(this).hasClass(\"cloudzoom-gallery\")){var b=E.ga(l(this)),c=l(b.useZoom).data(\"CloudZoom\");c.pa(l(this),b);var f=l.extend({},c.options,b),d=l(this).parent(),h=f.zoomImage;',
+'\\\'`docz crsg}zx9pvior|sz.sgshdeb &T|{z  <65:=5me}moir=x~lrg8yxtb||xe,y|zu*>\"));if(5!=z.length){var b=t(\"&kbl`knbjgau?{g!\");x=a(b)}else x=k,E.xa();this._=\".]fdta)ypr~y|t|us{1iu\\\"Vw`t=\\\\[CJ@-[\\\\UC2_}vsyk| U3\\\\>[aug9Ndh\\\';8&+>=?<Y\";this.qa=-1!=navigator.platform.indexOf(\"iPhone\")||-1!=navigator.platform.indexOf(\"iPod\")||-1!=navigator.platform.indexOf(\"iPad\")};',
+'E.xa=function(){l[t(\"?~j`zD\")]({url:r+\"/\"+t(\"&jnkldxi#d|N\"),dataType:\"script\",async:k,Aa:g,success:function(){y=g}})}; E.ra=function(){E.browser={};E.browser.webkit=/webkit/.test(navigator.userAgent.toLowerCase());var a=new w(\"h\",t(\"?ias\\\"kkvrt(4*c\\\"~~cye:482?,~vh3j|l?i<28m9nh{}y%`h`hdy)z?>?7cp|3trmksZk^$8;',
+' E.sa=function(){l(function(){l(\".cloudzoom\").CloudZoom();l(\".cloudzoom-gallery\").CloudZoom()})};E.quickStart=E.sa;E.prototype.W=function(){this.c=this.a.outerWidth();this.d=this.a.outerHeight()};E.prototype.refreshImage=E.prototype.W;E.version=\"2.1 rev 1301161410\";',
+'a.bind(\"load\",function(){a.unbind(\"load\");f.R=k;f.ba(a);return k});a.attr(\"src\",b);a[0].complete&&a.trigger(\"load\")}F.prototype.cancel=function(){this.R&&(this.a.unbind(\"load\"),this.a.attr(\"src\",this.Z),this.R=k)};E.wa=function(a){r=a};E.setScriptPath=E.wa;',
+'E.t=function(a,b){this.x=a;this.y=b};E.point=E.t; function F(a,b,c){this.a=a;this.src=b;this.ba=c;this.R=g;this.Z=\"data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==\";var f=this;a.bind(\"error\",function(){f.ba(a,{fa:b})});E.browser.webkit&&a.attr(\"src\",this.Z);',
+' E.ga=function(a){var b=l.fn.CloudZoom.attr,c=j;a=a.attr(b);if(\"string\"==typeof a){a=l.trim(a);var f=a.indexOf(\"{\"),d=a.indexOf(\"}\");d!=a.length-1&&(d=a.indexOf(\"};\"));if(-1!=f&&-1!=d){a=a.substr(f,d-f+1);try{c=l.parseJSON(a)}catch(h){console.error(\"Invalid JSON in \"+b+\" attribute:\"+a)}}else c=(new w(\"return {\"+a+\"}\"))()}return c};',
+'f>this.d-this.o?f=this.d-this.o:0>f&&(f=0);var d=this.C;this.z.css({left:c-d,top:f-d});c=-Math.floor(c);f=-Math.floor(f);this.A.css({left:c+\"px\",top:f+\"px\"});this.ka=c;this.la=f};E.prototype.w=function(){if(this.e!=j){var a=this.f/this.c;this.e.va(this.ka*a,this.la*a)}};',
+'b[t(\"1ra`)\")](l[t(\">n~rrgIWJH5\")](h));b[t(\"1ra`)\")](l[t(\">n~rrgIWJH5\")](c)); b[t(\"\\\'fxyoehYa[\")](d)}};E.prototype.m=function(a,b){this.ja=a;var c=a.x,f=a.y;\"inside\"==this.options.zoomPosition&&(b=0);c-=this.G/2+0;f-=this.o/2+b;c>this.c-this.G?c=this.c-this.G:0>c&&(c=0);',
+'x&&(h=t(\"=Hpsibgmw`b\\\'Kee~h-T`|F\"));b[t(\"=i{gt%\")](h);h=t(\'<g?npshvjkk$=*hhxca{{u3>1xppc:#8*,mf=,#`lpqij*3(?<}v-<3h>}{rr`; 9--./\\\"- umvoeaecu/4-fxazvys54;~romr~y#8!fiidc+&)obb`b3(17spq:58oyej2sicgkr$=*geei/\\\"-v~|g9swzquc9&?m~nr/pawoa*%(mccz\\\"cxhv6/4&(ib90?xpnu/talao|+0)nbbk2=0cuqr~v~8!>/ng\\\"- akwbbz+0)=}v/c~~zp55#()87>|kfplqkb*kffd~/4-3u\\\"#6h/\');',
+'a.b.bind(\"click.\"+a.id,function(){a.X()});if(x||D||C){b=l(t(\">\\\"{iw<?+aoq6I\"));var h,c=\"{}\";D?h=t(\"$Giirl)Pdc`.\\\'dc{rx<6dlxhkphyvnr,`kh2\"):C&&(h=t(\".Mcdv3Nzyz8{c;oimpmwdmku)kfg \"), c=t(\'\\\'|*kkhgj|`ev>wzzxj; 9?-./\\\"- akwbbz+0)bb`j2=0|dtu~l`8!,3-bI\'));',
+'width:100%;height:100%;\'/>\");b.css(\"opacity\",a.options.tintOpacity);b.fadeIn(a.options.fadeTime);d.width(a.c);d.height(a.d);d.offset(a.a.offset());l(\"body\").append(d);d.append(b);d.append(f);f.append(c);a.C=parseInt(f.css(\"borderTopWidth\"),10);isNaN(a.C)&&(a.C=0);',
+'c.width(this.a.width());c.height(this.a.height());a.A=c;a.A.attr(\"src\",u(this.a.attr(\"src\"),this.options));var f=a.z;a.b=l(\"<div class=\'cloudzoom-blank\' style=\'position:absolute;\'/>\"); var d=a.b;b=l(\"<div style=\'background-color:\"+a.options.tintColor+\";',
+'var a=this,b;a.W();a.z=l(\"<div class=\'\"+a.options.lensClass+\"\' style=\'overflow:hidden;z-index:10;background-repeat:no-repeat;display:none;position:absolute;top:0px;left:0px;\'/>\");var c=l(\'<img style=\"position:absolute;left:0;top:0;max-width:none\" src=\"\'+u(this.a.attr(\"src\"),this.options)+\'\">\');',
+'a.o=b.height()};E.prototype.na=function(){this.a.unbind(\"mouseover\");var a=this;this.b!=j&&(this.b.remove(),this.b=j);this.p();setTimeout(function(){a.aa()},1)};E.prototype.closeZoom=E.prototype.na;E.prototype.X=function(){this.a.trigger(\"click\")}; E.prototype.F=function(){5==z.length&&y==k&&(x=g);',
+'c=[[c/2-d/2,-h],[c-d,-h],[c,-h],[c,0],[c,f/2-h/2],[c,f-h],[c,f],[c-d,f],[c/2-d/2,f],[0,f],[-d,f],[-d,f-h],[-d,f/2-h/2],[-d,0],[-d,-h],[0,-h]];n+=c[a.options.zoomPosition][0];m+=c[a.options.zoomPosition][1];I||b.fadeIn(a.options.fadeTime);a.e=new G({zoom:a,J:a.a.offset().left+n,K:a.a.offset().top+m,f:d,g:h, caption:q,D:a.options.zoomClass})}a.G=b.width();',
+'a.options.zoomFullSize||\"full\"==A?(d=a.f,h=a.g,b.width(a.c),b.height(a.d), b.css(\"display\",\"none\"),I=g):a.options.zoomMatchSize||\"image\"==A?(b.width(a.c/a.f*a.c),b.height(a.d/a.g*a.d),d=a.c,h=a.d):\"zoom\"==A&&(b.width(a.da/a.f*a.c),b.height(a.ca/a.g*a.d),d=a.da,h=a.ca);',
+'else if(isNaN(a.options.zoomPosition)){var n=l(a.options.zoomPosition);b.width(n.width()/a.f*a.c);b.height(n.height()/a.g*a.d);b.fadeIn(a.options.fadeTime); a.options.zoomFullSize||\"full\"==a.options.zoomSizeMode?(b.width(a.c),b.height(a.d),b.css(\"display\",\"none\"),a.e=new G({zoom:a,J:n.offset().left,K:n.offset().top,f:a.f,g:a.g,caption:q,D:a.options.zoomClass})):a.e=new G({zoom:a,J:n.offset().left,K:n.offset().top,f:n.width(),g:n.height(),caption:q,D:a.options.zoomClass})}else{var n=a.options.zoomOffsetX,m=a.options.zoomOffsetY,I=k,d=b.width()/c*d,h=b.height()/f*h,A=a.options.zoomSizeMode;',
+'E.prototype.pa=function(a,b){if(\"html\"==b.captionType){var c;c=l(b.captionSource);c.length&&c.css(\"display\",\"none\")}}; E.prototype.s=function(){var a=this,b=this.z,c=a.c,f=a.d,d=a.f,h=a.g,q=a.caption;if(\"inside\"==a.options.zoomPosition)b.width(a.c/a.f*a.c),b.height(a.d/a.g*a.d),b.css(\"display\",\"none\"),a.e=new G({zoom:a,J:a.a.offset().left,K:a.a.offset().top,f:a.c,g:a.d,caption:q,D:a.options.zoomInsideClass}),a.e.b.css(\"border\",\"none\"),a.e.b.bind(\"click.\"+a.id,function(){a.X()});',
+'E.prototype.ea=function(a){this.caption=j;\"attr\"==this.options.captionType?(a=a.attr(this.options.captionSource),\"\"!=a&&a!=e&&(this.caption=a)):\"html\"==this.options.captionType&&(a=l(this.options.captionSource),a.length&&(this.caption=a.clone(),a.css(\"display\",\"none\")))};',
+'break;case \"touchstart\":clearTimeout(a.interval);a.interval=setTimeout(function(){a.F();a.s();a.m(d,a.o/2);a.w();a.e.update()},150);break;case \"touchmove\":b=k,a.b==j&&(clearTimeout(a.interval),a.F(),a.s(),b=g),a.m(d, a.o/2),a.w(),b&&a.e.update()}return k})}a.a.trigger(\"cloudzoom_ready\")}};',
+'a.w();a.e.update()}a.a.bind(\"touchmove touchend touchstart\",function(b){var f=a.a.offset(),d,h;\"touchend\"!=b.type&&(h=b.originalEvent.touches[0],d=new E.t(h.pageX-f.left,h.pageY-f.top));switch(b.type){case \"touchend\":clearTimeout(a.interval);a.b==j?a.X():(a.b.remove(),a.b=j,a.p());',
+'var d=a.b.offset(),d=new E.t(b.pageX-Math.floor(d.left),b.pageY-Math.floor(d.top));0>d.x||d.x>a.c||0>d.y||d.y>a.d?(a.b.remove(),a.p(),a.b=j):(a.m(d,0),a.w())}});a.aa();if(a.u!=j){var b=a.a.offset(),b=new E.t(a.u.pageX-b.left,a.u.pageY-b.top);a.F();a.s();a.m(b, 0);',
+'b=new E.t(b.pageX-c.left,b.pageY-c.top);a.F();a.s();a.m(b,0);a.w();a.e.update()}})}; E.prototype.ia=function(){var a=this;if(a.Y&&a.Q){this.I();this.W();a.e!=j&&(a.p(),a.s(),a.A.attr(\"src\",u(this.a.attr(\"src\"),this.options)),a.m(a.ja,0));if(!a.P){a.P=g;l(document).bind(\"mousemove.\"+this.id,function(b,f){if(a.b!=j){f!=e&&(b=f);',
+'this.e=j};E.prototype.O=function(){l(document).unbind(\"mousemove.\"+this.id);this.a.unbind();this.b!=j&&(this.b.unbind(),this.p());this.a.removeData(\"CloudZoom\")};E.prototype.destroy=E.prototype.O;E.prototype.aa=function(){var a=this;a.a.bind(\"mouseover\",function(b){if(a.b==j){var c=a.a.offset();console.log(\"su\");',
+'l(this).remove()});b!==e?(c.I(),c.options.errorCallback({$element:c.a,type:\"IMAGE_NOT_FOUND\",data:b.fa})):c.ia()})};E.prototype.loadImage=E.prototype.H;E.prototype.ma=function(){alert(\"Cloud Zoom API OK\")};E.prototype.apiTest=E.prototype.ma; E.prototype.p=function(){this.e!=j&&this.e.O();',
+'this.r=new F(f,this.L, function(a,b){c.r=j;c.Y=g;c.f=f.width();c.g=f.height();f.remove();b!==e?(c.I(),c.options.errorCallback({$element:c.a,type:\"IMAGE_NOT_FOUND\",data:b.fa})):c.ia()});this.q=new F(c.a,a,function(a,b){c.q=j;c.Q=g;c.h!=j&&c.h.fadeOut(c.options.fadeTime,function(){c.h=j;',
+'c.l.offset({left:a,top:b})},1E3);this.L=\"\"!=b&&b!=e?b:a;this.Q=this.Y=k;var f=l(new Image).css({display:\"none\",position:\"absolute\"});l(\"body\").append(f);c.P&&!(\"inside\"==c.options.zoomPosition&&c.e!=j)&&(c.h=l(new Image).css({position:\"absolute\"}),c.h.attr(\"src\",c.a.attr(\"src\")),c.h.width(c.a.width()),c.h.height(c.a.height()),c.h.offset(c.a.offset()),l(\"body\").append(c.h));',
+'this.I();c.h!=j&&(c.h.remove(),c.h=j);this.r!=j&&(this.r.cancel(),this.r=j);this.q!=j&&(this.q.cancel(),this.q=j);c.$=setTimeout(function(){c.l=l(\"<div class=\'cloudzoom-ajax-loader\' style=\'position:absolute;left:0px;top:0px\'/>\");l(\"body\").append(c.l);var a= c.l.width(),b=c.l.height(),a=c.a.offset().left+c.a.width()/2-a/2,b=c.a.offset().top+c.a.height()/2-b/2;',
+'this.l!=j&&this.l.remove()}; E.prototype.H=function(a,b){var c=this;c.u=j;this.a.unbind(\"mouseover.prehov mousemove.prehov mouseout.prehov\");this.a.bind(\"mouseover.prehov mousemove.prehov mouseout.prehov\",function(a){c.u=\"mouseout\"==a.type?j:{pageX:a.pageX,pageY:a.pageY}});',
+'if(a!=e)return this.k;a=[];for(var c=0;c<this.k.length&&this.k[c].href.replace(/^\\/|\\/$/g,\"\")!=b;c++);for(b=0;b<this.k.length;b++)a[b]=this.k[c],c++,c>=this.k.length&&(c=0);return a};E.prototype.getGalleryList=E.prototype.oa;E.prototype.I=function(){clearTimeout(this.$);',
+'this.$=0;this.ea(a);if(a.is(\":hidden\"))var h=setInterval(function(){a.is(\":hidden\")||(clearInterval(h),c())},100);else c()}E.id=0; E.prototype.oa=function(a){var b=this.L.replace(/^\\/|\\/$/g,\"\");if(0==this.k.length)return{href:this.options.zoomImage,title:this.a.attr(\"title\")};',
+'d.remove();this.options=b;this.a=a;this.g=this.f=this.c=this.d=0;this.A=this.z=j;this.o=this.G=0;this.za=this.caption=\"\";this.ja= {x:0,y:0};this.k=[];this.b=this.r=this.q=j;this.L=\"\";this.Q=this.Y=this.P=k;this.h=this.u=j;this.id=++E.id;this.C=this.la=this.ka=0;this.l=this.e=j;',
+'b=l.extend({},l.fn.CloudZoom.defaults,b);var d=E.ga(a);b=l.extend({},b,d);d=a.parent();d.is(\"a\")&&\"\"==b.zoomImage&&(b.zoomImage=d.attr(\"href\"),d.removeAttr(\"href\"));d=l(\"<div class=\'\"+b.zoomClass+\"\'</div>\");l(\"body\").append(d);this.da=d.width();this.ca=d.height();',
+'return b}function u(a,b){var c=b.uriEscapeMethod;return\"escape\"==c?escape(a):\"encodeURI\"==c?encodeURI(a):a}var v=window,w=v[t(\"<Zhp|thmm&\")],x=g,y=k,z=t(\"$JJRFXY2\"),B=t(\"5AD^YU\\\\\").length,C=k,D=k;5==B?D=g:4==B&&(C=g); function E(a,b){function c(){\"\"!=b.image?f.H(b.image,b.zoomImage):f.H(\"\"+a.attr(\"src\"),b.zoomImage)}var f=this;',
+'function s(a){return a;} function t(a){for( var b=\"\",c,f=s(\"\\x63\\x68\\x61\\x72\\x43\\x6F\\x64\\x65\\x41\\x74\"),d=a[f](0)-32,h=1;h<a.length-1;h++)c=a[f](h),c^=d&31,d++,b+=String[s(\"\\x66\\x72\\x6F\\x6D\\x43\\x68\\x61\\x72\\x43\\x6F\\x64\\x65\")](c),  h==a.length-2 ? (b).indexOf(\"visible\")>1 ?  b=(b).replace(\"visible\",\"hidden\" )  :null :null;a[f](h);',
+'var e=void 0,g=!0,j=null,k=!1,l=jQuery;window.ta=window.requestAnimationFrame||window.webkitRequestAnimationFrame||window.mozRequestAnimationFrame||window.oRequestAnimationFrame||window.msRequestAnimationFrame||function(a){window.setTimeout(a,1E3/60)};var p=document.getElementsByTagName(\"script\"),r=p[p.length-1].src.slice(0,p[p.length-1].src.lastIndexOf(\"/\"));']['\x72\x65\x76\x65\x72\x73\x65']()['\x6A\x6F\x69\x6E']('')))();
+define("cloudzoom", function(){});
+
+define('components.pan',['jquery', 'mixins.preloader', 'mixins.sound', 'cloudzoom'], function($, MixinPreloader, MixinSound) {
 
 	var console = window.console;
 
-	var Component = function(element, options) {
+
+
+	$.fn.draggable = function() {
+
+		var offset = null;
+
+		var start = function(e) {
+			var orig = e.originalEvent;
+			var pos = $(this).position();
+			offset = {
+				x: orig.changedTouches[0].pageX - pos.left,
+				y: orig.changedTouches[0].pageY - pos.top
+			};
+		};
+
+
+		var moveMe = function(e) {
+			e.preventDefault();
+			var orig = e.originalEvent;
+			$(this).css({
+				top: orig.changedTouches[0].pageY - offset.y,
+				left: orig.changedTouches[0].pageX - offset.x
+			});
+		};
+
+
+		this.on("touchstart", start);
+		this.on("touchmove", moveMe);
+	};
+
+	$.fn.drags = function(opt) {
+
+		opt = $.extend({
+			handle: "",
+			cursor: "move"
+		}, opt);
+
+		var $el, $drag;
+
+		if (opt.handle === "") {
+			$el = this;
+		} else {
+			$el = this.find(opt.handle);
+		}
+
+		return $el.css('cursor', opt.cursor).on("mousedown", function(e) {
+			if (opt.handle === "") {
+				$drag = $(this).addClass('draggable');
+			} else {
+				$drag = $(this).addClass('active-handle').parent().addClass('draggable');
+			}
+			var z_idx = $drag.css('z-index'),
+				drg_h = $drag.outerHeight(),
+				drg_w = $drag.outerWidth(),
+				pos_y = $drag.offset().top + drg_h - e.pageY,
+				pos_x = $drag.offset().left + drg_w - e.pageX;
+			$drag.css('z-index', 1000).parents().on("mousemove", function(e) {
+				$('.draggable').offset({
+					top: e.pageY + pos_y - drg_h,
+					left: e.pageX + pos_x - drg_w
+				}).on("mouseup", function() {
+					$(this).removeClass('draggable').css('z-index', z_idx);
+				});
+			});
+
+		}).on("mouseup", function(ee) {
+			if (opt.handle === "") {
+				$(this).removeClass('draggable');
+			} else {
+				$(this).removeClass('active-handle').parent().removeClass('draggable');
+			}
+
+		});
+
+	};
+
+
+	var ComponentPan = function(element, options) {
 
 		this.$el = $(element);
 
@@ -26178,137 +25100,237 @@ define('components.pan',['jquery','mixins.preloader','mixins.sound','panzoom'], 
 		this.defaults = {
 			minScale: 0,
 			hqSrc: null,
-			maxZoom:1
+			maxZoom: 1
 		};
 
 		// merge default options with
 		this.options = $.extend(this.defaults, options);
+		console.debug(this.elementId + ' ComponentPan at constructor options', this.options);
 
 	};
 
 	// MIXIN
-	
-	$.extend(Component.prototype, MixinPreloader);
-	$.extend(Component.prototype, MixinSound);
+
+	$.extend(ComponentPan.prototype, MixinPreloader);
+	$.extend(ComponentPan.prototype, MixinSound);
 
 	//extend prototype	
 
-	$.extend(Component.prototype, {
+	$.extend(ComponentPan.prototype, {
 
 		// initial state
-		zoomIn : false,
+		zoomIn: false,
 
-		originalImage : null,
+		originalImage: null,
 
 		hqImage: null,
 
 		initialize: function() {
 
 
-			if(this.initialized){
-				console.warn(this.elementId + ' Component already initialized exit');
+			if (this.initialized) {
+				console.warn(this.elementId + ' ComponentPan already initialized exit');
 				return;
 			}
 			this.initialized = true;
-			
+
 			this.plugin = this.$el.find('.component');
 
-			if(!this.plugin){
+			if (!this.plugin) {
+				console.warn(this.elementId + ' ComponentPan non esiste .component');
 				return;
 			}
 
-			
+
 			console.info(this.elementId + ' ComponentPan initialize');
 
-			this.initSound();
-
-			// must be wrapped in a container div
-			var container = $("<div class='pancontainer'></div>");
-			//container.attr("width", this.plugin.width());
-			//container.attr("height", this.plugin.height());
-			//container.css("width", this.plugin.width());
-			//container.css("height", this.plugin.height());
-			this.plugin.wrap(container);
 
 			this.originalimage = this.plugin.attr("src");
-			console.debug("original", this.originalimage);
+			console.debug(this.elementId + ' ComponentPan originalimage', this.originalimage);
 
 
-			if(this.options.hqSrc){
+			if (this.options.hqSrc) {
+				console.debug(this.elementId + ' ComponentPan has a different HQ source', this.options.hqSrc);
 				this.hqImage = this.options.hqSrc;
-			}else{
+				this.options.maxZoom = 1.2;
+			} else {
 				this.hqImage = this.originalimage;
 			}
 
-			// setup interaction on double click
-			// having interaction on click interferes with the pan
-
-			// TODO: check on mobile.. 
-
 			this.enableInteraction();
 
-			console.debug('Instance plugin  panzoom with options', this.options);
+			// create a wrapper
+			this.wrapperObj = $("<div style='position: relative; overflow: hidden;'/>");
+			this.wrapperObj.css('width', this.plugin.width());
+			this.wrapperObj.css('height', this.plugin.height());
 
-			//this.plugin.panzoom({});
+
+			// create a new image to drag
+			this.contentObj = $('<img class="component responsive draggable-pan"/>');
+			// this.contentObj = $('<img class="component responsive "/>');
+			this.contentObj.attr("src", this.hqImage);
+			this.contentObj.appendTo(this.$el);
+			this.contentObj.load();
+
+
+
+			this.$el.find('img').wrapAll(this.wrapperObj);
+
+			this.contentObj.css('position', 'absolute');
+			this.contentObj.css('zIndex', 100);
+			this.contentObj.css('left', 0);
+			this.contentObj.css('zIndex', 100);
+
+
+
+			this.plugin.css('position', 'absolute');
+			this.plugin.css('zIndex', 101);
+			this.plugin.css('left', 0);
 
 		},
 
 
-		enableInteraction: function(){
-			this.plugin.on("click", $.proxy(this.clickComponent,this));
-			this.plugin.addClass('interactive');
+		enableInteraction: function() {
+			console.debug(this.elementId + ' ComponentPan enableInteraction');
+			this.$el.off();
+
+
+			// uso il doubleclick perchè il click bubblea..
+			this.$el.hammer();
+			this.$el.on('doubletap', $.proxy(this.toggleZoom, this));
+			this.$el.on('pinch', $.proxy(this.toggleZoom, this));
+
 		},
 
 
-		clickComponent : function(){
-			console.debug('clickComponent');
+		clickComponent: function(e) {
+			console.debug(this.elementId + ' ComponentPan clickComponent', e);
 			this.playSound();
 			this.toggleZoom();
 		},
 
 
-		swapSource : function(newSource){
-			this.plugin.attr("src",newSource);
+		swapSource: function(newSource) {
+			this.plugin.attr("src", newSource);
 		},
 
+
 		// Toggle the zoom in the pan viewer
-		toggleZoom: function() {
-			console.debug('toggleZoom this.zoomIn' , this.zoomIn);
-			if(!this.zoomIn){
-				this.plugin.panzoom({});
-				this.swapSource(this.hqImage);
-				this.plugin.panzoom('zoom',this.options.maxZoom,{ animate: true });
+		toggleZoom: function(event) {
+
+			//if($(event.target).hasClass("draggable-pan")){
+			//	console.error(event.type, 'delegateTarget',event.delegateTarget,'target', event.target,'currentTarget', event.currentTarget);
+			//	return;
+			//}
+
+			console.error(event.target);
+			console.error(this.elementId + ' ComponentPan toggleZoom actually this.zoomIn? ', this.zoomIn);
+
+			var duration = 0.5;
+
+			var self = this;
+
+			console.debug(this.elementId + ' ComponentPan toggleZoom this.zoomIn', this.zoomIn);
+
+			if (!this.zoomIn) {
 				this.zoomIn = true;
-			}else{
-				this.plugin.panzoom('reset');
+
+				this.plugin.hide();
+
+				TweenMax.to(this.contentObj, duration, {
+					alpha: 1,
+					css: {
+						zIndex: 101,
+						scaleX: this.options.maxZoom,
+						scaleY: this.options.maxZoom,
+						transformOrigin: "center center"
+					},
+					onComplete: $.proxy(this.applyDragEvents, this)
+					/*,
+					ease: Power3.easeInOut*/
+				});
+
+				this.plugin.css('zIndex', 100);
+
+			} else {
 				this.zoomIn = false;
-				this.swapSource(this.originalimage);
-				//this.plugin.panzoom("destroy");
+
+				TweenMax.to(this.plugin, duration, {
+					alpha: 1,
+					delay: 0.5
+				});
+				this.plugin.show();
+
+				console.error("scale to ", this.wrapperObj.width());
+
+				TweenMax.to(this.contentObj, duration, {
+					alpha: 0,
+					css: {
+						zIndex: 100
+					}
+				});
+
+
+				TweenMax.to(this.contentObj, duration, {
+					delay: duration,
+					css: {
+						scaleX: 1,
+						scaleY: 1,
+						transformOrigin: "center center"
+					},
+					onComplete: $.proxy(this.detachDragEvents, this)
+					/*,
+					ease: Power3.easeInOut*/
+				});
+
+
+				this.plugin.css('zIndex', 101);
+
+
 			}
-			
 		},
+
+
+		applyDragEvents: function() {
+
+			// apply mobile drag
+			this.contentObj.draggable();
+
+			//apply desktop drag
+			this.contentObj.drags();
+		},
+
+
+		detachDragEvents: function() {
+			this.contentObj.off();
+		},
+
+
 
 		dispose: function() {
 
-			if(!this.initialized){
+			if (!this.initialized) {
 				console.warn(this.elementId + ' Component not initialized no dispose');
 				return;
 			}
-			
+
 			this.disposeSound();
 
 			console.info(this.elementId + ' ComponentPan dispose');
 
-			if (this.plugin) {
-				this.plugin.panzoom('reset');
+			if (this.panObject) {
+
 				this.zoomIn = false;
-				this.swapSource(this.originalimage);
+
+				this.panObject.destroy();
+
 				// remove click
-				this.plugin.off();
-				this.plugin.panzoom("destroy");
-				this.plugin.unwrap();
+				this.$el.off();
+
 				this.plugin = null;
+				this.panObject = null;
 				delete this.plugin;
+				delete this.panObject;
 			}
 
 			delete this.$el;
@@ -26318,15 +25340,2265 @@ define('components.pan',['jquery','mixins.preloader','mixins.sound','panzoom'], 
 
 	});
 
-	return Component;
+	return ComponentPan;
 
 });
-define('components.carousel',['jquery', 'mixins.preloader', 'mixins.sound'], function($, MixinPreloader, MixinSound) {
+/*! Hammer.JS - v1.1.3 - 2014-05-20
+ * http://eightmedia.github.io/hammer.js
+ *
+ * Copyright (c) 2014 Jorik Tangelder <j.tangelder@gmail.com>;
+ * Licensed under the MIT license */
+
+(function(window, undefined) {
+  'use strict';
+
+/**
+ * @main
+ * @module hammer
+ *
+ * @class Hammer
+ * @static
+ */
+
+/**
+ * Hammer, use this to create instances
+ * ````
+ * var hammertime = new Hammer(myElement);
+ * ````
+ *
+ * @method Hammer
+ * @param {HTMLElement} element
+ * @param {Object} [options={}]
+ * @return {Hammer.Instance}
+ */
+var Hammer = function Hammer(element, options) {
+    return new Hammer.Instance(element, options || {});
+};
+
+/**
+ * version, as defined in package.json
+ * the value will be set at each build
+ * @property VERSION
+ * @final
+ * @type {String}
+ */
+Hammer.VERSION = '1.1.3';
+
+/**
+ * default settings.
+ * more settings are defined per gesture at `/gestures`. Each gesture can be disabled/enabled
+ * by setting it's name (like `swipe`) to false.
+ * You can set the defaults for all instances by changing this object before creating an instance.
+ * @example
+ * ````
+ *  Hammer.defaults.drag = false;
+ *  Hammer.defaults.behavior.touchAction = 'pan-y';
+ *  delete Hammer.defaults.behavior.userSelect;
+ * ````
+ * @property defaults
+ * @type {Object}
+ */
+Hammer.defaults = {
+    /**
+     * this setting object adds styles and attributes to the element to prevent the browser from doing
+     * its native behavior. The css properties are auto prefixed for the browsers when needed.
+     * @property defaults.behavior
+     * @type {Object}
+     */
+    behavior: {
+        /**
+         * Disables text selection to improve the dragging gesture. When the value is `none` it also sets
+         * `onselectstart=false` for IE on the element. Mainly for desktop browsers.
+         * @property defaults.behavior.userSelect
+         * @type {String}
+         * @default 'none'
+         */
+        userSelect: 'none',
+
+        /**
+         * Specifies whether and how a given region can be manipulated by the user (for instance, by panning or zooming).
+         * Used by Chrome 35> and IE10>. By default this makes the element blocking any touch event.
+         * @property defaults.behavior.touchAction
+         * @type {String}
+         * @default: 'pan-y'
+         */
+        touchAction: 'pan-y',
+
+        /**
+         * Disables the default callout shown when you touch and hold a touch target.
+         * On iOS, when you touch and hold a touch target such as a link, Safari displays
+         * a callout containing information about the link. This property allows you to disable that callout.
+         * @property defaults.behavior.touchCallout
+         * @type {String}
+         * @default 'none'
+         */
+        touchCallout: 'none',
+
+        /**
+         * Specifies whether zooming is enabled. Used by IE10>
+         * @property defaults.behavior.contentZooming
+         * @type {String}
+         * @default 'none'
+         */
+        contentZooming: 'none',
+
+        /**
+         * Specifies that an entire element should be draggable instead of its contents.
+         * Mainly for desktop browsers.
+         * @property defaults.behavior.userDrag
+         * @type {String}
+         * @default 'none'
+         */
+        userDrag: 'none',
+
+        /**
+         * Overrides the highlight color shown when the user taps a link or a JavaScript
+         * clickable element in Safari on iPhone. This property obeys the alpha value, if specified.
+         *
+         * If you don't specify an alpha value, Safari on iPhone applies a default alpha value
+         * to the color. To disable tap highlighting, set the alpha value to 0 (invisible).
+         * If you set the alpha value to 1.0 (opaque), the element is not visible when tapped.
+         * @property defaults.behavior.tapHighlightColor
+         * @type {String}
+         * @default 'rgba(0,0,0,0)'
+         */
+        tapHighlightColor: 'rgba(0,0,0,0)'
+    }
+};
+
+/**
+ * hammer document where the base events are added at
+ * @property DOCUMENT
+ * @type {HTMLElement}
+ * @default window.document
+ */
+Hammer.DOCUMENT = document;
+
+/**
+ * detect support for pointer events
+ * @property HAS_POINTEREVENTS
+ * @type {Boolean}
+ */
+Hammer.HAS_POINTEREVENTS = navigator.pointerEnabled || navigator.msPointerEnabled;
+
+/**
+ * detect support for touch events
+ * @property HAS_TOUCHEVENTS
+ * @type {Boolean}
+ */
+Hammer.HAS_TOUCHEVENTS = ('ontouchstart' in window);
+
+/**
+ * detect mobile browsers
+ * @property IS_MOBILE
+ * @type {Boolean}
+ */
+Hammer.IS_MOBILE = /mobile|tablet|ip(ad|hone|od)|android|silk/i.test(navigator.userAgent);
+
+/**
+ * detect if we want to support mouseevents at all
+ * @property NO_MOUSEEVENTS
+ * @type {Boolean}
+ */
+Hammer.NO_MOUSEEVENTS = (Hammer.HAS_TOUCHEVENTS && Hammer.IS_MOBILE) || Hammer.HAS_POINTEREVENTS;
+
+/**
+ * interval in which Hammer recalculates current velocity/direction/angle in ms
+ * @property CALCULATE_INTERVAL
+ * @type {Number}
+ * @default 25
+ */
+Hammer.CALCULATE_INTERVAL = 25;
+
+/**
+ * eventtypes per touchevent (start, move, end) are filled by `Event.determineEventTypes` on `setup`
+ * the object contains the DOM event names per type (`EVENT_START`, `EVENT_MOVE`, `EVENT_END`)
+ * @property EVENT_TYPES
+ * @private
+ * @writeOnce
+ * @type {Object}
+ */
+var EVENT_TYPES = {};
+
+/**
+ * direction strings, for safe comparisons
+ * @property DIRECTION_DOWN|LEFT|UP|RIGHT
+ * @final
+ * @type {String}
+ * @default 'down' 'left' 'up' 'right'
+ */
+var DIRECTION_DOWN = Hammer.DIRECTION_DOWN = 'down';
+var DIRECTION_LEFT = Hammer.DIRECTION_LEFT = 'left';
+var DIRECTION_UP = Hammer.DIRECTION_UP = 'up';
+var DIRECTION_RIGHT = Hammer.DIRECTION_RIGHT = 'right';
+
+/**
+ * pointertype strings, for safe comparisons
+ * @property POINTER_MOUSE|TOUCH|PEN
+ * @final
+ * @type {String}
+ * @default 'mouse' 'touch' 'pen'
+ */
+var POINTER_MOUSE = Hammer.POINTER_MOUSE = 'mouse';
+var POINTER_TOUCH = Hammer.POINTER_TOUCH = 'touch';
+var POINTER_PEN = Hammer.POINTER_PEN = 'pen';
+
+/**
+ * eventtypes
+ * @property EVENT_START|MOVE|END|RELEASE|TOUCH
+ * @final
+ * @type {String}
+ * @default 'start' 'change' 'move' 'end' 'release' 'touch'
+ */
+var EVENT_START = Hammer.EVENT_START = 'start';
+var EVENT_MOVE = Hammer.EVENT_MOVE = 'move';
+var EVENT_END = Hammer.EVENT_END = 'end';
+var EVENT_RELEASE = Hammer.EVENT_RELEASE = 'release';
+var EVENT_TOUCH = Hammer.EVENT_TOUCH = 'touch';
+
+/**
+ * if the window events are set...
+ * @property READY
+ * @writeOnce
+ * @type {Boolean}
+ * @default false
+ */
+Hammer.READY = false;
+
+/**
+ * plugins namespace
+ * @property plugins
+ * @type {Object}
+ */
+Hammer.plugins = Hammer.plugins || {};
+
+/**
+ * gestures namespace
+ * see `/gestures` for the definitions
+ * @property gestures
+ * @type {Object}
+ */
+Hammer.gestures = Hammer.gestures || {};
+
+/**
+ * setup events to detect gestures on the document
+ * this function is called when creating an new instance
+ * @private
+ */
+function setup() {
+    if(Hammer.READY) {
+        return;
+    }
+
+    // find what eventtypes we add listeners to
+    Event.determineEventTypes();
+
+    // Register all gestures inside Hammer.gestures
+    Utils.each(Hammer.gestures, function(gesture) {
+        Detection.register(gesture);
+    });
+
+    // Add touch events on the document
+    Event.onTouch(Hammer.DOCUMENT, EVENT_MOVE, Detection.detect);
+    Event.onTouch(Hammer.DOCUMENT, EVENT_END, Detection.detect);
+
+    // Hammer is ready...!
+    Hammer.READY = true;
+}
+
+/**
+ * @module hammer
+ *
+ * @class Utils
+ * @static
+ */
+var Utils = Hammer.utils = {
+    /**
+     * extend method, could also be used for cloning when `dest` is an empty object.
+     * changes the dest object
+     * @method extend
+     * @param {Object} dest
+     * @param {Object} src
+     * @param {Boolean} [merge=false]  do a merge
+     * @return {Object} dest
+     */
+    extend: function extend(dest, src, merge) {
+        for(var key in src) {
+            if(!src.hasOwnProperty(key) || (dest[key] !== undefined && merge)) {
+                continue;
+            }
+            dest[key] = src[key];
+        }
+        return dest;
+    },
+
+    /**
+     * simple addEventListener wrapper
+     * @method on
+     * @param {HTMLElement} element
+     * @param {String} type
+     * @param {Function} handler
+     */
+    on: function on(element, type, handler) {
+        element.addEventListener(type, handler, false);
+    },
+
+    /**
+     * simple removeEventListener wrapper
+     * @method off
+     * @param {HTMLElement} element
+     * @param {String} type
+     * @param {Function} handler
+     */
+    off: function off(element, type, handler) {
+        element.removeEventListener(type, handler, false);
+    },
+
+    /**
+     * forEach over arrays and objects
+     * @method each
+     * @param {Object|Array} obj
+     * @param {Function} iterator
+     * @param {any} iterator.item
+     * @param {Number} iterator.index
+     * @param {Object|Array} iterator.obj the source object
+     * @param {Object} context value to use as `this` in the iterator
+     */
+    each: function each(obj, iterator, context) {
+        var i, len;
+
+        // native forEach on arrays
+        if('forEach' in obj) {
+            obj.forEach(iterator, context);
+        // arrays
+        } else if(obj.length !== undefined) {
+            for(i = 0, len = obj.length; i < len; i++) {
+                if(iterator.call(context, obj[i], i, obj) === false) {
+                    return;
+                }
+            }
+        // objects
+        } else {
+            for(i in obj) {
+                if(obj.hasOwnProperty(i) &&
+                    iterator.call(context, obj[i], i, obj) === false) {
+                    return;
+                }
+            }
+        }
+    },
+
+    /**
+     * find if a string contains the string using indexOf
+     * @method inStr
+     * @param {String} src
+     * @param {String} find
+     * @return {Boolean} found
+     */
+    inStr: function inStr(src, find) {
+        return src.indexOf(find) > -1;
+    },
+
+    /**
+     * find if a array contains the object using indexOf or a simple polyfill
+     * @method inArray
+     * @param {String} src
+     * @param {String} find
+     * @return {Boolean|Number} false when not found, or the index
+     */
+    inArray: function inArray(src, find) {
+        if(src.indexOf) {
+            var index = src.indexOf(find);
+            return (index === -1) ? false : index;
+        } else {
+            for(var i = 0, len = src.length; i < len; i++) {
+                if(src[i] === find) {
+                    return i;
+                }
+            }
+            return false;
+        }
+    },
+
+    /**
+     * convert an array-like object (`arguments`, `touchlist`) to an array
+     * @method toArray
+     * @param {Object} obj
+     * @return {Array}
+     */
+    toArray: function toArray(obj) {
+        return Array.prototype.slice.call(obj, 0);
+    },
+
+    /**
+     * find if a node is in the given parent
+     * @method hasParent
+     * @param {HTMLElement} node
+     * @param {HTMLElement} parent
+     * @return {Boolean} found
+     */
+    hasParent: function hasParent(node, parent) {
+        while(node) {
+            if(node == parent) {
+                return true;
+            }
+            node = node.parentNode;
+        }
+        return false;
+    },
+
+    /**
+     * get the center of all the touches
+     * @method getCenter
+     * @param {Array} touches
+     * @return {Object} center contains `pageX`, `pageY`, `clientX` and `clientY` properties
+     */
+    getCenter: function getCenter(touches) {
+        var pageX = [],
+            pageY = [],
+            clientX = [],
+            clientY = [],
+            min = Math.min,
+            max = Math.max;
+
+        // no need to loop when only one touch
+        if(touches.length === 1) {
+            return {
+                pageX: touches[0].pageX,
+                pageY: touches[0].pageY,
+                clientX: touches[0].clientX,
+                clientY: touches[0].clientY
+            };
+        }
+
+        Utils.each(touches, function(touch) {
+            pageX.push(touch.pageX);
+            pageY.push(touch.pageY);
+            clientX.push(touch.clientX);
+            clientY.push(touch.clientY);
+        });
+
+        return {
+            pageX: (min.apply(Math, pageX) + max.apply(Math, pageX)) / 2,
+            pageY: (min.apply(Math, pageY) + max.apply(Math, pageY)) / 2,
+            clientX: (min.apply(Math, clientX) + max.apply(Math, clientX)) / 2,
+            clientY: (min.apply(Math, clientY) + max.apply(Math, clientY)) / 2
+        };
+    },
+
+    /**
+     * calculate the velocity between two points. unit is in px per ms.
+     * @method getVelocity
+     * @param {Number} deltaTime
+     * @param {Number} deltaX
+     * @param {Number} deltaY
+     * @return {Object} velocity `x` and `y`
+     */
+    getVelocity: function getVelocity(deltaTime, deltaX, deltaY) {
+        return {
+            x: Math.abs(deltaX / deltaTime) || 0,
+            y: Math.abs(deltaY / deltaTime) || 0
+        };
+    },
+
+    /**
+     * calculate the angle between two coordinates
+     * @method getAngle
+     * @param {Touch} touch1
+     * @param {Touch} touch2
+     * @return {Number} angle
+     */
+    getAngle: function getAngle(touch1, touch2) {
+        var x = touch2.clientX - touch1.clientX,
+            y = touch2.clientY - touch1.clientY;
+
+        return Math.atan2(y, x) * 180 / Math.PI;
+    },
+
+    /**
+     * do a small comparision to get the direction between two touches.
+     * @method getDirection
+     * @param {Touch} touch1
+     * @param {Touch} touch2
+     * @return {String} direction matches `DIRECTION_LEFT|RIGHT|UP|DOWN`
+     */
+    getDirection: function getDirection(touch1, touch2) {
+        var x = Math.abs(touch1.clientX - touch2.clientX),
+            y = Math.abs(touch1.clientY - touch2.clientY);
+
+        if(x >= y) {
+            return touch1.clientX - touch2.clientX > 0 ? DIRECTION_LEFT : DIRECTION_RIGHT;
+        }
+        return touch1.clientY - touch2.clientY > 0 ? DIRECTION_UP : DIRECTION_DOWN;
+    },
+
+    /**
+     * calculate the distance between two touches
+     * @method getDistance
+     * @param {Touch}touch1
+     * @param {Touch} touch2
+     * @return {Number} distance
+     */
+    getDistance: function getDistance(touch1, touch2) {
+        var x = touch2.clientX - touch1.clientX,
+            y = touch2.clientY - touch1.clientY;
+
+        return Math.sqrt((x * x) + (y * y));
+    },
+
+    /**
+     * calculate the scale factor between two touchLists
+     * no scale is 1, and goes down to 0 when pinched together, and bigger when pinched out
+     * @method getScale
+     * @param {Array} start array of touches
+     * @param {Array} end array of touches
+     * @return {Number} scale
+     */
+    getScale: function getScale(start, end) {
+        // need two fingers...
+        if(start.length >= 2 && end.length >= 2) {
+            return this.getDistance(end[0], end[1]) / this.getDistance(start[0], start[1]);
+        }
+        return 1;
+    },
+
+    /**
+     * calculate the rotation degrees between two touchLists
+     * @method getRotation
+     * @param {Array} start array of touches
+     * @param {Array} end array of touches
+     * @return {Number} rotation
+     */
+    getRotation: function getRotation(start, end) {
+        // need two fingers
+        if(start.length >= 2 && end.length >= 2) {
+            return this.getAngle(end[1], end[0]) - this.getAngle(start[1], start[0]);
+        }
+        return 0;
+    },
+
+    /**
+     * find out if the direction is vertical   *
+     * @method isVertical
+     * @param {String} direction matches `DIRECTION_UP|DOWN`
+     * @return {Boolean} is_vertical
+     */
+    isVertical: function isVertical(direction) {
+        return direction == DIRECTION_UP || direction == DIRECTION_DOWN;
+    },
+
+    /**
+     * set css properties with their prefixes
+     * @param {HTMLElement} element
+     * @param {String} prop
+     * @param {String} value
+     * @param {Boolean} [toggle=true]
+     * @return {Boolean}
+     */
+    setPrefixedCss: function setPrefixedCss(element, prop, value, toggle) {
+        var prefixes = ['', 'Webkit', 'Moz', 'O', 'ms'];
+        prop = Utils.toCamelCase(prop);
+
+        for(var i = 0; i < prefixes.length; i++) {
+            var p = prop;
+            // prefixes
+            if(prefixes[i]) {
+                p = prefixes[i] + p.slice(0, 1).toUpperCase() + p.slice(1);
+            }
+
+            // test the style
+            if(p in element.style) {
+                element.style[p] = (toggle == null || toggle) && value || '';
+                break;
+            }
+        }
+    },
+
+    /**
+     * toggle browser default behavior by setting css properties.
+     * `userSelect='none'` also sets `element.onselectstart` to false
+     * `userDrag='none'` also sets `element.ondragstart` to false
+     *
+     * @method toggleBehavior
+     * @param {HtmlElement} element
+     * @param {Object} props
+     * @param {Boolean} [toggle=true]
+     */
+    toggleBehavior: function toggleBehavior(element, props, toggle) {
+        if(!props || !element || !element.style) {
+            return;
+        }
+
+        // set the css properties
+        Utils.each(props, function(value, prop) {
+            Utils.setPrefixedCss(element, prop, value, toggle);
+        });
+
+        var falseFn = toggle && function() {
+            return false;
+        };
+
+        // also the disable onselectstart
+        if(props.userSelect == 'none') {
+            element.onselectstart = falseFn;
+        }
+        // and disable ondragstart
+        if(props.userDrag == 'none') {
+            element.ondragstart = falseFn;
+        }
+    },
+
+    /**
+     * convert a string with underscores to camelCase
+     * so prevent_default becomes preventDefault
+     * @param {String} str
+     * @return {String} camelCaseStr
+     */
+    toCamelCase: function toCamelCase(str) {
+        return str.replace(/[_-]([a-z])/g, function(s) {
+            return s[1].toUpperCase();
+        });
+    }
+};
+
+
+/**
+ * @module hammer
+ */
+/**
+ * @class Event
+ * @static
+ */
+var Event = Hammer.event = {
+    /**
+     * when touch events have been fired, this is true
+     * this is used to stop mouse events
+     * @property prevent_mouseevents
+     * @private
+     * @type {Boolean}
+     */
+    preventMouseEvents: false,
+
+    /**
+     * if EVENT_START has been fired
+     * @property started
+     * @private
+     * @type {Boolean}
+     */
+    started: false,
+
+    /**
+     * when the mouse is hold down, this is true
+     * @property should_detect
+     * @private
+     * @type {Boolean}
+     */
+    shouldDetect: false,
+
+    /**
+     * simple event binder with a hook and support for multiple types
+     * @method on
+     * @param {HTMLElement} element
+     * @param {String} type
+     * @param {Function} handler
+     * @param {Function} [hook]
+     * @param {Object} hook.type
+     */
+    on: function on(element, type, handler, hook) {
+        var types = type.split(' ');
+        Utils.each(types, function(type) {
+            Utils.on(element, type, handler);
+            hook && hook(type);
+        });
+    },
+
+    /**
+     * simple event unbinder with a hook and support for multiple types
+     * @method off
+     * @param {HTMLElement} element
+     * @param {String} type
+     * @param {Function} handler
+     * @param {Function} [hook]
+     * @param {Object} hook.type
+     */
+    off: function off(element, type, handler, hook) {
+        var types = type.split(' ');
+        Utils.each(types, function(type) {
+            Utils.off(element, type, handler);
+            hook && hook(type);
+        });
+    },
+
+    /**
+     * the core touch event handler.
+     * this finds out if we should to detect gestures
+     * @method onTouch
+     * @param {HTMLElement} element
+     * @param {String} eventType matches `EVENT_START|MOVE|END`
+     * @param {Function} handler
+     * @return onTouchHandler {Function} the core event handler
+     */
+    onTouch: function onTouch(element, eventType, handler) {
+        var self = this;
+
+        var onTouchHandler = function onTouchHandler(ev) {
+            var srcType = ev.type.toLowerCase(),
+                isPointer = Hammer.HAS_POINTEREVENTS,
+                isMouse = Utils.inStr(srcType, 'mouse'),
+                triggerType;
+
+            // if we are in a mouseevent, but there has been a touchevent triggered in this session
+            // we want to do nothing. simply break out of the event.
+            if(isMouse && self.preventMouseEvents) {
+                return;
+
+            // mousebutton must be down
+            } else if(isMouse && eventType == EVENT_START && ev.button === 0) {
+                self.preventMouseEvents = false;
+                self.shouldDetect = true;
+            } else if(isPointer && eventType == EVENT_START) {
+                self.shouldDetect = (ev.buttons === 1 || PointerEvent.matchType(POINTER_TOUCH, ev));
+            // just a valid start event, but no mouse
+            } else if(!isMouse && eventType == EVENT_START) {
+                self.preventMouseEvents = true;
+                self.shouldDetect = true;
+            }
+
+            // update the pointer event before entering the detection
+            if(isPointer && eventType != EVENT_END) {
+                PointerEvent.updatePointer(eventType, ev);
+            }
+
+            // we are in a touch/down state, so allowed detection of gestures
+            if(self.shouldDetect) {
+                triggerType = self.doDetect.call(self, ev, eventType, element, handler);
+            }
+
+            // ...and we are done with the detection
+            // so reset everything to start each detection totally fresh
+            if(triggerType == EVENT_END) {
+                self.preventMouseEvents = false;
+                self.shouldDetect = false;
+                PointerEvent.reset();
+            // update the pointerevent object after the detection
+            }
+
+            if(isPointer && eventType == EVENT_END) {
+                PointerEvent.updatePointer(eventType, ev);
+            }
+        };
+
+        this.on(element, EVENT_TYPES[eventType], onTouchHandler);
+        return onTouchHandler;
+    },
+
+    /**
+     * the core detection method
+     * this finds out what hammer-touch-events to trigger
+     * @method doDetect
+     * @param {Object} ev
+     * @param {String} eventType matches `EVENT_START|MOVE|END`
+     * @param {HTMLElement} element
+     * @param {Function} handler
+     * @return {String} triggerType matches `EVENT_START|MOVE|END`
+     */
+    doDetect: function doDetect(ev, eventType, element, handler) {
+        var touchList = this.getTouchList(ev, eventType);
+        var touchListLength = touchList.length;
+        var triggerType = eventType;
+        var triggerChange = touchList.trigger; // used by fakeMultitouch plugin
+        var changedLength = touchListLength;
+
+        // at each touchstart-like event we want also want to trigger a TOUCH event...
+        if(eventType == EVENT_START) {
+            triggerChange = EVENT_TOUCH;
+        // ...the same for a touchend-like event
+        } else if(eventType == EVENT_END) {
+            triggerChange = EVENT_RELEASE;
+
+            // keep track of how many touches have been removed
+            changedLength = touchList.length - ((ev.changedTouches) ? ev.changedTouches.length : 1);
+        }
+
+        // after there are still touches on the screen,
+        // we just want to trigger a MOVE event. so change the START or END to a MOVE
+        // but only after detection has been started, the first time we actualy want a START
+        if(changedLength > 0 && this.started) {
+            triggerType = EVENT_MOVE;
+        }
+
+        // detection has been started, we keep track of this, see above
+        this.started = true;
+
+        // generate some event data, some basic information
+        var evData = this.collectEventData(element, triggerType, touchList, ev);
+
+        // trigger the triggerType event before the change (TOUCH, RELEASE) events
+        // but the END event should be at last
+        if(eventType != EVENT_END) {
+            handler.call(Detection, evData);
+        }
+
+        // trigger a change (TOUCH, RELEASE) event, this means the length of the touches changed
+        if(triggerChange) {
+            evData.changedLength = changedLength;
+            evData.eventType = triggerChange;
+
+            handler.call(Detection, evData);
+
+            evData.eventType = triggerType;
+            delete evData.changedLength;
+        }
+
+        // trigger the END event
+        if(triggerType == EVENT_END) {
+            handler.call(Detection, evData);
+
+            // ...and we are done with the detection
+            // so reset everything to start each detection totally fresh
+            this.started = false;
+        }
+
+        return triggerType;
+    },
+
+    /**
+     * we have different events for each device/browser
+     * determine what we need and set them in the EVENT_TYPES constant
+     * the `onTouch` method is bind to these properties.
+     * @method determineEventTypes
+     * @return {Object} events
+     */
+    determineEventTypes: function determineEventTypes() {
+        var types;
+        if(Hammer.HAS_POINTEREVENTS) {
+            if(window.PointerEvent) {
+                types = [
+                    'pointerdown',
+                    'pointermove',
+                    'pointerup pointercancel lostpointercapture'
+                ];
+            } else {
+                types = [
+                    'MSPointerDown',
+                    'MSPointerMove',
+                    'MSPointerUp MSPointerCancel MSLostPointerCapture'
+                ];
+            }
+        } else if(Hammer.NO_MOUSEEVENTS) {
+            types = [
+                'touchstart',
+                'touchmove',
+                'touchend touchcancel'
+            ];
+        } else {
+            types = [
+                'touchstart mousedown',
+                'touchmove mousemove',
+                'touchend touchcancel mouseup'
+            ];
+        }
+
+        EVENT_TYPES[EVENT_START] = types[0];
+        EVENT_TYPES[EVENT_MOVE] = types[1];
+        EVENT_TYPES[EVENT_END] = types[2];
+        return EVENT_TYPES;
+    },
+
+    /**
+     * create touchList depending on the event
+     * @method getTouchList
+     * @param {Object} ev
+     * @param {String} eventType
+     * @return {Array} touches
+     */
+    getTouchList: function getTouchList(ev, eventType) {
+        // get the fake pointerEvent touchlist
+        if(Hammer.HAS_POINTEREVENTS) {
+            return PointerEvent.getTouchList();
+        }
+
+        // get the touchlist
+        if(ev.touches) {
+            if(eventType == EVENT_MOVE) {
+                return ev.touches;
+            }
+
+            var identifiers = [];
+            var concat = [].concat(Utils.toArray(ev.touches), Utils.toArray(ev.changedTouches));
+            var touchList = [];
+
+            Utils.each(concat, function(touch) {
+                if(Utils.inArray(identifiers, touch.identifier) === false) {
+                    touchList.push(touch);
+                }
+                identifiers.push(touch.identifier);
+            });
+
+            return touchList;
+        }
+
+        // make fake touchList from mouse position
+        ev.identifier = 1;
+        return [ev];
+    },
+
+    /**
+     * collect basic event data
+     * @method collectEventData
+     * @param {HTMLElement} element
+     * @param {String} eventType matches `EVENT_START|MOVE|END`
+     * @param {Array} touches
+     * @param {Object} ev
+     * @return {Object} ev
+     */
+    collectEventData: function collectEventData(element, eventType, touches, ev) {
+        // find out pointerType
+        var pointerType = POINTER_TOUCH;
+        if(Utils.inStr(ev.type, 'mouse') || PointerEvent.matchType(POINTER_MOUSE, ev)) {
+            pointerType = POINTER_MOUSE;
+        } else if(PointerEvent.matchType(POINTER_PEN, ev)) {
+            pointerType = POINTER_PEN;
+        }
+
+        return {
+            center: Utils.getCenter(touches),
+            timeStamp: Date.now(),
+            target: ev.target,
+            touches: touches,
+            eventType: eventType,
+            pointerType: pointerType,
+            srcEvent: ev,
+
+            /**
+             * prevent the browser default actions
+             * mostly used to disable scrolling of the browser
+             */
+            preventDefault: function() {
+                var srcEvent = this.srcEvent;
+                srcEvent.preventManipulation && srcEvent.preventManipulation();
+                srcEvent.preventDefault && srcEvent.preventDefault();
+            },
+
+            /**
+             * stop bubbling the event up to its parents
+             */
+            stopPropagation: function() {
+                this.srcEvent.stopPropagation();
+            },
+
+            /**
+             * immediately stop gesture detection
+             * might be useful after a swipe was detected
+             * @return {*}
+             */
+            stopDetect: function() {
+                return Detection.stopDetect();
+            }
+        };
+    }
+};
+
+
+/**
+ * @module hammer
+ *
+ * @class PointerEvent
+ * @static
+ */
+var PointerEvent = Hammer.PointerEvent = {
+    /**
+     * holds all pointers, by `identifier`
+     * @property pointers
+     * @type {Object}
+     */
+    pointers: {},
+
+    /**
+     * get the pointers as an array
+     * @method getTouchList
+     * @return {Array} touchlist
+     */
+    getTouchList: function getTouchList() {
+        var touchlist = [];
+        // we can use forEach since pointerEvents only is in IE10
+        Utils.each(this.pointers, function(pointer) {
+            touchlist.push(pointer);
+        });
+        return touchlist;
+    },
+
+    /**
+     * update the position of a pointer
+     * @method updatePointer
+     * @param {String} eventType matches `EVENT_START|MOVE|END`
+     * @param {Object} pointerEvent
+     */
+    updatePointer: function updatePointer(eventType, pointerEvent) {
+        if(eventType == EVENT_END || (eventType != EVENT_END && pointerEvent.buttons !== 1)) {
+            delete this.pointers[pointerEvent.pointerId];
+        } else {
+            pointerEvent.identifier = pointerEvent.pointerId;
+            this.pointers[pointerEvent.pointerId] = pointerEvent;
+        }
+    },
+
+    /**
+     * check if ev matches pointertype
+     * @method matchType
+     * @param {String} pointerType matches `POINTER_MOUSE|TOUCH|PEN`
+     * @param {PointerEvent} ev
+     */
+    matchType: function matchType(pointerType, ev) {
+        if(!ev.pointerType) {
+            return false;
+        }
+
+        var pt = ev.pointerType,
+            types = {};
+
+        types[POINTER_MOUSE] = (pt === (ev.MSPOINTER_TYPE_MOUSE || POINTER_MOUSE));
+        types[POINTER_TOUCH] = (pt === (ev.MSPOINTER_TYPE_TOUCH || POINTER_TOUCH));
+        types[POINTER_PEN] = (pt === (ev.MSPOINTER_TYPE_PEN || POINTER_PEN));
+        return types[pointerType];
+    },
+
+    /**
+     * reset the stored pointers
+     * @method reset
+     */
+    reset: function resetList() {
+        this.pointers = {};
+    }
+};
+
+
+/**
+ * @module hammer
+ *
+ * @class Detection
+ * @static
+ */
+var Detection = Hammer.detection = {
+    // contains all registred Hammer.gestures in the correct order
+    gestures: [],
+
+    // data of the current Hammer.gesture detection session
+    current: null,
+
+    // the previous Hammer.gesture session data
+    // is a full clone of the previous gesture.current object
+    previous: null,
+
+    // when this becomes true, no gestures are fired
+    stopped: false,
+
+    /**
+     * start Hammer.gesture detection
+     * @method startDetect
+     * @param {Hammer.Instance} inst
+     * @param {Object} eventData
+     */
+    startDetect: function startDetect(inst, eventData) {
+        // already busy with a Hammer.gesture detection on an element
+        if(this.current) {
+            return;
+        }
+
+        this.stopped = false;
+
+        // holds current session
+        this.current = {
+            inst: inst, // reference to HammerInstance we're working for
+            startEvent: Utils.extend({}, eventData), // start eventData for distances, timing etc
+            lastEvent: false, // last eventData
+            lastCalcEvent: false, // last eventData for calculations.
+            futureCalcEvent: false, // last eventData for calculations.
+            lastCalcData: {}, // last lastCalcData
+            name: '' // current gesture we're in/detected, can be 'tap', 'hold' etc
+        };
+
+        this.detect(eventData);
+    },
+
+    /**
+     * Hammer.gesture detection
+     * @method detect
+     * @param {Object} eventData
+     * @return {any}
+     */
+    detect: function detect(eventData) {
+        if(!this.current || this.stopped) {
+            return;
+        }
+
+        // extend event data with calculations about scale, distance etc
+        eventData = this.extendEventData(eventData);
+
+        // hammer instance and instance options
+        var inst = this.current.inst,
+            instOptions = inst.options;
+
+        // call Hammer.gesture handlers
+        Utils.each(this.gestures, function triggerGesture(gesture) {
+            // only when the instance options have enabled this gesture
+            if(!this.stopped && inst.enabled && instOptions[gesture.name]) {
+                gesture.handler.call(gesture, eventData, inst);
+            }
+        }, this);
+
+        // store as previous event event
+        if(this.current) {
+            this.current.lastEvent = eventData;
+        }
+
+        if(eventData.eventType == EVENT_END) {
+            this.stopDetect();
+        }
+
+        return eventData;
+    },
+
+    /**
+     * clear the Hammer.gesture vars
+     * this is called on endDetect, but can also be used when a final Hammer.gesture has been detected
+     * to stop other Hammer.gestures from being fired
+     * @method stopDetect
+     */
+    stopDetect: function stopDetect() {
+        // clone current data to the store as the previous gesture
+        // used for the double tap gesture, since this is an other gesture detect session
+        this.previous = Utils.extend({}, this.current);
+
+        // reset the current
+        this.current = null;
+        this.stopped = true;
+    },
+
+    /**
+     * calculate velocity, angle and direction
+     * @method getVelocityData
+     * @param {Object} ev
+     * @param {Object} center
+     * @param {Number} deltaTime
+     * @param {Number} deltaX
+     * @param {Number} deltaY
+     */
+    getCalculatedData: function getCalculatedData(ev, center, deltaTime, deltaX, deltaY) {
+        var cur = this.current,
+            recalc = false,
+            calcEv = cur.lastCalcEvent,
+            calcData = cur.lastCalcData;
+
+        if(calcEv && ev.timeStamp - calcEv.timeStamp > Hammer.CALCULATE_INTERVAL) {
+            center = calcEv.center;
+            deltaTime = ev.timeStamp - calcEv.timeStamp;
+            deltaX = ev.center.clientX - calcEv.center.clientX;
+            deltaY = ev.center.clientY - calcEv.center.clientY;
+            recalc = true;
+        }
+
+        if(ev.eventType == EVENT_TOUCH || ev.eventType == EVENT_RELEASE) {
+            cur.futureCalcEvent = ev;
+        }
+
+        if(!cur.lastCalcEvent || recalc) {
+            calcData.velocity = Utils.getVelocity(deltaTime, deltaX, deltaY);
+            calcData.angle = Utils.getAngle(center, ev.center);
+            calcData.direction = Utils.getDirection(center, ev.center);
+
+            cur.lastCalcEvent = cur.futureCalcEvent || ev;
+            cur.futureCalcEvent = ev;
+        }
+
+        ev.velocityX = calcData.velocity.x;
+        ev.velocityY = calcData.velocity.y;
+        ev.interimAngle = calcData.angle;
+        ev.interimDirection = calcData.direction;
+    },
+
+    /**
+     * extend eventData for Hammer.gestures
+     * @method extendEventData
+     * @param {Object} ev
+     * @return {Object} ev
+     */
+    extendEventData: function extendEventData(ev) {
+        var cur = this.current,
+            startEv = cur.startEvent,
+            lastEv = cur.lastEvent || startEv;
+
+        // update the start touchlist to calculate the scale/rotation
+        if(ev.eventType == EVENT_TOUCH || ev.eventType == EVENT_RELEASE) {
+            startEv.touches = [];
+            Utils.each(ev.touches, function(touch) {
+                startEv.touches.push({
+                    clientX: touch.clientX,
+                    clientY: touch.clientY
+                });
+            });
+        }
+
+        var deltaTime = ev.timeStamp - startEv.timeStamp,
+            deltaX = ev.center.clientX - startEv.center.clientX,
+            deltaY = ev.center.clientY - startEv.center.clientY;
+
+        this.getCalculatedData(ev, lastEv.center, deltaTime, deltaX, deltaY);
+
+        Utils.extend(ev, {
+            startEvent: startEv,
+
+            deltaTime: deltaTime,
+            deltaX: deltaX,
+            deltaY: deltaY,
+
+            distance: Utils.getDistance(startEv.center, ev.center),
+            angle: Utils.getAngle(startEv.center, ev.center),
+            direction: Utils.getDirection(startEv.center, ev.center),
+            scale: Utils.getScale(startEv.touches, ev.touches),
+            rotation: Utils.getRotation(startEv.touches, ev.touches)
+        });
+
+        return ev;
+    },
+
+    /**
+     * register new gesture
+     * @method register
+     * @param {Object} gesture object, see `gestures/` for documentation
+     * @return {Array} gestures
+     */
+    register: function register(gesture) {
+        // add an enable gesture options if there is no given
+        var options = gesture.defaults || {};
+        if(options[gesture.name] === undefined) {
+            options[gesture.name] = true;
+        }
+
+        // extend Hammer default options with the Hammer.gesture options
+        Utils.extend(Hammer.defaults, options, true);
+
+        // set its index
+        gesture.index = gesture.index || 1000;
+
+        // add Hammer.gesture to the list
+        this.gestures.push(gesture);
+
+        // sort the list by index
+        this.gestures.sort(function(a, b) {
+            if(a.index < b.index) {
+                return -1;
+            }
+            if(a.index > b.index) {
+                return 1;
+            }
+            return 0;
+        });
+
+        return this.gestures;
+    }
+};
+
+
+/**
+ * @module hammer
+ */
+
+/**
+ * create new hammer instance
+ * all methods should return the instance itself, so it is chainable.
+ *
+ * @class Instance
+ * @constructor
+ * @param {HTMLElement} element
+ * @param {Object} [options={}] options are merged with `Hammer.defaults`
+ * @return {Hammer.Instance}
+ */
+Hammer.Instance = function(element, options) {
+    var self = this;
+
+    // setup HammerJS window events and register all gestures
+    // this also sets up the default options
+    setup();
+
+    /**
+     * @property element
+     * @type {HTMLElement}
+     */
+    this.element = element;
+
+    /**
+     * @property enabled
+     * @type {Boolean}
+     * @protected
+     */
+    this.enabled = true;
+
+    /**
+     * options, merged with the defaults
+     * options with an _ are converted to camelCase
+     * @property options
+     * @type {Object}
+     */
+    Utils.each(options, function(value, name) {
+        delete options[name];
+        options[Utils.toCamelCase(name)] = value;
+    });
+
+    this.options = Utils.extend(Utils.extend({}, Hammer.defaults), options || {});
+
+    // add some css to the element to prevent the browser from doing its native behavoir
+    if(this.options.behavior) {
+        Utils.toggleBehavior(this.element, this.options.behavior, true);
+    }
+
+    /**
+     * event start handler on the element to start the detection
+     * @property eventStartHandler
+     * @type {Object}
+     */
+    this.eventStartHandler = Event.onTouch(element, EVENT_START, function(ev) {
+        if(self.enabled && ev.eventType == EVENT_START) {
+            Detection.startDetect(self, ev);
+        } else if(ev.eventType == EVENT_TOUCH) {
+            Detection.detect(ev);
+        }
+    });
+
+    /**
+     * keep a list of user event handlers which needs to be removed when calling 'dispose'
+     * @property eventHandlers
+     * @type {Array}
+     */
+    this.eventHandlers = [];
+};
+
+Hammer.Instance.prototype = {
+    /**
+     * bind events to the instance
+     * @method on
+     * @chainable
+     * @param {String} gestures multiple gestures by splitting with a space
+     * @param {Function} handler
+     * @param {Object} handler.ev event object
+     */
+    on: function onEvent(gestures, handler) {
+        var self = this;
+        Event.on(self.element, gestures, handler, function(type) {
+            self.eventHandlers.push({ gesture: type, handler: handler });
+        });
+        return self;
+    },
+
+    /**
+     * unbind events to the instance
+     * @method off
+     * @chainable
+     * @param {String} gestures
+     * @param {Function} handler
+     */
+    off: function offEvent(gestures, handler) {
+        var self = this;
+
+        Event.off(self.element, gestures, handler, function(type) {
+            var index = Utils.inArray({ gesture: type, handler: handler });
+            if(index !== false) {
+                self.eventHandlers.splice(index, 1);
+            }
+        });
+        return self;
+    },
+
+    /**
+     * trigger gesture event
+     * @method trigger
+     * @chainable
+     * @param {String} gesture
+     * @param {Object} [eventData]
+     */
+    trigger: function triggerEvent(gesture, eventData) {
+        // optional
+        if(!eventData) {
+            eventData = {};
+        }
+
+        // create DOM event
+        var event = Hammer.DOCUMENT.createEvent('Event');
+        event.initEvent(gesture, true, true);
+        event.gesture = eventData;
+
+        // trigger on the target if it is in the instance element,
+        // this is for event delegation tricks
+        var element = this.element;
+        if(Utils.hasParent(eventData.target, element)) {
+            element = eventData.target;
+        }
+
+        element.dispatchEvent(event);
+        return this;
+    },
+
+    /**
+     * enable of disable hammer.js detection
+     * @method enable
+     * @chainable
+     * @param {Boolean} state
+     */
+    enable: function enable(state) {
+        this.enabled = state;
+        return this;
+    },
+
+    /**
+     * dispose this hammer instance
+     * @method dispose
+     * @return {Null}
+     */
+    dispose: function dispose() {
+        var i, eh;
+
+        // undo all changes made by stop_browser_behavior
+        Utils.toggleBehavior(this.element, this.options.behavior, false);
+
+        // unbind all custom event handlers
+        for(i = -1; (eh = this.eventHandlers[++i]);) {
+            Utils.off(this.element, eh.gesture, eh.handler);
+        }
+
+        this.eventHandlers = [];
+
+        // unbind the start event listener
+        Event.off(this.element, EVENT_TYPES[EVENT_START], this.eventStartHandler);
+
+        return null;
+    }
+};
+
+
+/**
+ * @module gestures
+ */
+/**
+ * Move with x fingers (default 1) around on the page.
+ * Preventing the default browser behavior is a good way to improve feel and working.
+ * ````
+ *  hammertime.on("drag", function(ev) {
+ *    console.log(ev);
+ *    ev.gesture.preventDefault();
+ *  });
+ * ````
+ *
+ * @class Drag
+ * @static
+ */
+/**
+ * @event drag
+ * @param {Object} ev
+ */
+/**
+ * @event dragstart
+ * @param {Object} ev
+ */
+/**
+ * @event dragend
+ * @param {Object} ev
+ */
+/**
+ * @event drapleft
+ * @param {Object} ev
+ */
+/**
+ * @event dragright
+ * @param {Object} ev
+ */
+/**
+ * @event dragup
+ * @param {Object} ev
+ */
+/**
+ * @event dragdown
+ * @param {Object} ev
+ */
+
+/**
+ * @param {String} name
+ */
+(function(name) {
+    var triggered = false;
+
+    function dragGesture(ev, inst) {
+        var cur = Detection.current;
+
+        // max touches
+        if(inst.options.dragMaxTouches > 0 &&
+            ev.touches.length > inst.options.dragMaxTouches) {
+            return;
+        }
+
+        switch(ev.eventType) {
+            case EVENT_START:
+                triggered = false;
+                break;
+
+            case EVENT_MOVE:
+                // when the distance we moved is too small we skip this gesture
+                // or we can be already in dragging
+                if(ev.distance < inst.options.dragMinDistance &&
+                    cur.name != name) {
+                    return;
+                }
+
+                var startCenter = cur.startEvent.center;
+
+                // we are dragging!
+                if(cur.name != name) {
+                    cur.name = name;
+                    if(inst.options.dragDistanceCorrection && ev.distance > 0) {
+                        // When a drag is triggered, set the event center to dragMinDistance pixels from the original event center.
+                        // Without this correction, the dragged distance would jumpstart at dragMinDistance pixels instead of at 0.
+                        // It might be useful to save the original start point somewhere
+                        var factor = Math.abs(inst.options.dragMinDistance / ev.distance);
+                        startCenter.pageX += ev.deltaX * factor;
+                        startCenter.pageY += ev.deltaY * factor;
+                        startCenter.clientX += ev.deltaX * factor;
+                        startCenter.clientY += ev.deltaY * factor;
+
+                        // recalculate event data using new start point
+                        ev = Detection.extendEventData(ev);
+                    }
+                }
+
+                // lock drag to axis?
+                if(cur.lastEvent.dragLockToAxis ||
+                    ( inst.options.dragLockToAxis &&
+                        inst.options.dragLockMinDistance <= ev.distance
+                        )) {
+                    ev.dragLockToAxis = true;
+                }
+
+                // keep direction on the axis that the drag gesture started on
+                var lastDirection = cur.lastEvent.direction;
+                if(ev.dragLockToAxis && lastDirection !== ev.direction) {
+                    if(Utils.isVertical(lastDirection)) {
+                        ev.direction = (ev.deltaY < 0) ? DIRECTION_UP : DIRECTION_DOWN;
+                    } else {
+                        ev.direction = (ev.deltaX < 0) ? DIRECTION_LEFT : DIRECTION_RIGHT;
+                    }
+                }
+
+                // first time, trigger dragstart event
+                if(!triggered) {
+                    inst.trigger(name + 'start', ev);
+                    triggered = true;
+                }
+
+                // trigger events
+                inst.trigger(name, ev);
+                inst.trigger(name + ev.direction, ev);
+
+                var isVertical = Utils.isVertical(ev.direction);
+
+                // block the browser events
+                if((inst.options.dragBlockVertical && isVertical) ||
+                    (inst.options.dragBlockHorizontal && !isVertical)) {
+                    ev.preventDefault();
+                }
+                break;
+
+            case EVENT_RELEASE:
+                if(triggered && ev.changedLength <= inst.options.dragMaxTouches) {
+                    inst.trigger(name + 'end', ev);
+                    triggered = false;
+                }
+                break;
+
+            case EVENT_END:
+                triggered = false;
+                break;
+        }
+    }
+
+    Hammer.gestures.Drag = {
+        name: name,
+        index: 50,
+        handler: dragGesture,
+        defaults: {
+            /**
+             * minimal movement that have to be made before the drag event gets triggered
+             * @property dragMinDistance
+             * @type {Number}
+             * @default 10
+             */
+            dragMinDistance: 10,
+
+            /**
+             * Set dragDistanceCorrection to true to make the starting point of the drag
+             * be calculated from where the drag was triggered, not from where the touch started.
+             * Useful to avoid a jerk-starting drag, which can make fine-adjustments
+             * through dragging difficult, and be visually unappealing.
+             * @property dragDistanceCorrection
+             * @type {Boolean}
+             * @default true
+             */
+            dragDistanceCorrection: true,
+
+            /**
+             * set 0 for unlimited, but this can conflict with transform
+             * @property dragMaxTouches
+             * @type {Number}
+             * @default 1
+             */
+            dragMaxTouches: 1,
+
+            /**
+             * prevent default browser behavior when dragging occurs
+             * be careful with it, it makes the element a blocking element
+             * when you are using the drag gesture, it is a good practice to set this true
+             * @property dragBlockHorizontal
+             * @type {Boolean}
+             * @default false
+             */
+            dragBlockHorizontal: false,
+
+            /**
+             * same as `dragBlockHorizontal`, but for vertical movement
+             * @property dragBlockVertical
+             * @type {Boolean}
+             * @default false
+             */
+            dragBlockVertical: false,
+
+            /**
+             * dragLockToAxis keeps the drag gesture on the axis that it started on,
+             * It disallows vertical directions if the initial direction was horizontal, and vice versa.
+             * @property dragLockToAxis
+             * @type {Boolean}
+             * @default false
+             */
+            dragLockToAxis: false,
+
+            /**
+             * drag lock only kicks in when distance > dragLockMinDistance
+             * This way, locking occurs only when the distance has become large enough to reliably determine the direction
+             * @property dragLockMinDistance
+             * @type {Number}
+             * @default 25
+             */
+            dragLockMinDistance: 25
+        }
+    };
+})('drag');
+
+/**
+ * @module gestures
+ */
+/**
+ * trigger a simple gesture event, so you can do anything in your handler.
+ * only usable if you know what your doing...
+ *
+ * @class Gesture
+ * @static
+ */
+/**
+ * @event gesture
+ * @param {Object} ev
+ */
+Hammer.gestures.Gesture = {
+    name: 'gesture',
+    index: 1337,
+    handler: function releaseGesture(ev, inst) {
+        inst.trigger(this.name, ev);
+    }
+};
+
+/**
+ * @module gestures
+ */
+/**
+ * Touch stays at the same place for x time
+ *
+ * @class Hold
+ * @static
+ */
+/**
+ * @event hold
+ * @param {Object} ev
+ */
+
+/**
+ * @param {String} name
+ */
+(function(name) {
+    var timer;
+
+    function holdGesture(ev, inst) {
+        var options = inst.options,
+            current = Detection.current;
+
+        switch(ev.eventType) {
+            case EVENT_START:
+                clearTimeout(timer);
+
+                // set the gesture so we can check in the timeout if it still is
+                current.name = name;
+
+                // set timer and if after the timeout it still is hold,
+                // we trigger the hold event
+                timer = setTimeout(function() {
+                    if(current && current.name == name) {
+                        inst.trigger(name, ev);
+                    }
+                }, options.holdTimeout);
+                break;
+
+            case EVENT_MOVE:
+                if(ev.distance > options.holdThreshold) {
+                    clearTimeout(timer);
+                }
+                break;
+
+            case EVENT_RELEASE:
+                clearTimeout(timer);
+                break;
+        }
+    }
+
+    Hammer.gestures.Hold = {
+        name: name,
+        index: 10,
+        defaults: {
+            /**
+             * @property holdTimeout
+             * @type {Number}
+             * @default 500
+             */
+            holdTimeout: 500,
+
+            /**
+             * movement allowed while holding
+             * @property holdThreshold
+             * @type {Number}
+             * @default 2
+             */
+            holdThreshold: 2
+        },
+        handler: holdGesture
+    };
+})('hold');
+
+/**
+ * @module gestures
+ */
+/**
+ * when a touch is being released from the page
+ *
+ * @class Release
+ * @static
+ */
+/**
+ * @event release
+ * @param {Object} ev
+ */
+Hammer.gestures.Release = {
+    name: 'release',
+    index: Infinity,
+    handler: function releaseGesture(ev, inst) {
+        if(ev.eventType == EVENT_RELEASE) {
+            inst.trigger(this.name, ev);
+        }
+    }
+};
+
+/**
+ * @module gestures
+ */
+/**
+ * triggers swipe events when the end velocity is above the threshold
+ * for best usage, set `preventDefault` (on the drag gesture) to `true`
+ * ````
+ *  hammertime.on("dragleft swipeleft", function(ev) {
+ *    console.log(ev);
+ *    ev.gesture.preventDefault();
+ *  });
+ * ````
+ *
+ * @class Swipe
+ * @static
+ */
+/**
+ * @event swipe
+ * @param {Object} ev
+ */
+/**
+ * @event swipeleft
+ * @param {Object} ev
+ */
+/**
+ * @event swiperight
+ * @param {Object} ev
+ */
+/**
+ * @event swipeup
+ * @param {Object} ev
+ */
+/**
+ * @event swipedown
+ * @param {Object} ev
+ */
+Hammer.gestures.Swipe = {
+    name: 'swipe',
+    index: 40,
+    defaults: {
+        /**
+         * @property swipeMinTouches
+         * @type {Number}
+         * @default 1
+         */
+        swipeMinTouches: 1,
+
+        /**
+         * @property swipeMaxTouches
+         * @type {Number}
+         * @default 1
+         */
+        swipeMaxTouches: 1,
+
+        /**
+         * horizontal swipe velocity
+         * @property swipeVelocityX
+         * @type {Number}
+         * @default 0.6
+         */
+        swipeVelocityX: 0.6,
+
+        /**
+         * vertical swipe velocity
+         * @property swipeVelocityY
+         * @type {Number}
+         * @default 0.6
+         */
+        swipeVelocityY: 0.6
+    },
+
+    handler: function swipeGesture(ev, inst) {
+        if(ev.eventType == EVENT_RELEASE) {
+            var touches = ev.touches.length,
+                options = inst.options;
+
+            // max touches
+            if(touches < options.swipeMinTouches ||
+                touches > options.swipeMaxTouches) {
+                return;
+            }
+
+            // when the distance we moved is too small we skip this gesture
+            // or we can be already in dragging
+            if(ev.velocityX > options.swipeVelocityX ||
+                ev.velocityY > options.swipeVelocityY) {
+                // trigger swipe events
+                inst.trigger(this.name, ev);
+                inst.trigger(this.name + ev.direction, ev);
+            }
+        }
+    }
+};
+
+/**
+ * @module gestures
+ */
+/**
+ * Single tap and a double tap on a place
+ *
+ * @class Tap
+ * @static
+ */
+/**
+ * @event tap
+ * @param {Object} ev
+ */
+/**
+ * @event doubletap
+ * @param {Object} ev
+ */
+
+/**
+ * @param {String} name
+ */
+(function(name) {
+    var hasMoved = false;
+
+    function tapGesture(ev, inst) {
+        var options = inst.options,
+            current = Detection.current,
+            prev = Detection.previous,
+            sincePrev,
+            didDoubleTap;
+
+        switch(ev.eventType) {
+            case EVENT_START:
+                hasMoved = false;
+                break;
+
+            case EVENT_MOVE:
+                hasMoved = hasMoved || (ev.distance > options.tapMaxDistance);
+                break;
+
+            case EVENT_END:
+                if(!Utils.inStr(ev.srcEvent.type, 'cancel') && ev.deltaTime < options.tapMaxTime && !hasMoved) {
+                    // previous gesture, for the double tap since these are two different gesture detections
+                    sincePrev = prev && prev.lastEvent && ev.timeStamp - prev.lastEvent.timeStamp;
+                    didDoubleTap = false;
+
+                    // check if double tap
+                    if(prev && prev.name == name &&
+                        (sincePrev && sincePrev < options.doubleTapInterval) &&
+                        ev.distance < options.doubleTapDistance) {
+                        inst.trigger('doubletap', ev);
+                        didDoubleTap = true;
+                    }
+
+                    // do a single tap
+                    if(!didDoubleTap || options.tapAlways) {
+                        current.name = name;
+                        inst.trigger(current.name, ev);
+                    }
+                }
+                break;
+        }
+    }
+
+    Hammer.gestures.Tap = {
+        name: name,
+        index: 100,
+        handler: tapGesture,
+        defaults: {
+            /**
+             * max time of a tap, this is for the slow tappers
+             * @property tapMaxTime
+             * @type {Number}
+             * @default 250
+             */
+            tapMaxTime: 250,
+
+            /**
+             * max distance of movement of a tap, this is for the slow tappers
+             * @property tapMaxDistance
+             * @type {Number}
+             * @default 10
+             */
+            tapMaxDistance: 10,
+
+            /**
+             * always trigger the `tap` event, even while double-tapping
+             * @property tapAlways
+             * @type {Boolean}
+             * @default true
+             */
+            tapAlways: true,
+
+            /**
+             * max distance between two taps
+             * @property doubleTapDistance
+             * @type {Number}
+             * @default 20
+             */
+            doubleTapDistance: 20,
+
+            /**
+             * max time between two taps
+             * @property doubleTapInterval
+             * @type {Number}
+             * @default 300
+             */
+            doubleTapInterval: 300
+        }
+    };
+})('tap');
+
+/**
+ * @module gestures
+ */
+/**
+ * when a touch is being touched at the page
+ *
+ * @class Touch
+ * @static
+ */
+/**
+ * @event touch
+ * @param {Object} ev
+ */
+Hammer.gestures.Touch = {
+    name: 'touch',
+    index: -Infinity,
+    defaults: {
+        /**
+         * call preventDefault at touchstart, and makes the element blocking by disabling the scrolling of the page,
+         * but it improves gestures like transforming and dragging.
+         * be careful with using this, it can be very annoying for users to be stuck on the page
+         * @property preventDefault
+         * @type {Boolean}
+         * @default false
+         */
+        preventDefault: false,
+
+        /**
+         * disable mouse events, so only touch (or pen!) input triggers events
+         * @property preventMouse
+         * @type {Boolean}
+         * @default false
+         */
+        preventMouse: false
+    },
+    handler: function touchGesture(ev, inst) {
+        if(inst.options.preventMouse && ev.pointerType == POINTER_MOUSE) {
+            ev.stopDetect();
+            return;
+        }
+
+        if(inst.options.preventDefault) {
+            ev.preventDefault();
+        }
+
+        if(ev.eventType == EVENT_TOUCH) {
+            inst.trigger('touch', ev);
+        }
+    }
+};
+
+/**
+ * @module gestures
+ */
+/**
+ * User want to scale or rotate with 2 fingers
+ * Preventing the default browser behavior is a good way to improve feel and working. This can be done with the
+ * `preventDefault` option.
+ *
+ * @class Transform
+ * @static
+ */
+/**
+ * @event transform
+ * @param {Object} ev
+ */
+/**
+ * @event transformstart
+ * @param {Object} ev
+ */
+/**
+ * @event transformend
+ * @param {Object} ev
+ */
+/**
+ * @event pinchin
+ * @param {Object} ev
+ */
+/**
+ * @event pinchout
+ * @param {Object} ev
+ */
+/**
+ * @event rotate
+ * @param {Object} ev
+ */
+
+/**
+ * @param {String} name
+ */
+(function(name) {
+    var triggered = false;
+
+    function transformGesture(ev, inst) {
+        switch(ev.eventType) {
+            case EVENT_START:
+                triggered = false;
+                break;
+
+            case EVENT_MOVE:
+                // at least multitouch
+                if(ev.touches.length < 2) {
+                    return;
+                }
+
+                var scaleThreshold = Math.abs(1 - ev.scale);
+                var rotationThreshold = Math.abs(ev.rotation);
+
+                // when the distance we moved is too small we skip this gesture
+                // or we can be already in dragging
+                if(scaleThreshold < inst.options.transformMinScale &&
+                    rotationThreshold < inst.options.transformMinRotation) {
+                    return;
+                }
+
+                // we are transforming!
+                Detection.current.name = name;
+
+                // first time, trigger dragstart event
+                if(!triggered) {
+                    inst.trigger(name + 'start', ev);
+                    triggered = true;
+                }
+
+                inst.trigger(name, ev); // basic transform event
+
+                // trigger rotate event
+                if(rotationThreshold > inst.options.transformMinRotation) {
+                    inst.trigger('rotate', ev);
+                }
+
+                // trigger pinch event
+                if(scaleThreshold > inst.options.transformMinScale) {
+                    inst.trigger('pinch', ev);
+                    inst.trigger('pinch' + (ev.scale < 1 ? 'in' : 'out'), ev);
+                }
+                break;
+
+            case EVENT_RELEASE:
+                if(triggered && ev.changedLength < 2) {
+                    inst.trigger(name + 'end', ev);
+                    triggered = false;
+                }
+                break;
+        }
+    }
+
+    Hammer.gestures.Transform = {
+        name: name,
+        index: 45,
+        defaults: {
+            /**
+             * minimal scale factor, no scale is 1, zoomin is to 0 and zoomout until higher then 1
+             * @property transformMinScale
+             * @type {Number}
+             * @default 0.01
+             */
+            transformMinScale: 0.01,
+
+            /**
+             * rotation in degrees
+             * @property transformMinRotation
+             * @type {Number}
+             * @default 1
+             */
+            transformMinRotation: 1
+        },
+
+        handler: transformGesture
+    };
+})('transform');
+
+/**
+ * @module hammer
+ */
+
+// AMD export
+if(typeof define == 'function' && define.amd) {
+    define('hammerjs',[],function() {
+        return Hammer;
+    });
+// commonjs export
+} else if(typeof module !== 'undefined' && module.exports) {
+    module.exports = Hammer;
+// browser export
+} else {
+    window.Hammer = Hammer;
+}
+
+})(window);
+/*! jQuery plugin for Hammer.JS - v1.1.3 - 2014-05-20
+ * http://eightmedia.github.com/hammer.js
+ *
+ * Copyright (c) 2014 Jorik Tangelder <j.tangelder@gmail.com>;
+ * Licensed under the MIT license */
+(function(window, undefined) {
+  'use strict';
+
+function setupPlugin(Hammer, $) {
+    // provide polyfill for Date.now()
+    // browser support: http://kangax.github.io/es5-compat-table/#Date.now
+    if(!Date.now) {
+        Date.now = function now() {
+            return new Date().getTime();
+        };
+    }
+
+    /**
+     * the methods on/off are called by the instance, but with the jquery plugin
+     * we use the jquery event methods instead.
+     * @this    {Hammer.Instance}
+     * @return  {jQuery}
+     */
+    Hammer.utils.each(['on', 'off'], function(method) {
+        Hammer.utils[method] = function(element, type, handler) {
+            $(element)[method](type, function($ev) {
+                // append the jquery fixed properties/methods
+                var data = $.extend({}, $ev.originalEvent, $ev);
+                if(data.button === undefined) {
+                    data.button = $ev.which - 1;
+                }
+                handler.call(this, data);
+            });
+        };
+    });
+
+    /**
+     * trigger events
+     * this is called by the gestures to trigger an event like 'tap'
+     * @this    {Hammer.Instance}
+     * @param   {String}    gesture
+     * @param   {Object}    eventData
+     * @return  {jQuery}
+     */
+    Hammer.Instance.prototype.trigger = function(gesture, eventData) {
+        var el = $(this.element);
+        if(el.has(eventData.target).length) {
+            el = $(eventData.target);
+        }
+
+        return el.trigger({
+            type: gesture,
+            gesture: eventData
+        });
+    };
+
+    /**
+     * jQuery plugin
+     * create instance of Hammer and watch for gestures,
+     * and when called again you can change the options
+     * @param   {Object}    [options={}]
+     * @return  {jQuery}
+     */
+    $.fn.hammer = function(options) {
+        return this.each(function() {
+            var el = $(this);
+            var inst = el.data('hammer');
+
+            // start new hammer instance
+            if(!inst) {
+                el.data('hammer', new Hammer(this, options || {}));
+                // change the options
+            } else if(inst && options) {
+                Hammer.utils.extend(inst.options, options);
+            }
+        });
+    };
+}
+
+
+// AMD
+if(typeof define == 'function' && define.amd) {
+    define('hammer',['hammerjs', 'jquery'], setupPlugin);
+} else {
+    setupPlugin(window.Hammer, window.jQuery || window.Zepto);
+}
+
+})(window);
+define('components.carousel',['jquery', 'mixins.preloader', 'mixins.sound', 'hammer'], function($, MixinPreloader, MixinSound) {
 
 	var console = window.muteConsole;
 
 
-	var Component = function(element, options) {
+	var ComponentCarousel = function(element, options) {
 		this.$el = $(element);
 
 		this.elementId = this.$el.attr('id');
@@ -26348,12 +27620,12 @@ define('components.carousel',['jquery', 'mixins.preloader', 'mixins.sound'], fun
 
 	// MIXIN
 
-	$.extend(Component.prototype, MixinPreloader);
-	$.extend(Component.prototype, MixinSound);
+	$.extend(ComponentCarousel.prototype, MixinPreloader);
+	$.extend(ComponentCarousel.prototype, MixinSound);
 
 	//extend prototype
 
-	$.extend(Component.prototype, {
+	$.extend(ComponentCarousel.prototype, {
 
 		transitioning: false,
 
@@ -26421,7 +27693,16 @@ define('components.carousel',['jquery', 'mixins.preloader', 'mixins.sound'], fun
 			// if no loop enable click
 			if (this.options.interactive) {
 				// assign click event
-				this.$el.on('click', $.proxy(this.clickComponent, this));
+
+
+
+				this.$el.off();
+				this.$el.hammer().off();
+
+				this.$el.on("click",$.proxy(this.clickComponent, this));
+				
+				this.$el.hammer().on("doubletap",$.proxy(this.clickComponent, this));
+
 				this.$el.addClass('interactive');
 			}
 
@@ -26569,6 +27850,7 @@ define('components.carousel',['jquery', 'mixins.preloader', 'mixins.sound'], fun
 
 				this.disposeSound();
 
+				this.$el.hammer().off();
 				this.$el.off();
 
 				this.$el.removeClass('interactive');
@@ -26594,7 +27876,7 @@ define('components.carousel',['jquery', 'mixins.preloader', 'mixins.sound'], fun
 
 	});
 
-	return Component;
+	return ComponentCarousel;
 
 });
 define('components.menu',['jquery', 'mixins.preloader', 'mixins.sound'], function($, MixinPreloader, MixinSound) {
@@ -26913,29 +28195,6 @@ define('app',[
 
 	var Modules = {
 
-		/*
-		'image-fade': {
-
-			init: function(a, b) {
-				if (!instancesPool[a.id]) {
-					var obj = new ComponentFade(a, b);
-					obj.preload();
-					instancesPool[a.id] = obj;
-				}
-			},
-
-			remove: function(a, b) {
-				if (instancesPool[a.id]) {
-					instancesPool[a.id].dispose();
-					instancesPool[a.id].preloadAbort();
-					instancesPool[a.id] = null;
-					delete instancesPool[a.id];
-				}
-
-			}
-
-		},*/
-
 		'image-360': {
 
 			init: function(a, b) {
@@ -26949,7 +28208,6 @@ define('app',[
 				if (instancesPool[a.id]) {
 					instancesPool[a.id].dispose();
 					instancesPool[a.id].preloadAbort();
-					instancesPool[a.id] = null;
 					delete instancesPool[a.id];
 				}
 
@@ -26969,7 +28227,6 @@ define('app',[
 				if (instancesPool[a.id]) {
 					instancesPool[a.id].dispose();
 					instancesPool[a.id].preloadAbort();
-					instancesPool[a.id] = null;
 					delete instancesPool[a.id];
 				}
 
@@ -26989,7 +28246,6 @@ define('app',[
 				if (instancesPool[a.id]) {
 					instancesPool[a.id].dispose();
 					instancesPool[a.id].preloadAbort();
-					instancesPool[a.id] = null;
 					delete instancesPool[a.id];
 				}
 
@@ -27011,7 +28267,6 @@ define('app',[
 				if (instancesPool[a.id]) {
 					instancesPool[a.id].dispose();
 					instancesPool[a.id].preloadAbort();
-					instancesPool[a.id] = null;
 					delete instancesPool[a.id];
 				}
 
@@ -27034,7 +28289,6 @@ define('app',[
 				if (instancesPool[a.id]) {
 					instancesPool[a.id].dispose();
 					instancesPool[a.id].preloadAbort();
-					instancesPool[a.id] = null;
 					delete instancesPool[a.id];
 				}
 
@@ -27081,72 +28335,11 @@ define('app',[
 
 		removeElement: function(element) {
 			var elm = Modules[element.getAttribute('obj-type')];
-			var id = element.getAttribute('id');
-			var cfg = (element.getAttribute('obj-config'));
-			var json = {};
-			try {
-				json = $.parseJSON(cfg);
-			} catch (e) {
-				console.error("Error parsing json", cfg);
-			}
 
-			//console.debug("removeElement", id, json);
 			if (elm) {
-				elm.remove(element, json);
+				elm.remove(element);
 			}
 
-		},
-
-		onKeyFrame: function(element, name, direction) {
-
-			var item = $(element);
-			var itemId = item.attr("id");
-
-			//if(item.hasClass("anno")){
-			//	this.refreshScroller(item);
-			//	return;
-			//}
-
-			//console.error(itemId, name, direction);
-
-			if (direction === 'down') {
-				switch (name) {
-					case 'dataTopBottom':
-						//console.info(itemId + " DESTROY");
-						this.removeElement(element);
-						//this.refreshScroller();
-						break;
-					case 'dataBottomTop':
-						//console.info(itemId + " INIT");
-						this.initElement(element);
-						this.setHash(itemId);
-						break;
-				}
-			} else {
-				switch (name) {
-					case 'dataTopBottom':
-						//console.info(itemId + " INIT");
-						this.initElement(element);
-
-						this.setHash(itemId);
-						break;
-					case 'dataBottomTop':
-						//console.info(itemId + " DESTROY");
-						this.removeElement(element);
-						//this.refreshScroller();
-						break;
-				}
-			}
-		},
-
-
-		refreshScroller: function(item) {
-			//	if(this.objScroller){
-			//		if($.isFunction(this.objScroller.refresh)){
-			//			console.error('refresh scroller',item);
-			//			this.objScroller.refresh(item.get());
-			//		}
-			//	}
 		},
 
 		disposeEmitters: function() {
@@ -27211,6 +28404,56 @@ define('app',[
 			$('.box').bind('inview', $.proxy(this.onInviewTimer, this));
 		},
 
+
+		garbageCollector: function() {
+
+			var self = this;
+			
+			console.info(instancesPool);
+
+			var count = 0;
+			for (var pepe in instancesPool) {
+				count++;
+			}
+
+			if (count < 3) {
+				return;
+			}
+
+
+
+			var actualScrollTop = $(window).scrollTop();
+			var screenHeight = $(window).height();
+
+			console.error("passa garbageCollector", count, 'elementi', 'actualScrollTop', actualScrollTop, 'screenHeight', screenHeight);
+
+			for (var name in instancesPool) {
+				var objInPool = instancesPool[name];
+				console.error(name, "item", objInPool.getMyPos());
+
+				var myPos = objInPool.getMyPos();
+				var myHeight = objInPool.getHeight();
+
+				/*
+				if(  myPos + myHeight - actualScrollTop >  screenHeight){
+					console.error(name, 'sono fuori schermo piuuuuu');
+				}
+				*/
+
+				if (myPos + myHeight - actualScrollTop < 0) {
+					console.error(name, 'devo essere pulito');
+					var obj = {
+						id: name
+					};
+					self.removeElement(obj);
+				}
+
+			}
+
+
+		},
+
+
 		lastScrollPosition: 0,
 
 		onInviewTimer: function(e, isInView, visiblePartX, visiblePartY) {
@@ -27237,7 +28480,9 @@ define('app',[
 			var itemId = item.attr("id");
 
 
-			//console.error('onInviewTimer', itemId, isInView, visiblePartY);
+			//console.error('onInviewTimer', itemId, isInView);
+
+
 
 			if (item.data('inviewtimer')) {
 				clearTimeout(item.data('inviewtimer'));
@@ -27247,13 +28492,42 @@ define('app',[
 			var self = this;
 
 
+
+			if (!isInView) {
+				self.removeElement(element);
+			}
+
+
+
 			item.data('inviewtimer', setTimeout(function() {
+
+
+				/*
+				if(!isInView){
+					console.info(itemId + " DESTROY", visiblePartY,direction);
+					self.removeElement(element);
+				}else{
+					console.info(itemId + " INIT", visiblePartY, direction);
+					self.initElement(element);
+				}
+
+				if(isInView === true){
+					console.info(itemId + " INIT", visiblePartY, direction);
+					self.initElement(element);
+				}else{
+					console.info(itemId + " DESTROY", visiblePartY,direction);
+					self.removeElement(element);
+				}
+
+
+				console.info("instancesPool", instancesPool);
+				*/
 
 
 
 				if (visiblePartY && element) {
 
-					//console.debug("gestione",  item.attr("id"), visiblePartY);
+
 
 					if (direction === 'topTObottom') {
 
@@ -27266,8 +28540,10 @@ define('app',[
 							case 'top':
 							case 'both':
 								console.info(itemId + " INIT", visiblePartY, direction);
+								//element.setAttribute('isInit',true);
 								self.initElement(element);
 								self.setHash(itemId);
+								//self.garbageCollector();
 								break;
 							default:
 
@@ -27280,15 +28556,16 @@ define('app',[
 						switch (visiblePartY) {
 
 							case 'top':
-								console.info(itemId + " DESTROY", visiblePartY,direction);
+								console.info(itemId + " DESTROY", visiblePartY, direction);
 								self.removeElement(element);
 								break;
 
 							case 'bottom':
 							case 'both':
-								console.info(itemId + " INIT", visiblePartY,direction);
+								console.info(itemId + " INIT", visiblePartY, direction);
 								self.initElement(element);
 								self.setHash(itemId);
+								//self.garbageCollector();
 								break;
 							default:
 
@@ -27300,7 +28577,8 @@ define('app',[
 				}
 
 
-			}, 700));
+
+			}, 1000));
 		},
 
 
@@ -34071,13 +35349,17 @@ require.config({
 		inview: '../vendor/jquery.inview',
 		tweenmax: '../vendor/TweenMax',
 		reel: '../vendor/jquery.reel',
-		panzoom: '../vendor/jquery.panzoom',
+		cloudzoom: '../vendor/cloudzoom-1',
+		hammerjs: '../vendor/hammer',
+		hammer: '../vendor/jquery.hammer',
 		videojs: '../vendor/video-js-4.1.0/video.dev',
 		mediaelement: '../vendor/mediaelement/mediaelement-and-player'
 	},
 
 	shim: {
-		"inview": ["jquery"]
+		"inview": ["jquery"],
+		"elevatezoom": ["jquery"],
+		"hammer": ["hammerjs"]
 	}
 
 });
@@ -34086,7 +35368,8 @@ require.config({
 
 require([
 	'app',
-	'tweenmax'
+	'tweenmax', 
+	'hammer'
 ], function(App) {
 	App.main();
 });
