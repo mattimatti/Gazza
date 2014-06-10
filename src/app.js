@@ -11,7 +11,7 @@ define([
 ], function($, ComponentFade, ComponentReel, ComponentVideo, ComponentEasy, ComponentPan, ComponentCarousel, ComponentMenu) {
 
 
-	var console = window.console;
+	var console = window.muteConsole;
 
 
 	var instancesPool = [];
@@ -189,9 +189,9 @@ define([
 
 		setupEmitters: function() {
 			console.debug("setBoxYearEvents");
+
 			$(".box").attr("data-top-bottom", "data-top-bottom").attr("data-bottom-top", "data-bottom-top");
 			$(".box").attr("data-emit-events", "data-emit-events");
-
 
 			$(".anno").attr("data-top-bottom", "").attr("data-bottom-top", "");
 			$(".anno").attr("data-emit-events", "data-emit-events");
@@ -318,10 +318,10 @@ define([
 			var itemId = item.attr("id");
 
 
-			//console.error('onInviewTimer', itemId, isInView);
+			console.debug('-------onInviewTimer',  'itemId ',itemId, 'isInView' ,isInView);
 
 
-
+			// assegno un timer all'elemento
 			if (item.data('inviewtimer')) {
 				clearTimeout(item.data('inviewtimer'));
 				item.removeData('inviewtimer');
@@ -333,34 +333,13 @@ define([
 
 			if (!isInView) {
 				self.removeElement(element);
+				return;
 			}
-
-
 
 			item.data('inviewtimer', setTimeout(function() {
 
 
-				/*
-				if(!isInView){
-					console.info(itemId + " DESTROY", visiblePartY,direction);
-					self.removeElement(element);
-				}else{
-					console.info(itemId + " INIT", visiblePartY, direction);
-					self.initElement(element);
-				}
-
-				if(isInView === true){
-					console.info(itemId + " INIT", visiblePartY, direction);
-					self.initElement(element);
-				}else{
-					console.info(itemId + " DESTROY", visiblePartY,direction);
-					self.removeElement(element);
-				}
-
-
 				console.info("instancesPool", instancesPool);
-				*/
-
 
 
 				if (visiblePartY && element) {
@@ -372,8 +351,8 @@ define([
 						switch (visiblePartY) {
 
 							case 'bottom':
-								console.info(itemId + " DESTROY", visiblePartY, direction);
-								self.removeElement(element);
+								//console.info(itemId + " DESTROY", visiblePartY, direction);
+								//self.removeElement(element);
 								break;
 							case 'top':
 							case 'both':
@@ -394,8 +373,8 @@ define([
 						switch (visiblePartY) {
 
 							case 'top':
-								console.info(itemId + " DESTROY", visiblePartY, direction);
-								self.removeElement(element);
+								//console.info(itemId + " DESTROY", visiblePartY, direction);
+								//self.removeElement(element);
 								break;
 
 							case 'bottom':
@@ -416,7 +395,7 @@ define([
 
 
 
-			}, 1000));
+			}, 200));
 		},
 
 

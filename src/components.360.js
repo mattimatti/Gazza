@@ -94,12 +94,13 @@ define(['jquery', 'mixins.preloader', 'mixins.sound', 'reel'], function($, Mixin
 
 
 			this.disposeSound();
+			this.disposeEventsSafe();
+			
 
 			if (this.plugin) {
 				this.plugin.unreel();
-				this.plugin.hammer().off();
 				this.plugin.off();
-				this.plugin = null;
+			
 				delete this.plugin;
 			}
 

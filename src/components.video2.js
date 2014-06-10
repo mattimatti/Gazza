@@ -1,6 +1,6 @@
 define(['jquery', 'mixins.preloader', 'mixins.sound', 'videojs'], function($, MixinPreloader, MixinSound) {
 
-	var console = window.console;
+	var console = window.muteConsole;
 
 	var Component = function(element, options) {
 
@@ -267,7 +267,7 @@ define(['jquery', 'mixins.preloader', 'mixins.sound', 'videojs'], function($, Mi
 
 			}
 
-			this.$el.off();
+			this.disposeEventsSafe();
 
 			// rimuoviamo
 			delete this.$el;

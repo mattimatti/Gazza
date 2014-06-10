@@ -159,6 +159,18 @@ define(['jquery'], function($) {
 		// return the height of the element
 		getHeight: function(xhr) {
 			return this.$el.height();
+		},
+
+		// safely dispose events
+		disposeEventsSafe: function(){
+			this.$el.off("click");
+			this.$el.off("dblclick");
+			this.$el.off("touch");
+			this.$el.off("swipe");
+			this.$el.off("doubletap");
+			this.$el.off("mouseover");
+			this.$el.off("mouseout");
+
 		}
 
 	};

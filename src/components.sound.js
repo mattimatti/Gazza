@@ -1,7 +1,7 @@
 define(['jquery'], function($) {
 
-	var console = window.console;
-
+	var console = window.muteConsole;
+	
 	var DEFAULT_SOUND_ID = 'click';
 
 

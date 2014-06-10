@@ -325,7 +325,7 @@ define(['jquery', 'mixins.preloader', 'mixins.sound'], function($, MixinPreloade
 				this.panObject.destroy();
 
 				// remove click
-				this.$el.off();
+				this.disposeEventsSafe();
 
 				this.plugin = null;
 				this.panObject = null;

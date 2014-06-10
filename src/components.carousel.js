@@ -255,8 +255,7 @@ define(['jquery', 'mixins.preloader', 'mixins.sound', 'hammer'], function($, Mix
 
 				this.disposeSound();
 
-				this.$el.hammer().off();
-				this.$el.off();
+				this.disposeEventsSafe();
 
 				this.$el.removeClass('interactive');
 

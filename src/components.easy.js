@@ -46,7 +46,7 @@ define(['jquery','mixins.preloader','mixins.sound'], function($,MixinPreloader,M
 
 			if(this.options.interactive){
 				this.$el.hammer();
-				this.$el.on("tap",$.proxy(this.elementClick, this));
+				//this.$el.on("tap",$.proxy(this.elementClick, this));
 				this.$el.on("click", $.proxy(this.elementClick,this));
 				this.$el.addClass("interactive");
 			}
@@ -66,7 +66,7 @@ define(['jquery','mixins.preloader','mixins.sound'], function($,MixinPreloader,M
 				return;
 			}
 			this.disposeSound();
-			this.$el.off();
+			this.disposeEventsSafe();
 			console.info(this.elementId + ' ComponentEasy dispose');
 			delete this.$el;
 			delete this.options;

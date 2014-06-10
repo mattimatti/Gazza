@@ -273,6 +273,8 @@ define(['jquery', 'mixins.preloader', 'mixins.sound'], function($, MixinPreloade
 				this.disposeWrapper(this.wrapperObj);
 			}
 
+			this.disposeEventsSafe();
+			
 			// show the original image
 			this.$el.find('img').first().show();
 

@@ -1,6 +1,6 @@
 define(['jquery', 'mixins.preloader', 'mixins.sound', 'mediaelement'], function($, MixinPreloader, MixinSound) {
 
-	var console = window.console;
+	var console = window.muteConsole;
 
 
 
@@ -85,8 +85,8 @@ define(['jquery', 'mixins.preloader', 'mixins.sound', 'mediaelement'], function(
 		},
 
 
-		isMobileBrowser: function(){
-			return ( /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ) ;
+		isMobileBrowser: function() {
+			return (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent));
 		},
 
 
@@ -103,9 +103,10 @@ define(['jquery', 'mixins.preloader', 'mixins.sound', 'mediaelement'], function(
 				console.warn(this.elementId + ' Component already initialized exit');
 				return;
 			}
+
 			this.initialized = true;
 
-
+			console.debug(this.elementId + ' ComponentVideo initialize');
 
 			this.video = this.options.id; //this.$el.find('.video-js').get(0);
 
@@ -114,7 +115,6 @@ define(['jquery', 'mixins.preloader', 'mixins.sound', 'mediaelement'], function(
 				return;
 			}
 
-			console.debug(this.options.id + ' ComponentVideo initialize');
 
 
 			// if interactive set autoplay at false
@@ -125,10 +125,9 @@ define(['jquery', 'mixins.preloader', 'mixins.sound', 'mediaelement'], function(
 
 
 			// force videoOver at false in mobile browsers
-			if(this.isMobileBrowser()){
+			if (this.isMobileBrowser()) {
 				this.options.videoOver = false;
 			}
-
 
 
 
@@ -154,7 +153,7 @@ define(['jquery', 'mixins.preloader', 'mixins.sound', 'mediaelement'], function(
 
 			this.plugin = document.getElementById(this.options.id);
 
-			
+
 
 			this.objWrapper = $(".videoWrapper");
 
@@ -169,17 +168,17 @@ define(['jquery', 'mixins.preloader', 'mixins.sound', 'mediaelement'], function(
 		},
 
 
-		initVideoOver: function(){
+		initVideoOver: function() {
 
-			if(this.options.videoOver){
+			if (this.options.videoOver) {
 				this.videoOverObj = $(this.plugin);
 				this.videoOverObj.addClass('videomodal');
 			}
 		},
 
 
-		disposeVideoOver: function(){
-			if(this.videoOverObj){
+		disposeVideoOver: function() {
+			if (this.videoOverObj) {
 				this.videoOverObj.removeClass('videomodal');
 				delete this.videoOverObj;
 			}
@@ -193,9 +192,9 @@ define(['jquery', 'mixins.preloader', 'mixins.sound', 'mediaelement'], function(
 
 
 		checkVideoIsReadyToPlay: function() {
-			
-			
-			this.disposeIfOffScreen();
+
+
+			//this.disposeIfOffScreen();
 			//console.debug(this.elementId + ' checkVideoIsReadyToPlay');
 
 			if (this.isPlayable()) {
@@ -213,7 +212,7 @@ define(['jquery', 'mixins.preloader', 'mixins.sound', 'mediaelement'], function(
 
 		showPoster: function() {
 
-			if(this.isMobileBrowser()){
+			if (this.isMobileBrowser()) {
 				return;
 			}
 
@@ -223,7 +222,7 @@ define(['jquery', 'mixins.preloader', 'mixins.sound', 'mediaelement'], function(
 
 		hidePoster: function() {
 			console.debug(this.elementId + " hidePoster");
-			if(this.options.videoOver){
+			if (this.options.videoOver) {
 				return;
 			}
 			this.objWrapper.find('img').hideVisible();
@@ -232,7 +231,6 @@ define(['jquery', 'mixins.preloader', 'mixins.sound', 'mediaelement'], function(
 		// video click interactivity
 		checkInteract: function() {
 			console.info(this.elementId + " checkInteract assign events");
-			this.$el.off();
 			if (this.options.interactive) {
 				this.$el.on("click", $.proxy(this.toggleVideoPlayback, this));
 				this.$el.addClass('interactive');
@@ -331,7 +329,7 @@ define(['jquery', 'mixins.preloader', 'mixins.sound', 'mediaelement'], function(
 			var isPlayable = false;
 
 			// mobile browsers have always readystate at zero.
-			if(this.isMobileBrowser()){
+			if (this.isMobileBrowser()) {
 				return true;
 			}
 
@@ -368,10 +366,10 @@ define(['jquery', 'mixins.preloader', 'mixins.sound', 'mediaelement'], function(
 
 		stop: function() {
 
-			
+
 			try {
 
-				if(this.isPlayable()){
+				if (this.isPlayable()) {
 
 					console.debug(this.elementId + ' stop Video');
 
@@ -395,16 +393,16 @@ define(['jquery', 'mixins.preloader', 'mixins.sound', 'mediaelement'], function(
 
 			if (this.plugin) {
 
-				try{
+				try {
 					this.plugin.currentTime = 1;
 					console.error('this.plugin.currentTime', this.plugin.currentTime);
 					isResetted = (this.plugin.currentTime === 1);
 					console.error('this.plugin.currentTime', this.plugin.currentTime);
 
-				}catch(ex){
+				} catch (ex) {
 
 				}
-				
+
 				this.showPoster();
 
 			}
@@ -415,30 +413,39 @@ define(['jquery', 'mixins.preloader', 'mixins.sound', 'mediaelement'], function(
 
 		dispose: function() {
 
-			console.info(this.options.id + ' ComponentVideo dispose');
 
 			if (!this.initialized) {
 				console.warn(this.elementId + ' ComponentVideo not initialized no dispose');
 				return;
 			}
 
-			console.info(this.options.id + ' ComponentVideo dispose');
+			console.error(this.elementId + ' ComponentVideo dispose', this.$el.height());
 
-			if (this.plugin) {
-				this.disposeSound();
-				this.stop();
+			try {
+
+				if (this.plugin) {
+					this.disposeSound();
+					this.stop();
+				}
+
+				this.disposeVideoOver();
+
+				clearInterval(this.garbageInterval);
+
+
+			}catch(e){
+				
 			}
 
-			this.disposeVideoOver();
-
-			clearInterval(this.garbageInterval);
-
-			this.$el.off();
+			this.disposeEventsSafe();
 
 			this.initialized = false;
 
+
+			console.debug(this.elementId + ' actual size', this.$el.height());
+
 			// rimuoviamo
-			delete this.$el;
+
 			delete this.objWrapper;
 			delete this.$plugin;
 			delete this.plugin;

@@ -1,26 +1,23 @@
 define(['jquery'], function($) {
 
-	var console = window.console;
+	var console = window.muteConsole;
 
 
-	var HTML5Media = function(element, options) {
-
-		this.$el = $(element);
-
-		this.plugin = element;
-
-		this.elementId = this.$el.attr('id');
-
-		this.initialize();
-
-	};
+	var HTML5Media = {
 
 
-	//extend prototype
+		_______playCount: 0,
 
 
-	$.extend(HTML5Media.prototype, {
+		increasePlayCount : function(){
+			this._______playCount ++;
+		},
 
+
+
+		getInstanceId: function (){
+			return "html5_audio_" + this.elementId + "_" + this._______playCount;
+		},
 
 		isMobileBrowser: function() {
 			return (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent));
@@ -163,8 +160,9 @@ define(['jquery'], function($) {
 
 
 		play: function() {
-
+			this.applySource();
 			if (this.plugin) {
+				console.debug('play');
 				this.plugin.play();
 			}
 		},
@@ -205,12 +203,17 @@ define(['jquery'], function($) {
 		},
 
 
+		_log: function() {
+			console.error(arguments);
+		},
+
 
 		dispose: function() {
-
+			console.debug('dispose');
 			if (this.plugin) {
 				this.stop();
 			}
+			this.removeMarkup();
 
 			this.$el.off();
 			delete this.$el;
@@ -219,7 +222,7 @@ define(['jquery'], function($) {
 
 
 
-	});
+	};
 
 
 

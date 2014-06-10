@@ -1,6 +1,6 @@
 define(['jquery','html5.media'], function($,HTML5Media) {
 
-	var console = window.console;
+	var console = window.muteConsole;
 
 
 	var HTML5VideoPlayer = function(element, options) {
