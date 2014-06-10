@@ -15416,7 +15416,7 @@ define('mixins.sound',['jquery', 'mediaelement'], function($) {
 });
 define('components.fade',['jquery', 'mixins.preloader', 'mixins.sound'], function($, MixinPreloader, MixinSound) {
 
-	var console = window.console;
+	var console = window.muteConsole;
 
 	var Component = function(element, options) {
 
@@ -18529,7 +18529,7 @@ define('components.fade',['jquery', 'mixins.preloader', 'mixins.sound'], functio
 
 define('components.360',['jquery', 'mixins.preloader', 'mixins.sound', 'reel'], function($, MixinPreloader, MixinSound) {
 
-	var console = window.console;
+	var console = window.muteConsole;
 
 	var Component = function(element, options) {
 
@@ -24883,7 +24883,7 @@ console.info(this.elementId + " toggle clip");
 });
 define('components.easy',['jquery','mixins.preloader','mixins.sound'], function($,MixinPreloader,MixinSound){
 	
-	var console = window.console;
+	var console = window.muteConsole;
 
 	var ComponentEasy = function(element, options) {
 		this.options = options;
@@ -24914,7 +24914,8 @@ define('components.easy',['jquery','mixins.preloader','mixins.sound'], function(
 			
 
 			if(this.options.sound){
-				this.$el.hammer().on("tap",$.proxy(this.clickComponent, this));
+				this.$el.hammer();
+				this.$el.on("tap",$.proxy(this.clickComponent, this));
 				this.$el.on("click", $.proxy(this.elementClick,this));
 				this.$el.addClass("interactive");
 			}
@@ -24935,7 +24936,6 @@ define('components.easy',['jquery','mixins.preloader','mixins.sound'], function(
 			}
 			this.disposeSound();
 			this.$el.off();
-			this.$el.hammer().off();
 			console.info(this.elementId + ' ComponentEasy dispose');
 			delete this.$el;
 			delete this.options;
