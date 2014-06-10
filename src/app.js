@@ -11,7 +11,7 @@ define([
 ], function($, ComponentFade, ComponentReel, ComponentVideo, ComponentEasy, ComponentPan, ComponentCarousel, ComponentMenu) {
 
 
-	var console = window.muteConsole;
+	var console = window.console;
 
 
 	var instancesPool = [];
@@ -144,7 +144,7 @@ define([
 
 			try {
 				var trackId = window.location.href + window.location.hash;
-				console.info('tracking', trackId);
+				//console.debug('tracking', trackId);
 				s.trackAjaxFotoGallery(trackId);
 			} catch (trackingExc) {
 
@@ -253,41 +253,40 @@ define([
 				count++;
 			}
 
+
+			var objInPool;
+
+			// check for disposables
+			for (var name in instancesPool) {
+				objInPool = instancesPool[name];
+				if(objInPool.readyForGrabageCollection){
+					console.info('Found element ',name,' marked for garbage collection');
+
+					// try to dispose it.. should be already disposed..
+					try{
+						instancesPool[name].dispose();
+					}catch(ex){}
+					
+					delete instancesPool[name];
+					return;
+				}
+			}
+
 			if (count < 3) {
 				return;
 			}
-
-
 
 			var actualScrollTop = $(window).scrollTop();
 			var screenHeight = $(window).height();
 
 			console.error("passa garbageCollector", count, 'elementi', 'actualScrollTop', actualScrollTop, 'screenHeight', screenHeight);
 
-			for (var name in instancesPool) {
-				var objInPool = instancesPool[name];
-				console.error(name, "item", objInPool.getMyPos());
-
-				var myPos = objInPool.getMyPos();
-				var myHeight = objInPool.getHeight();
-
-				/*
-				if(  myPos + myHeight - actualScrollTop >  screenHeight){
-					console.error(name, 'sono fuori schermo piuuuuu');
+			for (name in instancesPool) {
+				objInPool = instancesPool[name];
+				if(objInPool.readyForGrabageCollection){
+					delete instancesPool[name];
 				}
-				*/
-
-				if (myPos + myHeight - actualScrollTop < 0) {
-					console.error(name, 'devo essere pulito');
-					var obj = {
-						id: name
-					};
-					self.removeElement(obj);
-				}
-
 			}
-
-
 		},
 
 
@@ -378,9 +377,9 @@ define([
 							case 'both':
 								console.info(itemId + " INIT", visiblePartY, direction);
 								//element.setAttribute('isInit',true);
+								self.garbageCollector();
 								self.initElement(element);
 								self.setHash(itemId);
-								//self.garbageCollector();
 								break;
 							default:
 
@@ -400,9 +399,9 @@ define([
 							case 'bottom':
 							case 'both':
 								console.info(itemId + " INIT", visiblePartY, direction);
+								self.garbageCollector();
 								self.initElement(element);
 								self.setHash(itemId);
-								//self.garbageCollector();
 								break;
 							default:
 

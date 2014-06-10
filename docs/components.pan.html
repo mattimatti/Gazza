@@ -126,9 +126,9 @@
               
             </div>
             
-            <div class="content"><div class='highlight'><pre>define([<span class="hljs-string">'jquery'</span>, <span class="hljs-string">'mixins.preloader'</span>, <span class="hljs-string">'mixins.sound'</span>, <span class="hljs-string">'cloudzoom'</span>], <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">($, MixinPreloader, MixinSound)</span> {</span>
+            <div class="content"><div class='highlight'><pre>define([<span class="hljs-string">'jquery'</span>, <span class="hljs-string">'mixins.preloader'</span>, <span class="hljs-string">'mixins.sound'</span>], <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">($, MixinPreloader, MixinSound)</span> {</span>
 
-	<span class="hljs-keyword">var</span> console = window.console;
+	<span class="hljs-keyword">var</span> console = window.muteConsole;
 
 
 
@@ -528,6 +528,7 @@ return;
 					delay: <span class="hljs-number">0.5</span>
 				});
 				<span class="hljs-keyword">this</span>.plugin.show();
+				<span class="hljs-keyword">this</span>.contentObj.hide();
 
 				console.error(<span class="hljs-string">"scale to "</span>, <span class="hljs-keyword">this</span>.wrapperObj.width());
 

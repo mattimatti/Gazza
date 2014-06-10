@@ -130,7 +130,37 @@
 
 	<span class="hljs-keyword">var</span> console = window.console;
 
-	<span class="hljs-keyword">var</span> Component = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(element, options)</span> {</span>
+
+
+	$.fn.showVisible = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> {</span>
+		<span class="hljs-keyword">this</span>.css(<span class="hljs-string">'visibility'</span>, <span class="hljs-string">'visible'</span>);
+	};
+
+	$.fn.hideVisible = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> {</span>
+		<span class="hljs-keyword">this</span>.css(<span class="hljs-string">'visibility'</span>, <span class="hljs-string">'hidden'</span>);
+	};
+
+
+	$.fn.isOnScreen = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> {</span>
+
+		<span class="hljs-keyword">var</span> win = $(window);
+
+		<span class="hljs-keyword">var</span> viewport = {
+			top: win.scrollTop(),
+			left: win.scrollLeft()
+		};
+		viewport.right = viewport.left + win.width();
+		viewport.bottom = viewport.top + win.height();
+
+		<span class="hljs-keyword">var</span> bounds = <span class="hljs-keyword">this</span>.offset();
+		bounds.right = bounds.left + <span class="hljs-keyword">this</span>.outerWidth();
+		bounds.bottom = bounds.top + <span class="hljs-keyword">this</span>.outerHeight();
+
+		<span class="hljs-keyword">return</span> (!(viewport.right &lt; bounds.left || viewport.left &gt; bounds.right || viewport.bottom &lt; bounds.top || viewport.top &gt; bounds.bottom));
+
+	};
+
+	<span class="hljs-keyword">var</span> ComponentVideo = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(element, options)</span> {</span>
 
 		<span class="hljs-keyword">this</span>.$el = $(element);
 
@@ -153,6 +183,7 @@
 			autoplay: <span class="hljs-literal">true</span>,
 			interactive: <span class="hljs-literal">false</span>,
 			controls: <span class="hljs-literal">false</span>,
+			videoOver: <span class="hljs-literal">false</span>,
 			preload: <span class="hljs-string">'none'</span>,
 			sound: <span class="hljs-literal">null</span>,
 			techOrder: [<span class="hljs-string">"html5"</span>, <span class="hljs-string">"flash"</span>]
@@ -188,8 +219,8 @@
             </div>
             
             <div class="content"><div class='highlight'><pre>
-	$.extend(Component.prototype, MixinPreloader);
-	$.extend(Component.prototype, MixinSound);</pre></div></div>
+	$.extend(ComponentVideo.prototype, MixinPreloader);
+	$.extend(ComponentVideo.prototype, MixinSound);</pre></div></div>
             
         </li>
         
@@ -205,8 +236,51 @@
             </div>
             
             <div class="content"><div class='highlight'><pre>
-	$.extend(Component.prototype, {
+	$.extend(ComponentVideo.prototype, {
 
+
+
+		garbageCollectMe: <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> {</span>
+			console.debug(<span class="hljs-string">"check garbage"</span>);
+
+			<span class="hljs-keyword">if</span> (<span class="hljs-keyword">this</span>.$el) {
+				<span class="hljs-keyword">this</span>.disposeIfOffScreen();
+			}
+
+		},
+
+
+		disposeIfOffScreen: <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> {</span>
+			<span class="hljs-keyword">if</span> (<span class="hljs-keyword">this</span>.$el) {
+				<span class="hljs-keyword">if</span> (!<span class="hljs-keyword">this</span>.$el.isOnScreen()) {
+					console.error(<span class="hljs-string">"GARBAGE COLLECT"</span>);
+					<span class="hljs-keyword">this</span>.dispose();
+					<span class="hljs-keyword">this</span>.readyForGrabageCollection = <span class="hljs-literal">true</span>;
+				}
+			}
+		},
+
+
+		isMobileBrowser: <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span>{</span>
+			<span class="hljs-keyword">return</span> ( <span class="hljs-regexp">/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i</span>.test(navigator.userAgent) ) ;
+		},</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-6">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-6">&#182;</a>
+              </div>
+              <p>check if the browser can play a video</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>		hasVideoFeatures: <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> {</span>
+			<span class="hljs-keyword">return</span> !!document.createElement(<span class="hljs-string">'video'</span>).canPlayType;
+		},
 
 
 		initialize: <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> {</span>
@@ -219,26 +293,8 @@
 			<span class="hljs-keyword">this</span>.initialized = <span class="hljs-literal">true</span>;
 
 
+
 			<span class="hljs-keyword">this</span>.video = <span class="hljs-keyword">this</span>.options.id; <span class="hljs-comment">//this.$el.find('.video-js').get(0);</span></pre></div></div>
-            
-        </li>
-        
-        
-        <li id="section-6">
-            <div class="annotation">
-              
-              <div class="pilwrap ">
-                <a class="pilcrow" href="#section-6">&#182;</a>
-              </div>
-              <p>if the video has no id return </p>
-
-            </div>
-            
-            <div class="content"><div class='highlight'><pre>			<span class="hljs-keyword">if</span> (!<span class="hljs-keyword">this</span>.options.id) {
-				<span class="hljs-keyword">return</span>;
-			}
-
-			console.info(<span class="hljs-keyword">this</span>.options.id + <span class="hljs-string">' ComponentVideo initialize'</span>);</pre></div></div>
             
         </li>
         
@@ -248,6 +304,25 @@
               
               <div class="pilwrap ">
                 <a class="pilcrow" href="#section-7">&#182;</a>
+              </div>
+              <p>if the video has no id return </p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>			<span class="hljs-keyword">if</span> (!<span class="hljs-keyword">this</span>.options.id) {
+				<span class="hljs-keyword">return</span>;
+			}
+
+			console.debug(<span class="hljs-keyword">this</span>.options.id + <span class="hljs-string">' ComponentVideo initialize'</span>);</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-8">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-8">&#182;</a>
               </div>
               <p>if interactive set autoplay at false</p>
 
@@ -261,11 +336,11 @@
         </li>
         
         
-        <li id="section-8">
+        <li id="section-9">
             <div class="annotation">
               
               <div class="pilwrap ">
-                <a class="pilcrow" href="#section-8">&#182;</a>
+                <a class="pilcrow" href="#section-9">&#182;</a>
               </div>
               <p>toggle visibility</p>
 
@@ -281,35 +356,16 @@
 				isVideo: <span class="hljs-literal">true</span>
 			};
 
-			<span class="hljs-keyword">this</span>.removePoster();</pre></div></div>
-            
-        </li>
-        
-        
-        <li id="section-9">
-            <div class="annotation">
-              
-              <div class="pilwrap ">
-                <a class="pilcrow" href="#section-9">&#182;</a>
-              </div>
-              <p>this.plugin = window.MediaElementPlayer(“#” + this.options.id, videoOptions);
-this.plugin.stop();</p>
 
-            </div>
-            
-            <div class="content"><div class='highlight'><pre>
+			<span class="hljs-keyword">if</span> (!<span class="hljs-keyword">this</span>.hasVideoFeatures()) {
+				<span class="hljs-keyword">return</span>;
+			}
+
+
 			<span class="hljs-keyword">var</span> isSafari = <span class="hljs-regexp">/Safari/</span>.test(navigator.userAgent) &amp;&amp; <span class="hljs-regexp">/Apple Computer/</span>.test(navigator.vendor);
 
 
-			<span class="hljs-keyword">this</span>.plugin = document.getElementById(<span class="hljs-keyword">this</span>.options.id);
-			<span class="hljs-keyword">this</span>.plugin.load();
-
-			<span class="hljs-keyword">this</span>.$plugin = $(<span class="hljs-string">".videoWrapper"</span>);
-
-			<span class="hljs-keyword">this</span>.createPoster();
-
-
-			<span class="hljs-keyword">if</span> (isSafari) {</pre></div></div>
+			<span class="hljs-keyword">this</span>.plugin = document.getElementById(<span class="hljs-keyword">this</span>.options.id);</pre></div></div>
             
         </li>
         
@@ -320,43 +376,16 @@ this.plugin.stop();</p>
               <div class="pilwrap ">
                 <a class="pilcrow" href="#section-10">&#182;</a>
               </div>
-              <p>this.plugin.removeAttribute(‘autoplay’);</p>
-
+              
             </div>
             
-            <div class="content"><div class='highlight'><pre>				<span class="hljs-keyword">this</span>.plugin.preload = <span class="hljs-literal">true</span>;
-
+            <div class="content"><div class='highlight'><pre>			<span class="hljs-keyword">if</span>(<span class="hljs-keyword">this</span>.options.videoOver){
+				$(<span class="hljs-keyword">this</span>.plugin).addClass(<span class="hljs-string">'videomodal'</span>);
 			}
 
-			<span class="hljs-keyword">this</span>.checkInteract();
+			<span class="hljs-keyword">this</span>.objWrapper = $(<span class="hljs-string">".videoWrapper"</span>);
 
-
-		},
-
-
-		createPoster: <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> {</span>
-
-			<span class="hljs-comment">/*
-			this.posterObj = $('&lt;div class="posterImg"&gt;&lt;img  src="' + this.plugin.poster + '"/&gt;&lt;/div&gt;');
-			this.posterObj.appendTo(this.$el);
-			this.$plugin.hide();
-			*/</span>
-
-		},
-
-		removePoster: <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> {</span>
-			<span class="hljs-comment">/*
-			if (this.posterObj) {
-				this.posterObj.hide();
-				this.posterObj.fadeTo(.1, 0);
-				this.posterObj.empty().remove();
-				delete this.posterObj;
-			}
-			if (this.$plugin) {
-				this.$plugin.show();
-			}*/</span>
-
-		},</pre></div></div>
+			<span class="hljs-keyword">this</span>.showPoster();</pre></div></div>
             
         </li>
         
@@ -366,6 +395,61 @@ this.plugin.stop();</p>
               
               <div class="pilwrap ">
                 <a class="pilcrow" href="#section-11">&#182;</a>
+              </div>
+              <p>You have to set preload true once intilized otherwise in safari or firefox will not load the video</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>			<span class="hljs-keyword">this</span>.plugin.preload = <span class="hljs-literal">true</span>;
+
+			<span class="hljs-keyword">this</span>.initLoadCheck();
+
+		},
+
+
+		initLoadCheck: <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> {</span>
+			console.debug(<span class="hljs-keyword">this</span>.elementId + <span class="hljs-string">" initLoadCheck"</span>);
+			<span class="hljs-keyword">this</span>.videoloadInterval = setInterval($.proxy(<span class="hljs-keyword">this</span>.checkVideoIsReadyToPlay, <span class="hljs-keyword">this</span>), <span class="hljs-number">200</span>);
+		},
+
+
+		checkVideoIsReadyToPlay: <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> {</span>
+			
+			
+			<span class="hljs-keyword">this</span>.disposeIfOffScreen();
+			console.debug(<span class="hljs-keyword">this</span>.elementId + <span class="hljs-string">' checkVideoIsReadyToPlay'</span>);
+
+			<span class="hljs-keyword">if</span> (<span class="hljs-keyword">this</span>.isPlayable()) {
+				<span class="hljs-keyword">this</span>.disposeLoadCheck();
+				<span class="hljs-keyword">this</span>.checkInteract();
+			}
+
+		},
+
+		disposeLoadCheck: <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> {</span>
+			console.debug(<span class="hljs-keyword">this</span>.elementId + <span class="hljs-string">" disposeLoadCheck"</span>);
+			clearInterval(<span class="hljs-keyword">this</span>.videoloadInterval);
+		},
+
+
+		showPoster: <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> {</span>
+			console.debug(<span class="hljs-keyword">this</span>.elementId + <span class="hljs-string">" showPoster"</span>);
+			<span class="hljs-keyword">this</span>.objWrapper.find(<span class="hljs-string">'img'</span>).showVisible();
+		},
+
+		hidePoster: <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> {</span>
+			console.debug(<span class="hljs-keyword">this</span>.elementId + <span class="hljs-string">" hidePoster"</span>);
+			<span class="hljs-keyword">this</span>.objWrapper.find(<span class="hljs-string">'img'</span>).hideVisible();
+		},</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-12">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-12">&#182;</a>
               </div>
               <p>video click interactivity</p>
 
@@ -378,7 +462,8 @@ this.plugin.stop();</p>
 				<span class="hljs-keyword">this</span>.$el.on(<span class="hljs-string">"click"</span>, $.proxy(<span class="hljs-keyword">this</span>.toggleVideoPlayback, <span class="hljs-keyword">this</span>));
 				<span class="hljs-keyword">this</span>.$el.addClass(<span class="hljs-string">'interactive'</span>);
 			} <span class="hljs-keyword">else</span> {
-				<span class="hljs-keyword">this</span>.plugin.play();
+				<span class="hljs-keyword">this</span>.play();
+
 			}
 
 		},</pre></div></div>
@@ -386,11 +471,11 @@ this.plugin.stop();</p>
         </li>
         
         
-        <li id="section-12">
+        <li id="section-13">
             <div class="annotation">
               
               <div class="pilwrap ">
-                <a class="pilcrow" href="#section-12">&#182;</a>
+                <a class="pilcrow" href="#section-13">&#182;</a>
               </div>
               <p>toggle the video playstate</p>
 
@@ -405,33 +490,7 @@ this.plugin.stop();</p>
 			<span class="hljs-keyword">if</span> (!<span class="hljs-keyword">this</span>.plugin || !<span class="hljs-keyword">this</span>.isPlayable()) {
 				console.error(<span class="hljs-keyword">this</span>.elementId + <span class="hljs-string">" ComponentVideo clicking a video not inited"</span>, <span class="hljs-keyword">this</span>.isPlayable());
 				<span class="hljs-keyword">return</span>;
-			}
-
-			<span class="hljs-keyword">this</span>.removePoster();
-
-			console.debug(<span class="hljs-keyword">this</span>.elementId + <span class="hljs-string">" ComponentVideo toggleVideoPlayback"</span>);
-
-			<span class="hljs-keyword">if</span> (!<span class="hljs-keyword">this</span>.isPaused()) {
-				<span class="hljs-keyword">this</span>.stop();
-			} <span class="hljs-keyword">else</span> {
-				<span class="hljs-keyword">this</span>.play();
-			}
-
-		},</pre></div></div>
-            
-        </li>
-        
-        
-        <li id="section-13">
-            <div class="annotation">
-              
-              <div class="pilwrap ">
-                <a class="pilcrow" href="#section-13">&#182;</a>
-              </div>
-              <p>HAVE_NOTHING (numeric value 0)
-No information regarding the media resource is available. No data for the current playback position is available. Media elements whose networkState attribute are set to NETWORK_EMPTY are always in the HAVE_NOTHING state.</p>
-
-            </div>
+			}</pre></div></div>
             
         </li>
         
@@ -442,10 +501,23 @@ No information regarding the media resource is available. No data for the curren
               <div class="pilwrap ">
                 <a class="pilcrow" href="#section-14">&#182;</a>
               </div>
-              <p>HAVE_METADATA (numeric value 1)
-Enough of the resource has been obtained that the duration of the resource is available. In the case of a video element, the dimensions of the video are also available. The API will no longer throw an exception when seeking. No media data is available for the immediate current playback position.</p>
+              <p>this.objWrapper.css(“width”, this.$el.width());
+this.$el.css(“height”, this.objWrapper.height());</p>
 
             </div>
+            
+            <div class="content"><div class='highlight'><pre>
+			console.debug(<span class="hljs-keyword">this</span>.elementId + <span class="hljs-string">" ComponentVideo toggleVideoPlayback"</span>);
+
+			<span class="hljs-keyword">if</span> (!<span class="hljs-keyword">this</span>.isPaused()) {
+				<span class="hljs-keyword">this</span>.stop();
+				<span class="hljs-keyword">this</span>.showPoster();
+			} <span class="hljs-keyword">else</span> {
+				<span class="hljs-keyword">this</span>.play();
+				<span class="hljs-keyword">this</span>.hidePoster();
+			}
+
+		},</pre></div></div>
             
         </li>
         
@@ -455,47 +527,6 @@ Enough of the resource has been obtained that the duration of the resource is av
               
               <div class="pilwrap ">
                 <a class="pilcrow" href="#section-15">&#182;</a>
-              </div>
-              <p>HAVE_CURRENT_DATA (numeric value 2)
-Data for the immediate current playback position is available, but either not enough data is available that the user agent could successfully advance the current playback position in the direction of playback at all without immediately reverting to the HAVE_METADATA state, or there is no more data to obtain in the direction of playback. For example, in video this corresponds to the user agent having data from the current frame, but not the next frame, when the current playback position is at the end of the current frame; and to when playback has ended.</p>
-
-            </div>
-            
-        </li>
-        
-        
-        <li id="section-16">
-            <div class="annotation">
-              
-              <div class="pilwrap ">
-                <a class="pilcrow" href="#section-16">&#182;</a>
-              </div>
-              <p>HAVE_FUTURE_DATA (numeric value 3)
-Data for the immediate current playback position is available, as well as enough data for the user agent to advance the current playback position in the direction of playback at least a little without immediately reverting to the HAVE_METADATA state, and the text tracks are ready. For example, in video this corresponds to the user agent having data for at least the current frame and the next frame when the current playback position is at the instant in time between the two frames, or to the user agent having the video data for the current frame and audio data to keep playing at least a little when the current playback position is in the middle of a frame. The user agent cannot be in this state if playback has ended, as the current playback position can never advance in this case.</p>
-
-            </div>
-            
-        </li>
-        
-        
-        <li id="section-17">
-            <div class="annotation">
-              
-              <div class="pilwrap ">
-                <a class="pilcrow" href="#section-17">&#182;</a>
-              </div>
-              <p>HAVE_ENOUGH_DATA (numeric value 4)</p>
-
-            </div>
-            
-        </li>
-        
-        
-        <li id="section-18">
-            <div class="annotation">
-              
-              <div class="pilwrap ">
-                <a class="pilcrow" href="#section-18">&#182;</a>
               </div>
               <p>NETWORK_EMPTY (numeric value 0)
 The element has not yet been initialized. All attributes are in their initial states.
@@ -527,9 +558,7 @@ NETWORK_NO_SOURCE (numeric value 3)</p>
 			<span class="hljs-keyword">if</span> (<span class="hljs-keyword">this</span>.plugin) {
 
 				<span class="hljs-keyword">try</span> {
-
 					isPaused = <span class="hljs-keyword">this</span>.plugin.paused;
-
 				} <span class="hljs-keyword">catch</span> (e) {
 					console.error(<span class="hljs-string">'ComponentVideo cannot detect if paused'</span>);
 					console.error(e);
@@ -539,18 +568,108 @@ NETWORK_NO_SOURCE (numeric value 3)</p>
 			console.error(<span class="hljs-string">'isPaused'</span>, isPaused);
 			<span class="hljs-keyword">return</span> isPaused;
 
-		},
+		},</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-16">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-16">&#182;</a>
+              </div>
+              <p>HAVE_NOTHING (numeric value 0)
+No information regarding the media resource is available. No data for the current playback position is available. Media elements whose networkState attribute are set to NETWORK_EMPTY are always in the HAVE_NOTHING state.</p>
 
+            </div>
+            
+        </li>
+        
+        
+        <li id="section-17">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-17">&#182;</a>
+              </div>
+              <p>HAVE_METADATA (numeric value 1)
+Enough of the resource has been obtained that the duration of the resource is available. In the case of a video element, the dimensions of the video are also available. The API will no longer throw an exception when seeking. No media data is available for the immediate current playback position.</p>
 
+            </div>
+            
+        </li>
+        
+        
+        <li id="section-18">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-18">&#182;</a>
+              </div>
+              <p>HAVE_CURRENT_DATA (numeric value 2)
+Data for the immediate current playback position is available, but either not enough data is available that the user agent could successfully advance the current playback position in the direction of playback at all without immediately reverting to the HAVE_METADATA state, or there is no more data to obtain in the direction of playback. For example, in video this corresponds to the user agent having data from the current frame, but not the next frame, when the current playback position is at the end of the current frame; and to when playback has ended.</p>
 
+            </div>
+            
+        </li>
+        
+        
+        <li id="section-19">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-19">&#182;</a>
+              </div>
+              <p>HAVE_FUTURE_DATA (numeric value 3)
+Data for the immediate current playback position is available, as well as enough data for the user agent to advance the current playback position in the direction of playback at least a little without immediately reverting to the HAVE_METADATA state, and the text tracks are ready. For example, in video this corresponds to the user agent having data for at least the current frame and the next frame when the current playback position is at the instant in time between the two frames, or to the user agent having the video data for the current frame and audio data to keep playing at least a little when the current playback position is in the middle of a frame. The user agent cannot be in this state if playback has ended, as the current playback position can never advance in this case.</p>
+
+            </div>
+            
+        </li>
+        
+        
+        <li id="section-20">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-20">&#182;</a>
+              </div>
+              <p>HAVE_ENOUGH_DATA (numeric value 4)</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>
 		isPlayable: <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> {</span>
-			<span class="hljs-keyword">var</span> isPlayable = <span class="hljs-literal">false</span>;
+			<span class="hljs-keyword">var</span> isPlayable = <span class="hljs-literal">false</span>;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-21">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-21">&#182;</a>
+              </div>
+              <p>mobile browsers have always readystate at zero.</p>
 
-			<span class="hljs-keyword">if</span> (<span class="hljs-keyword">this</span>.plugin) {
-				console.debug(<span class="hljs-string">'this.plugin.readyState'</span>, <span class="hljs-keyword">this</span>.plugin.readyState);
-				isPlayable = (<span class="hljs-keyword">this</span>.plugin.readyState === <span class="hljs-number">4</span>);
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>			<span class="hljs-keyword">if</span>(<span class="hljs-keyword">this</span>.isMobileBrowser()){
+				<span class="hljs-keyword">return</span> <span class="hljs-literal">true</span>;
 			}
-			console.error(<span class="hljs-string">'isPlayable'</span>, isPlayable);
+
+			<span class="hljs-keyword">var</span> self = <span class="hljs-keyword">this</span>;
+			<span class="hljs-keyword">if</span> (<span class="hljs-keyword">this</span>.plugin) {
+				console.debug(<span class="hljs-string">'READYSTATE:'</span>, <span class="hljs-keyword">this</span>.plugin.readyState);
+				isPlayable = (<span class="hljs-keyword">this</span>.plugin.readyState &gt;= <span class="hljs-number">2</span>);
+				<span class="hljs-keyword">if</span> (!isPlayable) {
+					<span class="hljs-keyword">this</span>.plugin.addEventListener(<span class="hljs-string">"canplaythrough"</span>, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> {</span>
+						<span class="hljs-keyword">return</span> <span class="hljs-literal">true</span>;
+					});
+				}
+			}
 			<span class="hljs-keyword">return</span> isPlayable;
 		},
 
@@ -563,21 +682,41 @@ NETWORK_NO_SOURCE (numeric value 3)</p>
 			}
 
 			<span class="hljs-keyword">if</span> (<span class="hljs-keyword">this</span>.plugin) {
-				console.error(<span class="hljs-string">'play'</span>);
-				<span class="hljs-keyword">this</span>.plugin.play();
+				console.debug(<span class="hljs-keyword">this</span>.elementId + <span class="hljs-string">' play Video'</span>);
+				<span class="hljs-keyword">this</span>.plugin.play();</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-22">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-22">&#182;</a>
+              </div>
+              <p>setup garbage collector</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>				<span class="hljs-keyword">this</span>.garbageInterval = setInterval($.proxy(<span class="hljs-keyword">this</span>.garbageCollectMe, <span class="hljs-keyword">this</span>), <span class="hljs-number">1000</span>);
 			}
 		},
 
 
 		stop: <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> {</span>
 
-
+			
 			<span class="hljs-keyword">try</span> {
 
-				console.error(<span class="hljs-string">'stop'</span>);
+				<span class="hljs-keyword">if</span>(<span class="hljs-keyword">this</span>.isPlayable()){
 
-				<span class="hljs-keyword">this</span>.plugin.pause();
-				<span class="hljs-keyword">this</span>.resetPlayback();
+					console.debug(<span class="hljs-keyword">this</span>.elementId + <span class="hljs-string">' stop Video'</span>);
+
+					<span class="hljs-keyword">this</span>.plugin.pause();
+					<span class="hljs-keyword">this</span>.resetPlayback();
+				}
+
+				clearInterval(<span class="hljs-keyword">this</span>.garbageInterval);
 
 			} <span class="hljs-keyword">catch</span> (e) {
 				console.error(<span class="hljs-string">'ComponentVideo errors resetting Video Instance'</span>);
@@ -593,113 +732,63 @@ NETWORK_NO_SOURCE (numeric value 3)</p>
 
 			<span class="hljs-keyword">if</span> (<span class="hljs-keyword">this</span>.plugin) {
 
-				<span class="hljs-keyword">this</span>.plugin.currentTime = <span class="hljs-number">0</span>;
-				console.error(<span class="hljs-string">'this.plugin.currentTime'</span>, <span class="hljs-keyword">this</span>.plugin.currentTime);
-				isResetted = (<span class="hljs-keyword">this</span>.plugin.currentTime === <span class="hljs-number">0</span>);
+				<span class="hljs-keyword">try</span>{
+					<span class="hljs-keyword">this</span>.plugin.currentTime = <span class="hljs-number">1</span>;
+					console.error(<span class="hljs-string">'this.plugin.currentTime'</span>, <span class="hljs-keyword">this</span>.plugin.currentTime);
+					isResetted = (<span class="hljs-keyword">this</span>.plugin.currentTime === <span class="hljs-number">1</span>);
+					console.error(<span class="hljs-string">'this.plugin.currentTime'</span>, <span class="hljs-keyword">this</span>.plugin.currentTime);
 
-				console.error(<span class="hljs-string">'this.plugin.currentTime'</span>, <span class="hljs-keyword">this</span>.plugin.currentTime);
+				}<span class="hljs-keyword">catch</span>(ex){
+
+				}
+				
+				<span class="hljs-keyword">this</span>.showPoster();
 
 			}
-
-			<span class="hljs-comment">/*
-</span></pre></div></div>
-            
-        </li>
-        
-        
-        <li id="section-19">
-            <div class="annotation">
-              
-              <div class="pilwrap ">
-                <a class="pilcrow" href="#section-19">&#182;</a>
-              </div>
-              <p>this part is not working</p>
-
-            </div>
-            
-            <div class="content"><div class='highlight'><pre>
-			<span class="hljs-keyword">if</span> (!isResetted) {
-				console.error(<span class="hljs-string">'reinstance videojs'</span>);
-				<span class="hljs-keyword">var</span> self = <span class="hljs-keyword">this</span>;</pre></div></div>
-            
-        </li>
-        
-        
-        <li id="section-20">
-            <div class="annotation">
-              
-              <div class="pilwrap ">
-                <a class="pilcrow" href="#section-20">&#182;</a>
-              </div>
-              <p>instance the videojs object
-when ready add interactivity</p>
-
-            </div>
-            
-            <div class="content"><div class='highlight'><pre>
-				if (this.plugin) {
-					this.plugin.dispose();
-					this.plugin = null;
-				}
-
-
-				this.$el.find('#' + this.options.id).empty().remove();
-				delete this.$el.find('#' + this.options.id);
-
-				var $newVideo = $(this.originalVideo);
-
-				$($newVideo).appendTo(this.$el.find('.videoWrapper'));
-				console.debug(this.$el.html());
-
-
-
-			}*/
 
 		},
 
 
 
-		dispose: function() {
+		dispose: <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> {</span>
 
-			if (!this.initialized) {
-				console.warn(this.elementId + ' ComponentVideo not initialized no dispose');
-				return;
+			console.info(<span class="hljs-keyword">this</span>.options.id + <span class="hljs-string">' ComponentVideo dispose'</span>);
+
+			<span class="hljs-keyword">if</span> (!<span class="hljs-keyword">this</span>.initialized) {
+				console.warn(<span class="hljs-keyword">this</span>.elementId + <span class="hljs-string">' ComponentVideo not initialized no dispose'</span>);
+				<span class="hljs-keyword">return</span>;
 			}
 
 
 
-			console.info(this.options.id + ' ComponentVideo dispose');
+			console.info(<span class="hljs-keyword">this</span>.options.id + <span class="hljs-string">' ComponentVideo dispose'</span>);
 
-			if (this.plugin) {
-
-				this.disposeSound();
-
-				this.stop();
-
-				this.plugin.controlBar.hide();
-
+			<span class="hljs-keyword">if</span> (<span class="hljs-keyword">this</span>.plugin) {
+				<span class="hljs-keyword">this</span>.disposeSound();
+				<span class="hljs-keyword">this</span>.stop();
 			}
 
-			this.$el.off();
+			clearInterval(<span class="hljs-keyword">this</span>.garbageInterval);
 
+			<span class="hljs-keyword">this</span>.$el.off();
 
-			this.posterObj.remove();
-			delete this.posterObj;</pre></div></div>
+			<span class="hljs-keyword">this</span>.initialized = <span class="hljs-literal">false</span>;</pre></div></div>
             
         </li>
         
         
-        <li id="section-21">
+        <li id="section-23">
             <div class="annotation">
               
               <div class="pilwrap ">
-                <a class="pilcrow" href="#section-21">&#182;</a>
+                <a class="pilcrow" href="#section-23">&#182;</a>
               </div>
               <p>rimuoviamo</p>
 
             </div>
             
             <div class="content"><div class='highlight'><pre>			<span class="hljs-keyword">delete</span> <span class="hljs-keyword">this</span>.$el;
+			<span class="hljs-keyword">delete</span> <span class="hljs-keyword">this</span>.objWrapper;
 			<span class="hljs-keyword">delete</span> <span class="hljs-keyword">this</span>.$plugin;
 			<span class="hljs-keyword">delete</span> <span class="hljs-keyword">this</span>.plugin;
 
@@ -710,7 +799,7 @@ when ready add interactivity</p>
 	});
 
 
-	<span class="hljs-keyword">return</span> Component;
+	<span class="hljs-keyword">return</span> ComponentVideo;
 
 });</pre></div></div>
             

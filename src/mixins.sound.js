@@ -5,6 +5,13 @@ define(['jquery', 'mediaelement'], function($) {
 	var MixinSound = {
 
 
+
+		// check if the browser can play audio
+		hasAudioCapability: function() {
+			return !!document.createElement('audio').canPlayType;
+		},
+
+
 		// video has no sound
 		initSound: function() {
 	

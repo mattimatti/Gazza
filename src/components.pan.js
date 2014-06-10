@@ -1,4 +1,4 @@
-define(['jquery', 'mixins.preloader', 'mixins.sound', 'cloudzoom'], function($, MixinPreloader, MixinSound) {
+define(['jquery', 'mixins.preloader', 'mixins.sound'], function($, MixinPreloader, MixinSound) {
 
 	var console = window.muteConsole;
 
@@ -257,6 +257,7 @@ define(['jquery', 'mixins.preloader', 'mixins.sound', 'cloudzoom'], function($, 
 					delay: 0.5
 				});
 				this.plugin.show();
+				this.contentObj.hide();
 
 				console.error("scale to ", this.wrapperObj.width());
 

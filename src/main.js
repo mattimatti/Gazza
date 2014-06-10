@@ -1,6 +1,9 @@
 
-var noConflict = true;
+var noConflict = false;
 
+if (window.jQuery) {
+	noConflict = true;
+}
 /*
 if (window.jQuery) {
 	define('jquery', [], function() {
@@ -66,6 +69,7 @@ require.config({
 	shim: {
 		"inview": ["jquery"],
 		"elevatezoom": ["jquery"],
+		"cloudzoom": ["jquery"],
 		"hammer": ["hammerjs"]
 	}
 

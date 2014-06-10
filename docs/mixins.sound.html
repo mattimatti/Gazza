@@ -128,7 +128,7 @@
             
             <div class="content"><div class='highlight'><pre>define([<span class="hljs-string">'jquery'</span>, <span class="hljs-string">'mediaelement'</span>], <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">($)</span> {</span>
 
-	<span class="hljs-keyword">var</span> console = window.console;
+	<span class="hljs-keyword">var</span> console = window.muteConsole;
 
 	<span class="hljs-keyword">var</span> MixinSound = {</pre></div></div>
             
@@ -141,11 +141,13 @@
               <div class="pilwrap ">
                 <a class="pilcrow" href="#section-2">&#182;</a>
               </div>
-              <p>video has no sound</p>
+              <p>check if the browser can play audio</p>
 
             </div>
             
-            <div class="content"><div class='highlight'><pre>		initSound: <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> {</span></pre></div></div>
+            <div class="content"><div class='highlight'><pre>		hasAudioCapability: <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> {</span>
+			<span class="hljs-keyword">return</span> !!document.createElement(<span class="hljs-string">'audio'</span>).canPlayType;
+		},</pre></div></div>
             
         </li>
         
@@ -155,6 +157,21 @@
               
               <div class="pilwrap ">
                 <a class="pilcrow" href="#section-3">&#182;</a>
+              </div>
+              <p>video has no sound</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>		initSound: <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> {</span></pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-4">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-4">&#182;</a>
               </div>
               <p>toggle visibility</p>
 
@@ -192,11 +209,11 @@
         </li>
         
         
-        <li id="section-4">
+        <li id="section-5">
             <div class="annotation">
               
               <div class="pilwrap ">
-                <a class="pilcrow" href="#section-4">&#182;</a>
+                <a class="pilcrow" href="#section-5">&#182;</a>
               </div>
               <p>idf we have a sound source we do initialize</p>
 
@@ -213,11 +230,11 @@
         </li>
         
         
-        <li id="section-5">
+        <li id="section-6">
             <div class="annotation">
               
               <div class="pilwrap ">
-                <a class="pilcrow" href="#section-5">&#182;</a>
+                <a class="pilcrow" href="#section-6">&#182;</a>
               </div>
               <p>encodeuricomponent to print in flashvars!</p>
 
@@ -244,11 +261,11 @@
         </li>
         
         
-        <li id="section-6">
+        <li id="section-7">
             <div class="annotation">
               
               <div class="pilwrap ">
-                <a class="pilcrow" href="#section-6">&#182;</a>
+                <a class="pilcrow" href="#section-7">&#182;</a>
               </div>
               <p>Play the component sound
 Seems like the audio tag must be redrawn evey time we want to play..
@@ -281,11 +298,11 @@ see <a href="http://stackoverflow.com/questions/8733330/why-cant-i-play-sounds-m
         </li>
         
         
-        <li id="section-7">
+        <li id="section-8">
             <div class="annotation">
               
               <div class="pilwrap ">
-                <a class="pilcrow" href="#section-7">&#182;</a>
+                <a class="pilcrow" href="#section-8">&#182;</a>
               </div>
               <p>remove sound</p>
 

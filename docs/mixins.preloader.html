@@ -126,36 +126,11 @@
               
             </div>
             
-            <div class="content"><div class='highlight'><pre>define([<span class="hljs-string">'jquery'</span>], <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">($)</span>{</span>
+            <div class="content"><div class='highlight'><pre>define([<span class="hljs-string">'jquery'</span>], <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">($)</span> {</span>
 
 	<span class="hljs-keyword">var</span> console = window.muteConsole;
 
-	<span class="hljs-keyword">var</span> MixinPreloader = {
-
-
-		preloadAjaxPool: [],
-
-
-		preloading: <span class="hljs-literal">false</span>,
-
-
-		preloadCount : <span class="hljs-number">0</span>,
-
-		preload: <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> {</span>
-
-			<span class="hljs-keyword">if</span> (!<span class="hljs-keyword">this</span>.$el) {
-				console.error(<span class="hljs-string">'This component has no el'</span>);
-				<span class="hljs-keyword">return</span>;
-			}
-
-			<span class="hljs-keyword">if</span> (<span class="hljs-keyword">this</span>.preloading ) {
-				console.warn(<span class="hljs-string">'is preloading no preload'</span>);
-				<span class="hljs-keyword">return</span>;
-			}
-
-			<span class="hljs-keyword">this</span>.preloadCount = <span class="hljs-keyword">this</span>.$el.find(<span class="hljs-string">"img[data-src]"</span>).length;
-
-			console.debug(<span class="hljs-string">'this.preloadCount'</span> , <span class="hljs-keyword">this</span>.preloadCount);</pre></div></div>
+	<span class="hljs-keyword">var</span> MixinPreloader = {</pre></div></div>
             
         </li>
         
@@ -166,14 +141,11 @@
               <div class="pilwrap ">
                 <a class="pilcrow" href="#section-2">&#182;</a>
               </div>
-              <p>if no images to preload</p>
+              <p>the ajaxPool</p>
 
             </div>
             
-            <div class="content"><div class='highlight'><pre>			<span class="hljs-keyword">if</span>(<span class="hljs-keyword">this</span>.preloadCount === <span class="hljs-number">0</span>){
-				<span class="hljs-keyword">this</span>.initialize();
-				<span class="hljs-keyword">return</span>;
-			}</pre></div></div>
+            <div class="content"><div class='highlight'><pre>		preloadAjaxPool: [],</pre></div></div>
             
         </li>
         
@@ -184,13 +156,11 @@
               <div class="pilwrap ">
                 <a class="pilcrow" href="#section-3">&#182;</a>
               </div>
-              <p>for each element</p>
+              <p>is the element preloading content?</p>
 
             </div>
             
-            <div class="content"><div class='highlight'><pre>			<span class="hljs-keyword">this</span>.$el.find(<span class="hljs-string">'img[data-src]'</span>).each($.proxy(<span class="hljs-keyword">this</span>.eachImage, <span class="hljs-keyword">this</span>));
-
-		},</pre></div></div>
+            <div class="content"><div class='highlight'><pre>		preloading: <span class="hljs-literal">false</span>,</pre></div></div>
             
         </li>
         
@@ -201,19 +171,144 @@
               <div class="pilwrap ">
                 <a class="pilcrow" href="#section-4">&#182;</a>
               </div>
-              <p>iterate all elements</p>
+              <p>Elements can be disposed internally 
+this is the case of video that cannot stop normally on scroll</p>
 
             </div>
             
-            <div class="content"><div class='highlight'><pre>		eachImage: <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(index, element)</span> {</span>
+            <div class="content"><div class='highlight'><pre>
+		readyForGrabageCollection: <span class="hljs-literal">false</span>,</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-5">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-5">&#182;</a>
+              </div>
+              <p>how many elements to be preloaded</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>		preloadCount: <span class="hljs-number">0</span>,</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-6">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-6">&#182;</a>
+              </div>
+              <p>Fire the preload</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>		preload: <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> {</span>
+
+			<span class="hljs-keyword">if</span> (!<span class="hljs-keyword">this</span>.$el) {
+				console.error(<span class="hljs-string">'This component has no $el'</span>);
+				<span class="hljs-keyword">return</span>;
+			}
+
+			<span class="hljs-keyword">if</span> (<span class="hljs-keyword">this</span>.preloading) {
+				console.warn(<span class="hljs-string">'is already preloading no follow'</span>);
+				<span class="hljs-keyword">return</span>;
+			}</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-7">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-7">&#182;</a>
+              </div>
+              <p>store the number of items to preload</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>			<span class="hljs-keyword">this</span>.preloadCount = <span class="hljs-keyword">this</span>.$el.find(<span class="hljs-string">"img[data-src]"</span>).length;
+
+			console.debug(<span class="hljs-string">'this.preloadCount'</span>, <span class="hljs-keyword">this</span>.preloadCount);</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-8">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-8">&#182;</a>
+              </div>
+              <p>if no images to preload</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>			<span class="hljs-keyword">if</span> (<span class="hljs-keyword">this</span>.preloadCount === <span class="hljs-number">0</span>) {
+				<span class="hljs-keyword">this</span>.initialize();
+				<span class="hljs-keyword">return</span>;
+			}</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-9">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-9">&#182;</a>
+              </div>
+              <p>iterate all elements and start each preload</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>			<span class="hljs-keyword">this</span>.$el.find(<span class="hljs-string">'img[data-src]'</span>).each($.proxy(<span class="hljs-keyword">this</span>.invalidateForPreload, <span class="hljs-keyword">this</span>));
+
+		},</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-10">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-10">&#182;</a>
+              </div>
+              <p>invalidate an element if meets requirements
+the requirement is to have an attribute data-src</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>
+
+		invalidateForPreload: <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(index, element)</span> {</span>
 
 			<span class="hljs-keyword">var</span> item = $(element);
 			<span class="hljs-keyword">if</span> (item.attr(<span class="hljs-string">"data-src"</span>) &amp;&amp; item.attr(<span class="hljs-string">"data-src"</span>) !== <span class="hljs-string">''</span>) {
 				<span class="hljs-keyword">this</span>.preloadElement(item);
 			}
-		},
+		},</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-11">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-11">&#182;</a>
+              </div>
+              <p>start the preload of a single element</p>
 
-
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>
 		preloadElement: <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(item)</span> {</span>
 
 			<span class="hljs-keyword">this</span>.preloading = <span class="hljs-literal">true</span>;
@@ -223,7 +318,7 @@
 			<span class="hljs-keyword">var</span> theXHR;
 
 			<span class="hljs-keyword">if</span> (item.attr(<span class="hljs-string">"data-src"</span>)) {
-				
+
 				console.warn(<span class="hljs-string">'preloadElement'</span>, item.attr(<span class="hljs-string">"data-src"</span>));
 
 				$.ajax({
@@ -250,11 +345,11 @@
         </li>
         
         
-        <li id="section-5">
+        <li id="section-12">
             <div class="annotation">
               
               <div class="pilwrap ">
-                <a class="pilcrow" href="#section-5">&#182;</a>
+                <a class="pilcrow" href="#section-12">&#182;</a>
               </div>
               <p>once one element is loaded</p>
 
@@ -266,51 +361,62 @@
         </li>
         
         
-        <li id="section-6">
+        <li id="section-13">
             <div class="annotation">
               
               <div class="pilwrap ">
-                <a class="pilcrow" href="#section-6">&#182;</a>
+                <a class="pilcrow" href="#section-13">&#182;</a>
               </div>
               <p>if has data source apply as source and remove attribute from element</p>
 
             </div>
             
             <div class="content"><div class='highlight'><pre>
-			<span class="hljs-keyword">if</span>(item.attr(<span class="hljs-string">"data-src"</span>)){
+			<span class="hljs-keyword">if</span> (item.attr(<span class="hljs-string">"data-src"</span>)) {
 				item.attr(<span class="hljs-string">"src"</span>, item.attr(<span class="hljs-string">"data-src"</span>));
 				item.attr(<span class="hljs-string">"data-src"</span>, <span class="hljs-literal">null</span>);
 			}
 
-			<span class="hljs-keyword">this</span>.preloadCount --;</pre></div></div>
+			<span class="hljs-keyword">this</span>.preloadCount--;</pre></div></div>
             
         </li>
         
         
-        <li id="section-7">
+        <li id="section-14">
             <div class="annotation">
               
               <div class="pilwrap ">
-                <a class="pilcrow" href="#section-7">&#182;</a>
+                <a class="pilcrow" href="#section-14">&#182;</a>
               </div>
               <p>ONCE THE FIRST ELEMENT IS LOADED cal linitialize</p>
 
             </div>
             
-            <div class="content"><div class='highlight'><pre>			<span class="hljs-keyword">if</span>(<span class="hljs-keyword">this</span>.preloadCount &lt;= <span class="hljs-number">0</span>){
+            <div class="content"><div class='highlight'><pre>			<span class="hljs-keyword">if</span> (<span class="hljs-keyword">this</span>.preloadCount &lt;= <span class="hljs-number">0</span>) {
 				console.warn(<span class="hljs-string">'all preloaded call initialize'</span>);
 				<span class="hljs-keyword">this</span>.preloading = <span class="hljs-literal">false</span>;
 
-				<span class="hljs-keyword">if</span>($.isFunction(<span class="hljs-keyword">this</span>.initialize)){
+				<span class="hljs-keyword">if</span> ($.isFunction(<span class="hljs-keyword">this</span>.initialize)) {
 					<span class="hljs-keyword">this</span>.initialize();
 				}
-				
 			}
-			
-		},
+		},</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-15">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-15">&#182;</a>
+              </div>
+              <p>abort the preload of this component
+every element in preloadAjaxPool</p>
 
-
-		preloadAbort: <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> {</span>
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>		preloadAbort: <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> {</span>
 			console.warn(<span class="hljs-string">"preloadAbort BEFORE"</span>, <span class="hljs-keyword">this</span>.preloadAjaxPool.length);
 			<span class="hljs-keyword">var</span> self = <span class="hljs-keyword">this</span>;
 			$.each(<span class="hljs-keyword">this</span>.preloadAjaxPool, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(i, xhr)</span> {</span>
@@ -318,19 +424,31 @@
 				self.preloadRemoveXhr(xhr);
 			});
 			console.error(<span class="hljs-string">"preloadAbort AFTER"</span>, <span class="hljs-keyword">this</span>.preloadAjaxPool.length);
-		},
-
-
-		preloadAddXhr: <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(xhr, item)</span> {</span></pre></div></div>
+		},</pre></div></div>
             
         </li>
         
         
-        <li id="section-8">
+        <li id="section-16">
             <div class="annotation">
               
               <div class="pilwrap ">
-                <a class="pilcrow" href="#section-8">&#182;</a>
+                <a class="pilcrow" href="#section-16">&#182;</a>
+              </div>
+              <p>add the xhr to the preloadAjaxPool</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>		preloadAddXhr: <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(xhr, item)</span> {</span></pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-17">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-17">&#182;</a>
               </div>
               <p>console.debug(‘preloadAddXhr’, xhr);</p>
 
@@ -339,18 +457,31 @@
             <div class="content"><div class='highlight'><pre>			<span class="hljs-keyword">this</span>.preloadAjaxPool = $.grep(<span class="hljs-keyword">this</span>.preloadAjaxPool, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(value)</span> {</span>
 				<span class="hljs-keyword">return</span> value !== xhr;
 			});
-		},
-
-		preloadRemoveXhr: <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(xhr)</span> {</span></pre></div></div>
+		},</pre></div></div>
             
         </li>
         
         
-        <li id="section-9">
+        <li id="section-18">
             <div class="annotation">
               
               <div class="pilwrap ">
-                <a class="pilcrow" href="#section-9">&#182;</a>
+                <a class="pilcrow" href="#section-18">&#182;</a>
+              </div>
+              <p>remove the </p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>		preloadRemoveXhr: <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(xhr)</span> {</span></pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-19">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-19">&#182;</a>
               </div>
               <p>console.debug(‘preloadRemoveXhr’, xhr);</p>
 
@@ -359,13 +490,39 @@
             <div class="content"><div class='highlight'><pre>			<span class="hljs-keyword">this</span>.preloadAjaxPool = $.grep(<span class="hljs-keyword">this</span>.preloadAjaxPool, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(value)</span> {</span>
 				<span class="hljs-keyword">return</span> value !== xhr;
 			});
-		},
+		},</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-20">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-20">&#182;</a>
+              </div>
+              <p>return the offset top pf the element</p>
 
-		getMyPos: <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(xhr)</span> {</span>
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>		getMyPos: <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(xhr)</span> {</span>
 			<span class="hljs-keyword">return</span> <span class="hljs-keyword">this</span>.$el.offset().top;
-		},
+		},</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-21">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-21">&#182;</a>
+              </div>
+              <p>return the height of the element</p>
 
-		getHeight: <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(xhr)</span> {</span>
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>		getHeight: <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(xhr)</span> {</span>
 			<span class="hljs-keyword">return</span> <span class="hljs-keyword">this</span>.$el.height();
 		}
 

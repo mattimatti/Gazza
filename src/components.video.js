@@ -1,6 +1,36 @@
 define(['jquery', 'mixins.preloader', 'mixins.sound', 'mediaelement'], function($, MixinPreloader, MixinSound) {
 
-	var console = window.muteConsole;
+	var console = window.console;
+
+
+
+	$.fn.showVisible = function() {
+		this.css('visibility', 'visible');
+	};
+
+	$.fn.hideVisible = function() {
+		this.css('visibility', 'hidden');
+	};
+
+
+	$.fn.isOnScreen = function() {
+
+		var win = $(window);
+
+		var viewport = {
+			top: win.scrollTop(),
+			left: win.scrollLeft()
+		};
+		viewport.right = viewport.left + win.width();
+		viewport.bottom = viewport.top + win.height();
+
+		var bounds = this.offset();
+		bounds.right = bounds.left + this.outerWidth();
+		bounds.bottom = bounds.top + this.outerHeight();
+
+		return (!(viewport.right < bounds.left || viewport.left > bounds.right || viewport.bottom < bounds.top || viewport.top > bounds.bottom));
+
+	};
 
 	var ComponentVideo = function(element, options) {
 
@@ -13,6 +43,7 @@ define(['jquery', 'mixins.preloader', 'mixins.sound', 'mediaelement'], function(
 			autoplay: true,
 			interactive: false,
 			controls: false,
+			videoOver: false,
 			preload: 'none',
 			sound: null,
 			techOrder: ["html5", "flash"]
@@ -33,6 +64,38 @@ define(['jquery', 'mixins.preloader', 'mixins.sound', 'mediaelement'], function(
 
 
 
+		garbageCollectMe: function() {
+			console.debug("check garbage");
+
+			if (this.$el) {
+				this.disposeIfOffScreen();
+			}
+
+		},
+
+
+		disposeIfOffScreen: function() {
+			if (this.$el) {
+				if (!this.$el.isOnScreen()) {
+					console.error("GARBAGE COLLECT");
+					this.dispose();
+					this.readyForGrabageCollection = true;
+				}
+			}
+		},
+
+
+		isMobileBrowser: function(){
+			return ( /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ) ;
+		},
+
+
+		// check if the browser can play a video
+		hasVideoFeatures: function() {
+			return !!document.createElement('video').canPlayType;
+		},
+
+
 		initialize: function() {
 
 
@@ -43,6 +106,7 @@ define(['jquery', 'mixins.preloader', 'mixins.sound', 'mediaelement'], function(
 			this.initialized = true;
 
 
+
 			this.video = this.options.id; //this.$el.find('.video-js').get(0);
 
 			// if the video has no id return 
@@ -50,7 +114,7 @@ define(['jquery', 'mixins.preloader', 'mixins.sound', 'mediaelement'], function(
 				return;
 			}
 
-			console.info(this.options.id + ' ComponentVideo initialize');
+			console.debug(this.options.id + ' ComponentVideo initialize');
 
 
 			// if interactive set autoplay at false
@@ -71,56 +135,67 @@ define(['jquery', 'mixins.preloader', 'mixins.sound', 'mediaelement'], function(
 				isVideo: true
 			};
 
-			this.removePoster();
 
-			//this.plugin = window.MediaElementPlayer("#" + this.options.id, videoOptions);
-			//this.plugin.stop();
+			if (!this.hasVideoFeatures()) {
+				return;
+			}
+
 
 			var isSafari = /Safari/.test(navigator.userAgent) && /Apple Computer/.test(navigator.vendor);
 
 
 			this.plugin = document.getElementById(this.options.id);
-			this.plugin.load();
 
-			this.$plugin = $(".videoWrapper");
-
-			this.createPoster();
-
-
-			if (isSafari) {
-				//this.plugin.removeAttribute('autoplay');
-				this.plugin.preload = true;
-
+			// 
+			if(this.options.videoOver){
+				$(this.plugin).addClass('videomodal');
 			}
 
-			this.checkInteract();
+			this.objWrapper = $(".videoWrapper");
 
+			this.showPoster();
+
+			// You have to set preload true once intilized otherwise in safari or firefox will not load the video
+			this.plugin.preload = true;
+
+			this.initLoadCheck();
 
 		},
 
 
-		createPoster: function() {
+		initLoadCheck: function() {
+			console.debug(this.elementId + " initLoadCheck");
+			this.videoloadInterval = setInterval($.proxy(this.checkVideoIsReadyToPlay, this), 200);
+		},
 
-			/*
-			this.posterObj = $('<div class="posterImg"><img  src="' + this.plugin.poster + '"/></div>');
-			this.posterObj.appendTo(this.$el);
-			this.$plugin.hide();
-			*/
+
+		checkVideoIsReadyToPlay: function() {
+			
+			
+			this.disposeIfOffScreen();
+			console.debug(this.elementId + ' checkVideoIsReadyToPlay');
+
+			if (this.isPlayable()) {
+				this.disposeLoadCheck();
+				this.checkInteract();
+			}
 
 		},
 
-		removePoster: function() {
-			/*
-			if (this.posterObj) {
-				this.posterObj.hide();
-				this.posterObj.fadeTo(.1, 0);
-				this.posterObj.empty().remove();
-				delete this.posterObj;
-			}
-			if (this.$plugin) {
-				this.$plugin.show();
-			}*/
+		disposeLoadCheck: function() {
+			console.debug(this.elementId + " disposeLoadCheck");
+			clearInterval(this.videoloadInterval);
+		},
 
+
+		showPoster: function() {
+			console.debug(this.elementId + " showPoster");
+			this.objWrapper.find('img').showVisible();
+		},
+
+		hidePoster: function() {
+			console.debug(this.elementId + " hidePoster");
+			this.objWrapper.find('img').hideVisible();
 		},
 
 		// video click interactivity
@@ -131,7 +206,8 @@ define(['jquery', 'mixins.preloader', 'mixins.sound', 'mediaelement'], function(
 				this.$el.on("click", $.proxy(this.toggleVideoPlayback, this));
 				this.$el.addClass('interactive');
 			} else {
-				this.plugin.play();
+				this.play();
+
 			}
 
 		},
@@ -148,33 +224,20 @@ define(['jquery', 'mixins.preloader', 'mixins.sound', 'mediaelement'], function(
 				return;
 			}
 
-			this.removePoster();
+			//this.objWrapper.css("width", this.$el.width());
+			//this.$el.css("height", this.objWrapper.height());
 
 			console.debug(this.elementId + " ComponentVideo toggleVideoPlayback");
 
 			if (!this.isPaused()) {
 				this.stop();
+				this.showPoster();
 			} else {
 				this.play();
+				this.hidePoster();
 			}
 
 		},
-
-
-
-		// HAVE_NOTHING (numeric value 0)
-		// No information regarding the media resource is available. No data for the current playback position is available. Media elements whose networkState attribute are set to NETWORK_EMPTY are always in the HAVE_NOTHING state.
-
-		// HAVE_METADATA (numeric value 1)
-		// Enough of the resource has been obtained that the duration of the resource is available. In the case of a video element, the dimensions of the video are also available. The API will no longer throw an exception when seeking. No media data is available for the immediate current playback position.
-
-		// HAVE_CURRENT_DATA (numeric value 2)
-		// Data for the immediate current playback position is available, but either not enough data is available that the user agent could successfully advance the current playback position in the direction of playback at all without immediately reverting to the HAVE_METADATA state, or there is no more data to obtain in the direction of playback. For example, in video this corresponds to the user agent having data from the current frame, but not the next frame, when the current playback position is at the end of the current frame; and to when playback has ended.
-
-		// HAVE_FUTURE_DATA (numeric value 3)
-		// Data for the immediate current playback position is available, as well as enough data for the user agent to advance the current playback position in the direction of playback at least a little without immediately reverting to the HAVE_METADATA state, and the text tracks are ready. For example, in video this corresponds to the user agent having data for at least the current frame and the next frame when the current playback position is at the instant in time between the two frames, or to the user agent having the video data for the current frame and audio data to keep playing at least a little when the current playback position is in the middle of a frame. The user agent cannot be in this state if playback has ended, as the current playback position can never advance in this case.
-
-		// HAVE_ENOUGH_DATA (numeric value 4)
 
 
 
@@ -205,9 +268,7 @@ define(['jquery', 'mixins.preloader', 'mixins.sound', 'mediaelement'], function(
 			if (this.plugin) {
 
 				try {
-
 					isPaused = this.plugin.paused;
-
 				} catch (e) {
 					console.error('ComponentVideo cannot detect if paused');
 					console.error(e);
@@ -220,15 +281,38 @@ define(['jquery', 'mixins.preloader', 'mixins.sound', 'mediaelement'], function(
 		},
 
 
+		// HAVE_NOTHING (numeric value 0)
+		// No information regarding the media resource is available. No data for the current playback position is available. Media elements whose networkState attribute are set to NETWORK_EMPTY are always in the HAVE_NOTHING state.
+
+		// HAVE_METADATA (numeric value 1)
+		// Enough of the resource has been obtained that the duration of the resource is available. In the case of a video element, the dimensions of the video are also available. The API will no longer throw an exception when seeking. No media data is available for the immediate current playback position.
+
+		// HAVE_CURRENT_DATA (numeric value 2)
+		// Data for the immediate current playback position is available, but either not enough data is available that the user agent could successfully advance the current playback position in the direction of playback at all without immediately reverting to the HAVE_METADATA state, or there is no more data to obtain in the direction of playback. For example, in video this corresponds to the user agent having data from the current frame, but not the next frame, when the current playback position is at the end of the current frame; and to when playback has ended.
+
+		// HAVE_FUTURE_DATA (numeric value 3)
+		// Data for the immediate current playback position is available, as well as enough data for the user agent to advance the current playback position in the direction of playback at least a little without immediately reverting to the HAVE_METADATA state, and the text tracks are ready. For example, in video this corresponds to the user agent having data for at least the current frame and the next frame when the current playback position is at the instant in time between the two frames, or to the user agent having the video data for the current frame and audio data to keep playing at least a little when the current playback position is in the middle of a frame. The user agent cannot be in this state if playback has ended, as the current playback position can never advance in this case.
+
+		// HAVE_ENOUGH_DATA (numeric value 4)
 
 		isPlayable: function() {
 			var isPlayable = false;
 
-			if (this.plugin) {
-				console.debug('this.plugin.readyState', this.plugin.readyState);
-				isPlayable = (this.plugin.readyState === 4);
+			// mobile browsers have always readystate at zero.
+			if(this.isMobileBrowser()){
+				return true;
 			}
-			console.error('isPlayable', isPlayable);
+
+			var self = this;
+			if (this.plugin) {
+				console.debug('READYSTATE:', this.plugin.readyState);
+				isPlayable = (this.plugin.readyState >= 2);
+				if (!isPlayable) {
+					this.plugin.addEventListener("canplaythrough", function() {
+						return true;
+					});
+				}
+			}
 			return isPlayable;
 		},
 
@@ -241,21 +325,29 @@ define(['jquery', 'mixins.preloader', 'mixins.sound', 'mediaelement'], function(
 			}
 
 			if (this.plugin) {
-				console.error('play');
+				console.debug(this.elementId + ' play Video');
 				this.plugin.play();
+
+				// setup garbage collector
+				this.garbageInterval = setInterval($.proxy(this.garbageCollectMe, this), 1000);
 			}
 		},
 
 
 		stop: function() {
 
-
+			
 			try {
 
-				console.error('stop');
+				if(this.isPlayable()){
 
-				this.plugin.pause();
-				this.resetPlayback();
+					console.debug(this.elementId + ' stop Video');
+
+					this.plugin.pause();
+					this.resetPlayback();
+				}
+
+				clearInterval(this.garbageInterval);
 
 			} catch (e) {
 				console.error('ComponentVideo errors resetting Video Instance');
@@ -271,46 +363,27 @@ define(['jquery', 'mixins.preloader', 'mixins.sound', 'mediaelement'], function(
 
 			if (this.plugin) {
 
-				this.plugin.currentTime = 0;
-				console.error('this.plugin.currentTime', this.plugin.currentTime);
-				isResetted = (this.plugin.currentTime === 0);
+				try{
+					this.plugin.currentTime = 1;
+					console.error('this.plugin.currentTime', this.plugin.currentTime);
+					isResetted = (this.plugin.currentTime === 1);
+					console.error('this.plugin.currentTime', this.plugin.currentTime);
 
-				console.error('this.plugin.currentTime', this.plugin.currentTime);
+				}catch(ex){
+
+				}
+				
+				this.showPoster();
 
 			}
-
-			/*
-			// this part is not working
-
-			if (!isResetted) {
-				console.error('reinstance videojs');
-				var self = this;
-				//instance the videojs object
-				// when ready add interactivity
-
-				if (this.plugin) {
-					this.plugin.dispose();
-					this.plugin = null;
-				}
-
-
-				this.$el.find('#' + this.options.id).empty().remove();
-				delete this.$el.find('#' + this.options.id);
-
-				var $newVideo = $(this.originalVideo);
-
-				$($newVideo).appendTo(this.$el.find('.videoWrapper'));
-				console.debug(this.$el.html());
-
-
-
-			}*/
 
 		},
 
 
 
 		dispose: function() {
+
+			console.info(this.options.id + ' ComponentVideo dispose');
 
 			if (!this.initialized) {
 				console.warn(this.elementId + ' ComponentVideo not initialized no dispose');
@@ -322,23 +395,19 @@ define(['jquery', 'mixins.preloader', 'mixins.sound', 'mediaelement'], function(
 			console.info(this.options.id + ' ComponentVideo dispose');
 
 			if (this.plugin) {
-
 				this.disposeSound();
-
 				this.stop();
-
-				this.plugin.controlBar.hide();
-
 			}
+
+			clearInterval(this.garbageInterval);
 
 			this.$el.off();
 
-
-			this.posterObj.remove();
-			delete this.posterObj;
+			this.initialized = false;
 
 			// rimuoviamo
 			delete this.$el;
+			delete this.objWrapper;
 			delete this.$plugin;
 			delete this.plugin;
 

@@ -123,6 +123,35 @@
               <div class="pilwrap ">
                 <a class="pilcrow" href="#section-1">&#182;</a>
               </div>
+              
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>
+<span class="hljs-keyword">var</span> noConflict = <span class="hljs-literal">false</span>;
+
+<span class="hljs-keyword">if</span> (window.jQuery) {
+	noConflict = <span class="hljs-literal">true</span>;
+}
+<span class="hljs-comment">/*
+if (window.jQuery) {
+	define('jquery', [], function() {
+		return window.jQuery;
+	});
+	noConflict = true;
+	window.$ = window.jQuery;
+}
+
+*/</span></pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-2">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-2">&#182;</a>
+              </div>
               <p>Polyfill the console object</p>
 
             </div>
@@ -142,11 +171,11 @@ window.muteConsole = {};
         </li>
         
         
-        <li id="section-2">
+        <li id="section-3">
             <div class="annotation">
               
               <div class="pilwrap ">
-                <a class="pilcrow" href="#section-2">&#182;</a>
+                <a class="pilcrow" href="#section-3">&#182;</a>
               </div>
               <p>Only stub undefined methods.</p>
 
@@ -160,11 +189,11 @@ window.muteConsole = {};
         </li>
         
         
-        <li id="section-3">
+        <li id="section-4">
             <div class="annotation">
               
               <div class="pilwrap ">
-                <a class="pilcrow" href="#section-3">&#182;</a>
+                <a class="pilcrow" href="#section-4">&#182;</a>
               </div>
               <p>fill a mute console</p>
 
@@ -178,11 +207,11 @@ mlength = methods.length;
         </li>
         
         
-        <li id="section-4">
+        <li id="section-5">
             <div class="annotation">
               
               <div class="pilwrap ">
-                <a class="pilcrow" href="#section-4">&#182;</a>
+                <a class="pilcrow" href="#section-5">&#182;</a>
               </div>
               <p>Only stub undefined methods.</p>
 
@@ -196,11 +225,11 @@ mlength = methods.length;
         </li>
         
         
-        <li id="section-5">
+        <li id="section-6">
             <div class="annotation">
               
               <div class="pilwrap ">
-                <a class="pilcrow" href="#section-5">&#182;</a>
+                <a class="pilcrow" href="#section-6">&#182;</a>
               </div>
               <p>urlArgs: “bust=” + Math.random(),</p>
 
@@ -209,11 +238,11 @@ mlength = methods.length;
         </li>
         
         
-        <li id="section-6">
+        <li id="section-7">
             <div class="annotation">
               
               <div class="pilwrap ">
-                <a class="pilcrow" href="#section-6">&#182;</a>
+                <a class="pilcrow" href="#section-7">&#182;</a>
               </div>
               <p>The require config file</p>
 
@@ -221,23 +250,23 @@ mlength = methods.length;
             
             <div class="content"><div class='highlight'><pre><span class="hljs-built_in">require</span>.config({
 
-
 	paths: {
-		almond: <span class="hljs-string">'../vendor/almond'</span>,
-		jquery: <span class="hljs-string">'../vendor/jquery-1.9.1'</span>,
-		inview: <span class="hljs-string">'../vendor/jquery.inview'</span>,
-		tweenmax: <span class="hljs-string">'../vendor/TweenMax'</span>,
-		reel: <span class="hljs-string">'../vendor/jquery.reel'</span>,
-		cloudzoom: <span class="hljs-string">'../vendor/cloudzoom-1'</span>,
-		hammerjs: <span class="hljs-string">'../vendor/hammer'</span>,
-		hammer: <span class="hljs-string">'../vendor/jquery.hammer'</span>,
-		videojs: <span class="hljs-string">'../vendor/video-js-4.1.0/video.dev'</span>,
-		mediaelement: <span class="hljs-string">'../vendor/mediaelement/mediaelement-and-player'</span>
-	},
+	almond: <span class="hljs-string">'../vendor/almond'</span>,
+	jquery: <span class="hljs-string">'../vendor/jquery-1.9.1'</span>,
+	inview: <span class="hljs-string">'../vendor/jquery.inview'</span>,
+	tweenmax: <span class="hljs-string">'../vendor/TweenMax'</span>,
+	reel: <span class="hljs-string">'../vendor/jquery.reel'</span>,
+	cloudzoom: <span class="hljs-string">'../vendor/cloudzoom-1'</span>,
+	hammerjs: <span class="hljs-string">'../vendor/hammer'</span>,
+	hammer: <span class="hljs-string">'../vendor/jquery.hammer'</span>,
+	videojs: <span class="hljs-string">'../vendor/video-js-4.1.0/video.dev'</span>,
+	mediaelement: <span class="hljs-string">'../vendor/mediaelement/mediaelement-and-player'</span>
+},
 
 	shim: {
 		<span class="hljs-string">"inview"</span>: [<span class="hljs-string">"jquery"</span>],
 		<span class="hljs-string">"elevatezoom"</span>: [<span class="hljs-string">"jquery"</span>],
+		<span class="hljs-string">"cloudzoom"</span>: [<span class="hljs-string">"jquery"</span>],
 		<span class="hljs-string">"hammer"</span>: [<span class="hljs-string">"hammerjs"</span>]
 	}
 
@@ -246,10 +275,14 @@ mlength = methods.length;
 
 
 <span class="hljs-built_in">require</span>([
+	<span class="hljs-string">'jquery'</span>,
 	<span class="hljs-string">'app'</span>,
-	<span class="hljs-string">'tweenmax'</span>, 
+	<span class="hljs-string">'tweenmax'</span>,
 	<span class="hljs-string">'hammer'</span>
-], <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(App)</span> {</span>
+], <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">($, App)</span> {</span>
+	<span class="hljs-keyword">if</span> (noConflict) {
+		$.noConflict(<span class="hljs-literal">true</span>);
+	}
 	App.main();
 });</pre></div></div>
             

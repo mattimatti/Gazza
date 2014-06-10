@@ -1,22 +1,25 @@
 ﻿<!DOCTYPE html>
 
-<!--#set var="sezione"        value="staticomkt" -->
-<!--#set var="sottosezione"   value="default" --> 
-<!--#set var="tipologia"      value="staticomkt" -->
+
+
+<!--#set var="sezione"        value="infografichemini" -->
+<!--#set var="sottosezione"   value="default" -->
+<!--#set var="tipologia"      value="whitelabel" -->
 <!--#set var="lang"           value="it" -->
+<!--#set var="ARTICLE_TITLE"  value=" - Gazzetta dello Sport" -->
 
 
 
 <!--#include virtual="/includes2013/SSI/config/global.config" -->
-<!--#include virtual="${HEAD_PATH}/writehtmltag.shtml" --><head>
+<!--#include virtual="${HEAD_PATH}/writehtmltag.shtml" -->
+<head>
 <!--#include virtual="${HEAD_PATH}/default.shtml" -->
 
 
 
 <meta property="og:title" content=""/>
 <meta property="og:type" content="article"/>
-<meta property="og:url" content="<!--#echo var="WEB_ROOT_" -->
-/"/>
+<meta property="og:url" content="<!--#echo var="WEB_ROOT_" -->/"/>
 
 <meta property="og:site_name" content=""/>
 <meta property="og:description" content=""/>
@@ -24,14 +27,32 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="viewport" id="viewport" content="width=device-width, initial-scale=1, user-scalable = no ,maximum-scale=1.0">
 
-<!--#set var="info_path"           value="./modules/" -->
+
+<!--#set var="info_path"		value="http://images2.gazzettaobjects.it/" --> 
+<!--#set var="css_path"		value="http://css.gazzettaobjects.it/" --> 
+<!--#set var="js_path"		value="http://js.gazzettaobjects.it/" --> 
 
 <!--#set var="res_path"           value="./" -->
 
-<link rel="stylesheet" href="<!--#echo var='res_path' -->css/base.css">
-<noscript>
-<link rel="stylesheet" href="<!--#echo var='res_path' -->css/nojs.css">
-</noscript>
+
+<!--#if expr="$HTTP_HOST = /(staging+)/" --> 
+
+<!-- cosa fa quando trova "staging"? --> 
+
+<!--#set var="info_path"		value="./modules/" --> 
+<!--#set var="css_path"		value="./" --> 
+<!--#set var="js_path"		value="./" --> 
+
+
+ 
+<!--#endif -->
+
+
+
+
+<link rel="stylesheet" href="<!--#echo var='css_path' -->css/base.css">
+
+
 
 
 </head>
@@ -45,9 +66,24 @@
 
 
 
-<!--#set var="info_path"		value="./modules/" --> 
+
 <!--#set var="res_path"		value="./" --> 
 <!--#set var="ani_path"		value="../../" --> 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 <!--#set var="de" value="" --> 
 
@@ -55,12 +91,6 @@
 <!--#set var="de" value="$1" --> 
 
 <!--#endif --> 
-
-<!--#if expr="$HTTP_HOST = /(staging+)/" --> 
-
-<!-- cosa fa quando trova "staging"? --> 
-
-<!--#endif -->
 
 
 
@@ -73,6 +103,14 @@
 <!--#set var="img_pref" value="mobile_" --> 
 
 <!--#endif -->
+
+
+
+
+
+
+
+
 
 
 
@@ -101,11 +139,22 @@
 <div id="skrollr-body">
   <div id="content"> 
   
+     <!--#set var="module_id"		value="cover_anni" --> 
+    <!--#set var="module_dir"		value="cover" --> 
+    <!--#set var="module_pos"		value="0" --> 
+    <!--#set var="module_label"	value="H" -->
+    
+    <div  id="box-<!--#echo var='module_id' -->" > 
+      <!--#include virtual="modules/${module_dir}/index.shtml" --> 
+    </div>
+  
+  
+  
   
       <!--#set var="module_id"		value="anno_1930" --> 
     <!--#set var="module_dir"		value="1930" --> 
     <!--#set var="module_pos"		value="1" --> 
-    <!--#set var="module_nav1"	value="${module_id}" -->
+    <!--#set var="module_label"	value="30" -->
     
     <div  id="box-<!--#echo var='module_id' -->" > 
       <!--#include virtual="modules/${module_dir}/index.shtml" --> 
@@ -115,7 +164,7 @@
     <!--#set var="module_id"		value="anno_1934" --> 
     <!--#set var="module_dir"		value="1934" --> 
     <!--#set var="module_pos"		value="2" --> 
-    <!--#set var="module_nav2"	value="${module_id}" -->
+    <!--#set var="module_label"	value="34" -->
     
     <div  id="box-<!--#echo var='module_id' -->" > 
       <!--#include virtual="modules/${module_dir}/index.shtml" --> 
@@ -125,7 +174,7 @@
      <!--#set var="module_id"		value="anno_1938" --> 
     <!--#set var="module_dir"		value="1938" --> 
     <!--#set var="module_pos"		value="3" --> 
-    <!--#set var="module_nav3"	value="${module_id}" -->
+    <!--#set var="module_label"	value="38" -->
     
     <div  id="box-<!--#echo var='module_id' -->" > 
       <!--#include virtual="modules/${module_dir}/index.shtml" --> 
@@ -136,7 +185,7 @@
        <!--#set var="module_id"		value="anno_1950" --> 
     <!--#set var="module_dir"		value="1950" --> 
     <!--#set var="module_pos"		value="4" --> 
-    <!--#set var="module_nav4"	value="${module_id}" -->
+    <!--#set var="module_label"	value="50" -->
     
     <div  id="box-<!--#echo var='module_id' -->" > 
       <!--#include virtual="modules/${module_dir}/index.shtml" --> 
@@ -147,7 +196,7 @@
       <!--#set var="module_id"		value="anno_1954" --> 
     <!--#set var="module_dir"		value="1954" --> 
     <!--#set var="module_pos"		value="5" --> 
-    <!--#set var="module_nav5"	value="${module_id}" -->
+    <!--#set var="module_label"	value="54" -->
     
     <div  id="box-<!--#echo var='module_id' -->" > 
       <!--#include virtual="modules/${module_dir}/index.shtml" --> 
@@ -158,7 +207,7 @@
      <!--#set var="module_id"		value="anno_1958" --> 
     <!--#set var="module_dir"		value="1958" --> 
     <!--#set var="module_pos"		value="6" --> 
-    <!--#set var="module_nav6"	value="${module_id}" -->
+    <!--#set var="module_label"	value="58" -->
     
     <div  id="box-<!--#echo var='module_id' -->" > 
       <!--#include virtual="modules/${module_dir}/index.shtml" --> 
@@ -169,7 +218,7 @@
         <!--#set var="module_id"		value="anno_1962" --> 
     <!--#set var="module_dir"		value="1962" --> 
     <!--#set var="module_pos"		value="7" --> 
-    <!--#set var="module_nav7"	value="${module_id}" -->
+    <!--#set var="module_label"	value="62" -->
     
     <div  id="box-<!--#echo var='module_id' -->" > 
       <!--#include virtual="modules/${module_dir}/index.shtml" --> 
@@ -179,7 +228,7 @@
      <!--#set var="module_id"		value="anno_1966" --> 
     <!--#set var="module_dir"		value="1966" --> 
     <!--#set var="module_pos"		value="8" --> 
-    <!--#set var="module_nav8"	value="${module_id}" -->
+    <!--#set var="module_label"	value="66" -->
     
     <div  id="box-<!--#echo var='module_id' -->" > 
       <!--#include virtual="modules/${module_dir}/index.shtml" --> 
@@ -195,17 +244,29 @@
      <!--#set var="module_id"		value="anno_1970" --> 
     <!--#set var="module_dir"		value="1970" --> 
     <!--#set var="module_pos"		value="9" --> 
-    <!--#set var="module_nav9"	value="${module_id}" -->
+    <!--#set var="module_label"	value="70" -->
     
     <div  id="box-<!--#echo var='module_id' -->" > 
       <!--#include virtual="modules/${module_dir}/index.shtml" --> 
     </div>
     
     
+    
+      <!--#set var="module_id"		value="anno_1974" --> 
+    <!--#set var="module_dir"		value="1974" --> 
+    <!--#set var="module_pos"		value="10" --> 
+    <!--#set var="module_label"	value="74" -->
+    
+    <div  id="box-<!--#echo var='module_id' -->" > 
+      <!--#include virtual="modules/${module_dir}/index.shtml" --> 
+    </div>
+    
+    
+    
     <!--#set var="module_id"		value="anno_1978" --> 
     <!--#set var="module_dir"		value="1978" --> 
     <!--#set var="module_pos"		value="11" --> 
-    <!--#set var="module_nav11"	value="${module_id}" -->
+    <!--#set var="module_label"	value="78" -->
     
     <div  id="box-<!--#echo var='module_id' -->" > 
       <!--#include virtual="modules/${module_dir}/index.shtml" --> 
@@ -217,7 +278,7 @@
     <!--#set var="module_id"		value="anno_1982" --> 
     <!--#set var="module_dir"		value="1982" --> 
     <!--#set var="module_pos"		value="12" --> 
-    <!--#set var="module_nav12"	value="${module_id}" -->
+    <!--#set var="module_label"	value="82" -->
     
     <div  id="box-<!--#echo var='module_id' -->" > 
       <!--#include virtual="modules/${module_dir}/index.shtml" --> 
@@ -226,7 +287,7 @@
      <!--#set var="module_id"		value="anno_1986" --> 
     <!--#set var="module_dir"		value="1986" --> 
     <!--#set var="module_pos"		value="13" --> 
-    <!--#set var="module_nav13"	value="${module_id}" -->
+    <!--#set var="module_label"	value="86" -->
     
     <div  id="box-<!--#echo var='module_id' -->" > 
       <!--#include virtual="modules/${module_dir}/index.shtml" --> 
@@ -237,7 +298,7 @@
       <!--#set var="module_id"		value="anno_1990" --> 
     <!--#set var="module_dir"		value="1990" --> 
     <!--#set var="module_pos"		value="14" --> 
-    <!--#set var="module_nav14"	value="${module_id}" -->
+  <!--#set var="module_label"	value="90" -->
     
     <div  id="box-<!--#echo var='module_id' -->" > 
       <!--#include virtual="modules/${module_dir}/index.shtml" --> 
@@ -248,7 +309,60 @@
        <!--#set var="module_id"		value="anno_1994" --> 
     <!--#set var="module_dir"		value="1994" --> 
     <!--#set var="module_pos"		value="15" --> 
-    <!--#set var="module_nav15"	value="${module_id}" -->
+    <!--#set var="module_label"	value="94" -->
+    
+    <div  id="box-<!--#echo var='module_id' -->" > 
+      <!--#include virtual="modules/${module_dir}/index.shtml" --> 
+    </div>
+    
+    
+    
+         <!--#set var="module_id"		value="anno_1998" --> 
+    <!--#set var="module_dir"		value="1998" --> 
+    <!--#set var="module_pos"		value="16" --> 
+    <!--#set var="module_label"	value="98" -->
+    
+    <div  id="box-<!--#echo var='module_id' -->" > 
+      <!--#include virtual="modules/${module_dir}/index.shtml" --> 
+    </div>
+    
+    
+    
+         <!--#set var="module_id"		value="anno_2002" --> 
+    <!--#set var="module_dir"		value="2002" --> 
+    <!--#set var="module_pos"		value="17" --> 
+     <!--#set var="module_label"	value="02" -->
+    
+    <div  id="box-<!--#echo var='module_id' -->" > 
+      <!--#include virtual="modules/${module_dir}/index.shtml" --> 
+    </div>
+    
+    
+    
+    <!--#set var="module_id"		value="anno_2006" --> 
+    <!--#set var="module_dir"		value="2006" --> 
+    <!--#set var="module_pos"		value="18" --> 
+    <!--#set var="module_label"	value="06" -->
+    
+    <div  id="box-<!--#echo var='module_id' -->" > 
+      <!--#include virtual="modules/${module_dir}/index.shtml" --> 
+    </div>
+    
+    
+    <!--#set var="module_id"		value="anno_2010" --> 
+    <!--#set var="module_dir"		value="2010" --> 
+    <!--#set var="module_pos"		value="19" --> 
+    <!--#set var="module_label"	value="10" -->
+    
+    <div  id="box-<!--#echo var='module_id' -->" > 
+      <!--#include virtual="modules/${module_dir}/index.shtml" --> 
+    </div>
+    
+    
+    <!--#set var="module_id"		value="credits" -->
+    <!--#set var="module_dir"		value="credits" -->
+    <!--#set var="module_pos"		value="20" --> 
+    <!--#set var="module_label"	value="C" -->
     
     <div  id="box-<!--#echo var='module_id' -->" > 
       <!--#include virtual="modules/${module_dir}/index.shtml" --> 
@@ -260,24 +374,35 @@
 </div>
 
 
-<div id="nav_click" class="disp_<!--#echo var='device' -->"></div>
-<div id="is_nav" class="disp_<!--#echo var='device' -->">
-  <ul>
-    <li> <span>&nbsp;</span> <a href="#s/<!--#echo var='module_nav1' -->"><strong>1930</strong></a> </li>
-  </ul>
-</div>
+<div id="menu_" class="disp_<!--#echo var='device' -->"> </div>
+
 
 <!--#include virtual="${FOOTER_PATH}/footer.shtml" --> 
+
 <!--#include virtual="${FOOTER_PATH}/default.shtml" -->
 
 <script>
 
 TrackNielsen("refresh_ce-awe");
 
-//s.trackAjaxFotoGallery("12345");
+//s.trackAjaxFotoGallery("12345"); <script src="dist/require.min.js">
+//  <script data-main="js/main" src="vendor/require.js">
+
+// Path immagini: http://images2.gazzettaobjects.it/
+
+ 
+
+//Path css: http://css.gazzettaobjects.it/
+
+ 
+
+//Path js: http://js.gazzettaobjects.it/
+
+
 </script> 
 
-  <script src="http://code.createjs.com/soundjs-0.5.2.min.js"></script>
-  <script data-main="js/main" src="vendor/require.js"></script>
+
+ <script src="<!--#echo var='js_path' -->js/require.min.js"> </script>
+
 </body>
 </html>

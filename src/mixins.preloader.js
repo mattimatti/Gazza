@@ -1,48 +1,61 @@
-define(['jquery'], function($){
+define(['jquery'], function($) {
 
 	var console = window.muteConsole;
 
 	var MixinPreloader = {
 
-
+		// the ajaxPool
 		preloadAjaxPool: [],
 
-
+		// is the element preloading content?
 		preloading: false,
 
 
-		preloadCount : 0,
+		// Elements can be disposed internally 
+		// this is the case of video that cannot stop normally on scroll
 
+		readyForGrabageCollection: false,
+
+		// how many elements to be preloaded
+		preloadCount: 0,
+
+
+
+		// Fire the preload
 		preload: function() {
 
 			if (!this.$el) {
-				console.error('This component has no el');
+				console.error('This component has no $el');
 				return;
 			}
 
-			if (this.preloading ) {
-				console.warn('is preloading no preload');
+			if (this.preloading) {
+				console.warn('is already preloading no follow');
 				return;
 			}
 
+			// store the number of items to preload
 			this.preloadCount = this.$el.find("img[data-src]").length;
 
-			console.debug('this.preloadCount' , this.preloadCount);
+			console.debug('this.preloadCount', this.preloadCount);
 
 			// if no images to preload
-			if(this.preloadCount === 0){
+			if (this.preloadCount === 0) {
 				this.initialize();
 				return;
 			}
 
-			// for each element
-			this.$el.find('img[data-src]').each($.proxy(this.eachImage, this));
+			// iterate all elements and start each preload
+			this.$el.find('img[data-src]').each($.proxy(this.invalidateForPreload, this));
 
 		},
 
 
-		// iterate all elements
-		eachImage: function(index, element) {
+		// invalidate an element if meets requirements
+		// the requirement is to have an attribute data-src
+
+
+		invalidateForPreload: function(index, element) {
 
 			var item = $(element);
 			if (item.attr("data-src") && item.attr("data-src") !== '') {
@@ -50,6 +63,8 @@ define(['jquery'], function($){
 			}
 		},
 
+
+		// start the preload of a single element
 
 		preloadElement: function(item) {
 
@@ -60,7 +75,7 @@ define(['jquery'], function($){
 			var theXHR;
 
 			if (item.attr("data-src")) {
-				
+
 				console.warn('preloadElement', item.attr("data-src"));
 
 				$.ajax({
@@ -90,27 +105,26 @@ define(['jquery'], function($){
 
 			// if has data source apply as source and remove attribute from element
 
-			if(item.attr("data-src")){
+			if (item.attr("data-src")) {
 				item.attr("src", item.attr("data-src"));
 				item.attr("data-src", null);
 			}
 
-			this.preloadCount --;
+			this.preloadCount--;
 
 			// ONCE THE FIRST ELEMENT IS LOADED cal linitialize
-			if(this.preloadCount <= 0){
+			if (this.preloadCount <= 0) {
 				console.warn('all preloaded call initialize');
 				this.preloading = false;
 
-				if($.isFunction(this.initialize)){
+				if ($.isFunction(this.initialize)) {
 					this.initialize();
 				}
-				
 			}
-			
 		},
 
-
+		// abort the preload of this component
+		// every element in preloadAjaxPool
 		preloadAbort: function() {
 			console.warn("preloadAbort BEFORE", this.preloadAjaxPool.length);
 			var self = this;
@@ -121,7 +135,7 @@ define(['jquery'], function($){
 			console.error("preloadAbort AFTER", this.preloadAjaxPool.length);
 		},
 
-
+		// add the xhr to the preloadAjaxPool
 		preloadAddXhr: function(xhr, item) {
 			//console.debug('preloadAddXhr', xhr);
 			this.preloadAjaxPool = $.grep(this.preloadAjaxPool, function(value) {
@@ -129,6 +143,7 @@ define(['jquery'], function($){
 			});
 		},
 
+		// remove the 
 		preloadRemoveXhr: function(xhr) {
 			//console.debug('preloadRemoveXhr', xhr);
 			this.preloadAjaxPool = $.grep(this.preloadAjaxPool, function(value) {
@@ -136,10 +151,12 @@ define(['jquery'], function($){
 			});
 		},
 
+		// return the offset top pf the element
 		getMyPos: function(xhr) {
 			return this.$el.offset().top;
 		},
 
+		// return the height of the element
 		getHeight: function(xhr) {
 			return this.$el.height();
 		}
