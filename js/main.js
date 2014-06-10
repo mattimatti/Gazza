@@ -43,8 +43,7 @@ require.config({
 		inview: '../vendor/jquery.inview',
 		tweenmax: '../vendor/TweenMax',
 		reel: '../vendor/jquery.reel',
-		/*panzoom: '../vendor/jquery.panzoom',*/
-		panzoom: '../vendor/jquery.elevatezoom',
+		cloudzoom: '../vendor/cloudzoom-1',
 		hammerjs: '../vendor/hammer',
 		hammer: '../vendor/jquery.hammer',
 		videojs: '../vendor/video-js-4.1.0/video.dev',
@@ -53,7 +52,7 @@ require.config({
 
 	shim: {
 		"inview": ["jquery"],
-		"panzoom": ["jquery"],
+		"elevatezoom": ["jquery"],
 		"hammer": ["hammerjs"]
 	}
 

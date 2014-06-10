@@ -1,4 +1,4 @@
-define(['jquery','mixins.preloader','mixins.sound','hammer','panzoom'], function($,MixinPreloader,MixinSound){
+define(['jquery','mixins.preloader','mixins.sound','hammer','elevatezoom'], function($,MixinPreloader,MixinSound){
 
 	var console = window.console;
 
@@ -12,11 +12,12 @@ define(['jquery','mixins.preloader','mixins.sound','hammer','panzoom'], function
 		this.defaults = {
 			minScale: 0,
 			hqSrc: null,
-			maxZoom:1
+			maxZoom:2
 		};
 
 		// merge default options with
 		this.options = $.extend(this.defaults, options);
+		console.debug(this.elementId + ' ComponentPan at constructor options', this.options);
 
 	};
 
@@ -57,17 +58,18 @@ define(['jquery','mixins.preloader','mixins.sound','hammer','panzoom'], function
 
 
 			this.originalimage = this.plugin.attr("src");
-			console.debug("originalimage", this.originalimage);
+			console.debug(this.elementId + ' ComponentPan originalimage', this.originalimage);
 
 
 			if(this.options.hqSrc){
+				console.debug(this.elementId + ' ComponentPan has a different HQ source', this.options.hqSrc);
 				this.hqImage = this.options.hqSrc;
 			}else{
-				this.hqImage = this.originalimage;
+				this.hqImage = this.originalimage + '?rnd='+ Math.random();
 			}
 
-
-			console.debug(this.elementId + ' ComponentPan Instance plugin  panzoom with options', this.options);
+			//the plugin requires this kind of metadata
+			this.plugin.data('zoom-image',this.hqImage);
 
 			this.enableInteraction();
 
@@ -77,10 +79,17 @@ define(['jquery','mixins.preloader','mixins.sound','hammer','panzoom'], function
 				zoomWindowFadeIn: 500,
 				zoomWindowFadeOut: 750,
 				constrainType:"height",
-				zoomLevel:maxZoom
+				zoomLevel:10
 			};
 
-			this.plugin.data('zoom-image',this.hqImage);
+			var opts = {
+				zoomType: "inner",
+				cursor: "crosshair"
+			};
+
+			console.debug(this.elementId + ' ComponentPan Instance plugin  elevateZoom with options', opts);
+
+			
 			this.plugin.elevateZoom(opts);
 
 		},
