@@ -19,30 +19,6 @@ define([
 
 	var Modules = {
 
-		/*
-		RIMOSSO DEFINITIVAMENTE
-		'image-fade': {
-
-			init: function(a, b) {
-				if (!instancesPool[a.id]) {
-					var obj = new ComponentFade(a, b);
-					obj.preload();
-					instancesPool[a.id] = obj;
-				}
-			},
-
-			remove: function(a, b) {
-				if (instancesPool[a.id]) {
-					instancesPool[a.id].dispose();
-					instancesPool[a.id].preloadAbort();
-					instancesPool[a.id] = null;
-					delete instancesPool[a.id];
-				}
-
-			}
-
-		},*/
-
 		'image-360': {
 
 			init: function(a, b) {
@@ -183,20 +159,11 @@ define([
 
 		removeElement: function(element) {
 			var elm = Modules[element.getAttribute('obj-type')];
-			
+
 			if (elm) {
 				elm.remove(element);
 			}
 
-		},
-
-		refreshScroller: function(item) {
-			//	if(this.objScroller){
-			//		if($.isFunction(this.objScroller.refresh)){
-			//			console.error('refresh scroller',item);
-			//			this.objScroller.refresh(item.get());
-			//		}
-			//	}
 		},
 
 		disposeEmitters: function() {
@@ -262,46 +229,51 @@ define([
 		},
 
 
-		garbageCollector: function(){
+		garbageCollector: function() {
 
+			var self = this;
+			
 			console.info(instancesPool);
 
 			var count = 0;
-			for (var pepe in instancesPool){
+			for (var pepe in instancesPool) {
 				count++;
 			}
 
-			if(count < 3){
+			if (count < 3) {
 				return;
 			}
 
-			
 
 
 			var actualScrollTop = $(window).scrollTop();
-			var screenHeight = $( window ).height();
+			var screenHeight = $(window).height();
 
-			console.error("passa garbageCollector", count, 'elementi','actualScrollTop',actualScrollTop,'screenHeight',screenHeight);
+			console.error("passa garbageCollector", count, 'elementi', 'actualScrollTop', actualScrollTop, 'screenHeight', screenHeight);
 
-			for (var name in instancesPool){
+			for (var name in instancesPool) {
 				var objInPool = instancesPool[name];
-				console.error(name, "item",objInPool.getMyPos());
+				console.error(name, "item", objInPool.getMyPos());
 
 				var myPos = objInPool.getMyPos();
 				var myHeight = objInPool.getHeight();
 
-				// if(  myPos + myHeight - actualScrollTop >  screenHeight){
-				// 	console.error(name, 'sono fuori schermo piuuuuu');
-				// }
+				/*
+				if(  myPos + myHeight - actualScrollTop >  screenHeight){
+					console.error(name, 'sono fuori schermo piuuuuu');
+				}
+				*/
 
-				if(  myPos + myHeight - actualScrollTop <  0){
+				if (myPos + myHeight - actualScrollTop < 0) {
 					console.error(name, 'devo essere pulito');
-					var obj = {id: name};
+					var obj = {
+						id: name
+					};
 					self.removeElement(obj);
 				}
 
 			}
-			
+
 
 		},
 
@@ -333,9 +305,8 @@ define([
 
 
 			//console.error('onInviewTimer', itemId, isInView);
-			
-			
-			
+
+
 
 			if (item.data('inviewtimer')) {
 				clearTimeout(item.data('inviewtimer'));
@@ -346,44 +317,39 @@ define([
 
 
 
-			if(!isInView){
+			if (!isInView) {
 				self.removeElement(element);
 			}
-
-
 
 
 
 			item.data('inviewtimer', setTimeout(function() {
 
 
+				/*
+				if(!isInView){
+					console.info(itemId + " DESTROY", visiblePartY,direction);
+					self.removeElement(element);
+				}else{
+					console.info(itemId + " INIT", visiblePartY, direction);
+					self.initElement(element);
+				}
 
-				// if(!isInView){
-				// 	console.info(itemId + " DESTROY", visiblePartY,direction);
-				// 	self.removeElement(element);
-				// }else{
-				// 	console.info(itemId + " INIT", visiblePartY, direction);
-				// 	self.initElement(element);
-				// }
-
-				// if(isInView === true){
-				// 	console.info(itemId + " INIT", visiblePartY, direction);
-				// 	self.initElement(element);
-				// }else{
-				// 	console.info(itemId + " DESTROY", visiblePartY,direction);
-				// 	self.removeElement(element);
-				// }
+				if(isInView === true){
+					console.info(itemId + " INIT", visiblePartY, direction);
+					self.initElement(element);
+				}else{
+					console.info(itemId + " DESTROY", visiblePartY,direction);
+					self.removeElement(element);
+				}
 
 
-				//console.info("instancesPool", instancesPool);
-
+				console.info("instancesPool", instancesPool);
+				*/
 
 
 
 				if (visiblePartY && element) {
-
-					
-
 
 
 
@@ -392,9 +358,9 @@ define([
 						switch (visiblePartY) {
 
 							case 'bottom':
-								console.info(itemId + " DESTROY", visiblePartY, direction );
+								console.info(itemId + " DESTROY", visiblePartY, direction);
 								self.removeElement(element);
-							break;
+								break;
 							case 'top':
 							case 'both':
 								console.info(itemId + " INIT", visiblePartY, direction);
@@ -414,13 +380,13 @@ define([
 						switch (visiblePartY) {
 
 							case 'top':
-								console.info(itemId + " DESTROY", visiblePartY,direction);
+								console.info(itemId + " DESTROY", visiblePartY, direction);
 								self.removeElement(element);
 								break;
 
 							case 'bottom':
 							case 'both':
-								console.info(itemId + " INIT", visiblePartY,direction);
+								console.info(itemId + " INIT", visiblePartY, direction);
 								self.initElement(element);
 								self.setHash(itemId);
 								//self.garbageCollector();
@@ -434,8 +400,6 @@ define([
 
 				}
 
-				
-				
 
 
 			}, 1000));

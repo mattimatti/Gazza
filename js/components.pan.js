@@ -4,75 +4,79 @@ define(['jquery', 'mixins.preloader', 'mixins.sound', 'cloudzoom'], function($, 
 
 
 
-
 	$.fn.draggable = function() {
 
-	  var offset = null;
+		var offset = null;
 
-	  var start = function(e) {
-	    var orig = e.originalEvent;
-	    var pos = $(this).position();
-	    offset = {
-	      x: orig.changedTouches[0].pageX - pos.left,
-	      y: orig.changedTouches[0].pageY - pos.top
-	    };
-	  };
-
-
-	  var moveMe = function(e) {
-	    e.preventDefault();
-	    var orig = e.originalEvent;
-	    $(this).css({
-	      top: orig.changedTouches[0].pageY - offset.y,
-	      left: orig.changedTouches[0].pageX - offset.x
-	    });
-	  };
+		var start = function(e) {
+			var orig = e.originalEvent;
+			var pos = $(this).position();
+			offset = {
+				x: orig.changedTouches[0].pageX - pos.left,
+				y: orig.changedTouches[0].pageY - pos.top
+			};
+		};
 
 
-	  this.on("touchstart", start);
-	  this.on("touchmove", moveMe);
+		var moveMe = function(e) {
+			e.preventDefault();
+			var orig = e.originalEvent;
+			$(this).css({
+				top: orig.changedTouches[0].pageY - offset.y,
+				left: orig.changedTouches[0].pageX - offset.x
+			});
+		};
+
+
+		this.on("touchstart", start);
+		this.on("touchmove", moveMe);
 	};
 
-$.fn.drags = function(opt) {
+	$.fn.drags = function(opt) {
 
-        opt = $.extend({handle:"",cursor:"move"}, opt);
+		opt = $.extend({
+			handle: "",
+			cursor: "move"
+		}, opt);
 
-        if(opt.handle === "") {
-            var $el = this;
-        } else {
-            var $el = this.find(opt.handle);
-        }
+		var $el, $drag;
 
-        return $el.css('cursor', opt.cursor).on("mousedown", function(e) {
-            if(opt.handle === "") {
-                var $drag = $(this).addClass('draggable');
-            } else {
-                var $drag = $(this).addClass('active-handle').parent().addClass('draggable');
-            }
-            var z_idx = $drag.css('z-index'),
-                drg_h = $drag.outerHeight(),
-                drg_w = $drag.outerWidth(),
-                pos_y = $drag.offset().top + drg_h - e.pageY,
-                pos_x = $drag.offset().left + drg_w - e.pageX;
-            $drag.css('z-index', 1000).parents().on("mousemove", function(e) {
-                $('.draggable').offset({
-                    top:e.pageY + pos_y - drg_h,
-                    left:e.pageX + pos_x - drg_w
-                }).on("mouseup", function() {
-                    $(this).removeClass('draggable').css('z-index', z_idx);
-                });
-            });
-           
-        }).on("mouseup", function(ee) {
-            if(opt.handle === "") {
-                $(this).removeClass('draggable');
-            } else {
-                $(this).removeClass('active-handle').parent().removeClass('draggable');
-            }
-            
-        });
+		if (opt.handle === "") {
+			$el = this;
+		} else {
+			$el = this.find(opt.handle);
+		}
 
-    }
+		return $el.css('cursor', opt.cursor).on("mousedown", function(e) {
+			if (opt.handle === "") {
+				$drag = $(this).addClass('draggable');
+			} else {
+				$drag = $(this).addClass('active-handle').parent().addClass('draggable');
+			}
+			var z_idx = $drag.css('z-index'),
+				drg_h = $drag.outerHeight(),
+				drg_w = $drag.outerWidth(),
+				pos_y = $drag.offset().top + drg_h - e.pageY,
+				pos_x = $drag.offset().left + drg_w - e.pageX;
+			$drag.css('z-index', 1000).parents().on("mousemove", function(e) {
+				$('.draggable').offset({
+					top: e.pageY + pos_y - drg_h,
+					left: e.pageX + pos_x - drg_w
+				}).on("mouseup", function() {
+					$(this).removeClass('draggable').css('z-index', z_idx);
+				});
+			});
+
+		}).on("mouseup", function(ee) {
+			if (opt.handle === "") {
+				$(this).removeClass('draggable');
+			} else {
+				$(this).removeClass('active-handle').parent().removeClass('draggable');
+			}
+
+		});
+
+	};
 
 
 	var ComponentPan = function(element, options) {
@@ -148,7 +152,7 @@ $.fn.drags = function(opt) {
 			this.wrapperObj = $("<div style='position: relative; overflow: hidden;'/>");
 			this.wrapperObj.css('width', this.plugin.width());
 			this.wrapperObj.css('height', this.plugin.height());
-			
+
 
 			// create a new image to drag
 			this.contentObj = $('<img class="component responsive draggable-pan"/>');
@@ -165,7 +169,7 @@ $.fn.drags = function(opt) {
 			this.contentObj.css('zIndex', 100);
 			this.contentObj.css('left', 0);
 			this.contentObj.css('zIndex', 100);
-			
+
 
 
 			this.plugin.css('position', 'absolute');
@@ -222,38 +226,51 @@ $.fn.drags = function(opt) {
 
 				this.plugin.hide();
 
-				TweenMax.to(this.contentObj, duration, {alpha:1,css: {
-                    zIndex:101,
-                    scaleX: this.options.maxZoom,
-                    scaleY: this.options.maxZoom,
-                    transformOrigin: "center center"
-                },onComplete:$.proxy(this.applyDragEvents, this),
-                ease: Power3.easeInOut
-            	});
+				TweenMax.to(this.contentObj, duration, {
+					alpha: 1,
+					css: {
+						zIndex: 101,
+						scaleX: this.options.maxZoom,
+						scaleY: this.options.maxZoom,
+						transformOrigin: "center center"
+					},
+					onComplete: $.proxy(this.applyDragEvents, this)
+					/*,
+					ease: Power3.easeInOut*/
+				});
 
 				this.plugin.css('zIndex', 100);
 
 			} else {
 				this.zoomIn = false;
 
-				TweenMax.to(this.plugin, duration, {alpha:1,delay:0.5});
+				TweenMax.to(this.plugin, duration, {
+					alpha: 1,
+					delay: 0.5
+				});
 				this.plugin.show();
 
 				console.error("scale to ", this.wrapperObj.width());
 
-				TweenMax.to(this.contentObj, duration, {alpha:0,css: {
-                    zIndex:100
-                }});
+				TweenMax.to(this.contentObj, duration, {
+					alpha: 0,
+					css: {
+						zIndex: 100
+					}
+				});
 
 
-                TweenMax.to(this.contentObj, duration, {delay:duration,css: {
-                    scaleX: 1,
-                    scaleY: 1,
-                    transformOrigin: "center center"
-                },
-                onComplete:$.proxy(this.detachDragEvents, this),
-            	ease: Power3.easeInOut
-        		});
+				TweenMax.to(this.contentObj, duration, {
+					delay: duration,
+					css: {
+						scaleX: 1,
+						scaleY: 1,
+						transformOrigin: "center center"
+					},
+					onComplete: $.proxy(this.detachDragEvents, this)
+					/*,
+					ease: Power3.easeInOut*/
+				});
 
 
 				this.plugin.css('zIndex', 101);
@@ -264,7 +281,7 @@ $.fn.drags = function(opt) {
 
 
 		applyDragEvents: function() {
-			
+
 			// apply mobile drag
 			this.contentObj.draggable();
 

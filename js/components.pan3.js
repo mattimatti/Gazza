@@ -1,4 +1,4 @@
-define(['jquery','mixins.preloader','mixins.sound','cloudzoom'], function($,MixinPreloader,MixinSound){
+define(['jquery', 'mixins.preloader', 'mixins.sound', 'cloudzoom'], function($, MixinPreloader, MixinSound) {
 
 	var console = window.console;
 
@@ -12,7 +12,7 @@ define(['jquery','mixins.preloader','mixins.sound','cloudzoom'], function($,Mixi
 		this.defaults = {
 			minScale: 0,
 			hqSrc: null,
-			maxZoom:2
+			maxZoom: 2
 		};
 
 		// merge default options with
@@ -22,7 +22,7 @@ define(['jquery','mixins.preloader','mixins.sound','cloudzoom'], function($,Mixi
 	};
 
 	// MIXIN
-	
+
 	$.extend(ComponentPan.prototype, MixinPreloader);
 	$.extend(ComponentPan.prototype, MixinSound);
 
@@ -31,29 +31,29 @@ define(['jquery','mixins.preloader','mixins.sound','cloudzoom'], function($,Mixi
 	$.extend(ComponentPan.prototype, {
 
 		// initial state
-		zoomIn : false,
+		zoomIn: false,
 
-		originalImage : null,
+		originalImage: null,
 
 		hqImage: null,
 
 		initialize: function() {
 
 
-			if(this.initialized){
+			if (this.initialized) {
 				console.warn(this.elementId + ' ComponentPan already initialized exit');
 				return;
 			}
 			this.initialized = true;
-			
+
 			this.plugin = this.$el.find('.component');
 
-			if(!this.plugin){
+			if (!this.plugin) {
 				console.warn(this.elementId + ' ComponentPan non esiste .component');
 				return;
 			}
 
-			
+
 			console.info(this.elementId + ' ComponentPan initialize');
 
 
@@ -61,10 +61,10 @@ define(['jquery','mixins.preloader','mixins.sound','cloudzoom'], function($,Mixi
 			console.debug(this.elementId + ' ComponentPan originalimage', this.originalimage);
 
 
-			if(this.options.hqSrc){
+			if (this.options.hqSrc) {
 				console.debug(this.elementId + ' ComponentPan has a different HQ source', this.options.hqSrc);
 				this.hqImage = this.options.hqSrc;
-			}else{
+			} else {
 				this.hqImage = this.originalimage;
 			}
 
@@ -114,15 +114,15 @@ define(['jquery','mixins.preloader','mixins.sound','cloudzoom'], function($,Mixi
 		},
 
 
-		enableInteraction: function(){
+		enableInteraction: function() {
 			console.debug(this.elementId + ' ComponentPan enableInteraction');
 			this.$el.off();
 			this.$el.on('click', $.proxy(this.toggleZoom, this));
 		},
 
 
-		clickComponent : function(e){
-			console.debug(this.elementId + ' ComponentPan clickComponent',e);
+		clickComponent: function(e) {
+			console.debug(this.elementId + ' ComponentPan clickComponent', e);
 			this.playSound();
 			this.toggleZoom();
 		},
@@ -130,23 +130,23 @@ define(['jquery','mixins.preloader','mixins.sound','cloudzoom'], function($,Mixi
 
 		// Toggle the zoom in the pan viewer
 		toggleZoom: function() {
-			console.debug(this.elementId + ' ComponentPan toggleZoom this.zoomIn' , this.zoomIn);
-			if(!this.zoomIn){
+			console.debug(this.elementId + ' ComponentPan toggleZoom this.zoomIn', this.zoomIn);
+			if (!this.zoomIn) {
 				this.zoomIn = true;
 
 				var opts = {
-	                zoomPosition : 'inside',
-	                zoomSizeMode : 'image'
-	            };
+					zoomPosition: 'inside',
+					zoomSizeMode: 'image'
+				};
 
 				console.debug(this.elementId + ' ComponentPan Instance plugin plugin with options', opts);
 
 				this.panObject = new window.CloudZoom(this.plugin, opts);
 				console.debug(window.CloudZoom.prototype);
-				this.panObject.loadImage( encodeURI(this.originalimage), encodeURI(this.hqImage)) ;
+				this.panObject.loadImage(encodeURI(this.originalimage), encodeURI(this.hqImage));
 
 
-			}else{
+			} else {
 				this.zoomIn = false;
 
 				this.panObject.destroy();
@@ -155,11 +155,11 @@ define(['jquery','mixins.preloader','mixins.sound','cloudzoom'], function($,Mixi
 
 		dispose: function() {
 
-			if(!this.initialized){
+			if (!this.initialized) {
 				console.warn(this.elementId + ' Component not initialized no dispose');
 				return;
 			}
-			
+
 			this.disposeSound();
 
 			console.info(this.elementId + ' ComponentPan dispose');

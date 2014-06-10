@@ -80,8 +80,8 @@ define(['jquery', 'mediaelement'], function($) {
 				console.debug('MixinSound:playSound');
 
 				this.audioPlayerObj.setSrc([
-					   { src:this.options.sound, type:'audio/ogg' },
-					   { src:this.options.sound.replace('.ogv','.mp3'), type:'audio/mp3' }
+					{ src:this.options.sound, type:'audio/ogg' },
+					{ src:this.options.sound.replace('.ogv','.mp3'), type:'audio/mp3' }
 					]);
 
 			
