@@ -17,10 +17,8 @@
     <script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
     <![endif]-->
 
-
-
   </head>
-  <body>
+  <body class="initializer">
     <div id="skrollr-body">
       <div id="content">
 
@@ -80,7 +78,7 @@
 
 
         
-        <div class="anno" data-label="01" id="anno_carousel">
+        <div class="anno" data-label="Carousel" id="anno_carousel">
 
 
           <h1>Carousel</h1>
@@ -145,7 +143,7 @@
 
           </div>
 
-          <div class="anno" data-label="02" id="anno_360">
+          <div class="anno" data-label="360" id="anno_360">
             <h1>360</h1>
             <h2>elemento rotazione</h2>      
 
@@ -157,7 +155,7 @@
             <noscript>
             <img class="responsive" src="./modules/1930/assets/imgs/pallone1.jpg" />
             </noscript>
-            <h3><span class="blinker" ><span class="blink_1" ></span><span class="blink_2" ></span><span class="blink_3" ></span></span><strong>360</strong><br/><br/></h3>
+            <h3><span class="blinker" ><span class="blink_1" ></span><span class="blink_2" ></span><span class="blink_3" ></span></span><strong>360 interactive, deve funzionare con il drag. In PHONE il comportamento muta automaticamente a NON INTERACTIVE</strong><br/><br/></h3>
           </div>
           <!-- End 360 -->
 
@@ -168,7 +166,7 @@
             <noscript>
             <img class="responsive" src="./modules/1930/assets/imgs/pallone1.jpg" />
             </noscript>
-            <h3><span class="blinker" ><span class="blink_1" ></span><span class="blink_2" ></span><span class="blink_3" ></span></span><strong>360</strong><br/><br/></h3>
+            <h3><span class="blinker" ><span class="blink_1" ></span><span class="blink_2" ></span><span class="blink_3" ></span></span><strong>automatico360_04 360 automatico NON INTERACTIVE</strong><br/><br/></h3>
           </div>
           <!-- End 360 automatico -->
 
@@ -179,7 +177,18 @@
             <noscript>
             <img class="responsive" src="./modules/1930/assets/imgs/pallone1.jpg" />
             </noscript>
-            <h3><span class="blinker" ><span class="blink_1" ></span><span class="blink_2" ></span><span class="blink_3" ></span></span><strong>360</strong><br/><br/></h3>
+            <h3><span class="blinker" ><span class="blink_1" ></span><span class="blink_2" ></span><span class="blink_3" ></span></span><strong> automatico_sound360_04 360 automatico con sound al click</strong><br/><br/></h3>
+          </div>
+          <!-- End 360 automatico con sound al click -->
+
+
+           <!-- 360 automatico con sound al click-->
+          <div class="box"   id='automatico_sound360_05'   obj-type='image-360'  obj-config='{"soundControls": true, "images":"./modules/1930/assets/imgs/pallone#.jpg|1..11|1","frames":11,"autosize":true,"responsive":true,"speed":0.5,"sound": "http://media2.gazzetta.it/gazzetta/content/2014/06/10/Varie/italia82.ogv"}'>
+            <img class="component responsive" src="./images/blank.png"   data-src="./modules/1930/assets/imgs/pallone1.jpg" />
+            <noscript>
+            <img class="responsive" src="./modules/1930/assets/imgs/pallone1.jpg" />
+            </noscript>
+            <h3><span class="blinker" ><span class="blink_1" ></span><span class="blink_2" ></span><span class="blink_3" ></span></span><strong>automatico_sound360_05 360 automatico con sound al click e showControls</strong><br/><br/></h3>
           </div>
           <!-- End 360 automatico con sound al click -->
 
@@ -309,6 +318,6 @@
            
             
               <script data-main="src/main" src="vendor/require.js"></script>
-              <!--<script src="js/require.min.js"></script>-->
+              <!--<script src="js/require.js"></script>-->
           </body>
         </html>

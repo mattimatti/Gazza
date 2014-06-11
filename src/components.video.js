@@ -88,11 +88,6 @@ define(['jquery', 'mixins.preloader', 'mixins.sound','mixins.genericcomponent', 
 		},
 
 
-		isMobileBrowser: function() {
-			return (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent));
-		},
-
-
 		// check if the browser can play a video
 		hasVideoFeatures: function() {
 			return !!document.createElement('video').canPlayType;

@@ -8,6 +8,21 @@ define(['jquery'], function($) {
 
 	var MixinGenericComponent = {
 
+		isPhoneBrowser: function() {
+			return (/iPhone|iPod/i.test(navigator.userAgent));
+		},
+
+		isMobileBrowser: function() {
+			return (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent));
+		},
+
+		// remove the blinker
+		hideBlinker: function(){
+			if(this.$el){
+				this.$el.find(".blinker").hide();
+			}
+		},
+
 		
 		// safely dispose events
 		disposeEventsSafe: function(){

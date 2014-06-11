@@ -116,12 +116,17 @@ define(['jquery'], function($) {
 
 			this.preloadCount--;
 
+
+
 			// ONCE THE FIRST ELEMENT IS LOADED cal linitialize
 			if (this.preloadCount <= 0) {
 				console.warn('all preloaded call initialize');
 				this.preloading = false;
 
+				this.$el.trigger("allpreloaded");
+
 				if ($.isFunction(this.initialize)) {
+
 					this.initialize();
 				}
 			}

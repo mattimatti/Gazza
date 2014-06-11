@@ -1,10 +1,10 @@
-define(['jquery', 'mixins.preloader', 'mixins.sound','mixins.genericcomponent', 'reel'], function($, MixinPreloader, MixinSound, MixinGenericComponent) {
+define(['jquery', 'mixins.preloader', 'mixins.sound', 'mixins.genericcomponent', 'reel'], function($, MixinPreloader, MixinSound, MixinGenericComponent) {
 
 	var console = window.console;
 
-	if(window.REMOVECONSOLE){
+	if (window.REMOVECONSOLE) {
 		console = window.muteConsole;
-	}	
+	}
 
 	var Component360 = function(element, options) {
 
@@ -38,23 +38,16 @@ define(['jquery', 'mixins.preloader', 'mixins.sound','mixins.genericcomponent', 
 		initialize: function() {
 
 
-			if(this.initialized){
+			if (this.initialized) {
 				console.warn(this.elementId + ' Component360 already initialized exit');
 				return;
 			}
+
 			this.initialized = true;
 
 
 			console.info(this.elementId + ': Component360 initialize');
 
-
-			if (this.options.interactive) {
-				this.options.cursor = 'pointer';
-				this.options.draggable = true;
-			}
-
-			// remove custom option
-			delete this.options.interactive;
 
 			this.plugin = this.$el.find('.component');
 
@@ -63,20 +56,44 @@ define(['jquery', 'mixins.preloader', 'mixins.sound','mixins.genericcomponent', 
 			this.plugin.attr("height", this.plugin.height());
 
 
-			console.debug(this.elementId + ': Component360 instance reel with options', this.options);
+			//  HACK
+			// Nel caso di mobile i 360 sono automatici
+			//
+			if (this.isMobileBrowser()) {
+				this.options.interactive = false;
+				this.options.speed = 0.5;
+				this.options.draggable = false;
+				this.options.cursor = 'default';
+				this.hideBlinker();
+				console.warn(this.elementId + ' NO INTERACTIVITY IN MOBILE');
+			}
+
+
+			// if interactive setup custom properties
+			if (this.options.interactive) {
+				this.options.cursor = 'pointer';
+				this.options.draggable = true;
+			}
+
+			// remove custom option interactivity
+			delete this.options.interactive;
+
 
 			// setup the plugin
+
+			console.debug(this.elementId + ': Component360 instance reel with options', this.options);
+			
 			this.plugin.reel(this.options);
 
 
-			if(this.options.sound){
-				
-				// assign click event
-				this.plugin.hammer().on('tap', $.proxy(this.clickComponent, this));
-				this.plugin.addClass('interactive');
+			// if we have a sound add interactivity
+			if (this.options.sound) {
+				this.enableInteractivity();
 			}
 
-			if(this.options.soundControls){
+
+			// if we have sound controls
+			if (this.options.soundControls) {
 				this.initSound();
 			}
 
@@ -84,19 +101,32 @@ define(['jquery', 'mixins.preloader', 'mixins.sound','mixins.genericcomponent', 
 		},
 
 
+		enableInteractivity: function() {
+
+			console.debug(this.elementId + ': Component360 enableInteractivity');
+
+			this.disposeEventsSafe();
+
+			this.plugin.hammer();
+
+			// assign click event
+			this.plugin.hammer().on('tap', $.proxy(this.clickComponent, this));
+			this.plugin.addClass('interactive');
+
+		},
+
 		// the user click
 		clickComponent: function(event) {
 			console.debug('clickComponent');
 
-			if(this.options.soundControls){
+			if (this.options.soundControls) {
 				// prevent overlapping commands
-				try{
-					if($(event.target).hasClass("playSound")){
+				try {
+					if ($(event.target).hasClass("playSound")) {
 						return;
 					}
-				}catch(soundex){}
+				} catch (soundex) {}
 			}
-
 
 			this.initSound();
 			this.playSound();
@@ -105,7 +135,7 @@ define(['jquery', 'mixins.preloader', 'mixins.sound','mixins.genericcomponent', 
 
 
 		dispose: function() {
-			if(!this.initialized){
+			if (!this.initialized) {
 				console.warn(this.elementId + ': Component360 not initialized no dispose');
 				return;
 			}
@@ -114,12 +144,12 @@ define(['jquery', 'mixins.preloader', 'mixins.sound','mixins.genericcomponent', 
 
 			this.disposeSound();
 			this.disposeEventsSafe();
-			
+
 
 			if (this.plugin) {
 				this.plugin.unreel();
 				this.plugin.off();
-			
+
 				delete this.plugin;
 			}
 

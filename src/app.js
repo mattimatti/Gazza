@@ -11,7 +11,7 @@ define([
 ], function($, ComponentFade, ComponentReel, ComponentVideo, ComponentEasy, ComponentPan, ComponentCarousel, ComponentMenu) {
 
 
-	var console = window.muteConsole;
+	var console = window.console;
 
 
 	var instancesPool = [];
@@ -228,8 +228,8 @@ define([
 
 		// main entry function
 		main: function() {
-			this.initializeScroller();
 			this.initMenu();
+			this.initPreloader();
 		},
 
 		// initilaize  the sticky menu
@@ -237,9 +237,54 @@ define([
 			this.objMenu = new ComponentMenu($("#menu_"), {});
 		},
 
+		numItemsToPreinitialize: null,
+
+		// initilaize  the sticky menu
+		initPreloader: function() {
+
+			console.debug('initPreloader');
+
+			this.numItemsToPreinitialize = 3;
+
+			var elementsToPreload = document.getElementsByClassName('box');
+
+			for (var i = 0; i < this.numItemsToPreinitialize; i++) {
+
+				console.debug('numItemsToPreinitialize', i);
+				
+				// my element
+				var $element = $(elementsToPreload[i]);
+					$element.on('allpreloaded', $.proxy(this.onPreloadComplete, this));
+
+				this.initElement(elementsToPreload[i]);
+			}
+
+
+		},
+
+		onPreloadComplete: function(event){
+
+			console.debug('onPreloadComplete',event.target.id);
+
+			// came back
+			$(event.target).off('allpreloaded');
+
+			this.numItemsToPreinitialize --;
+
+			console.error("missing elements to preload: ", this.numItemsToPreinitialize);
+			
+			// preload load is complete
+			if(this.numItemsToPreinitialize === 0){
+
+				$("body").removeClass("initializer");
+				this.initializeScroller();
+			}
+
+		},
 
 
 		initializeScroller: function() {
+			console.debug('initializeScroller');
 			$('.box').bind('inview', $.proxy(this.onInviewTimer, this));
 		},
 

@@ -1,6 +1,6 @@
 define(['jquery', 'mixins.preloader', 'mixins.sound','mixins.genericcomponent'], function($, MixinPreloader, MixinSound, MixinGenericComponent) {
 
-	var console = window.muteConsole;	var console = window.console;
+	var console = window.console;
 
 	if(window.REMOVECONSOLE){
 		console = window.muteConsole;
@@ -167,7 +167,6 @@ define(['jquery', 'mixins.preloader', 'mixins.sound','mixins.genericcomponent'],
 			this.contentObj.load();
 
 
-
 			this.$el.find('img').wrapAll(this.wrapperObj);
 
 			this.contentObj.css('position', 'absolute');
@@ -198,8 +197,8 @@ define(['jquery', 'mixins.preloader', 'mixins.sound','mixins.genericcomponent'],
 
 			// uso il doubleclick perchè il click bubblea..
 			this.$el.hammer();
-			this.$el.on('doubletap', $.proxy(this.toggleZoom, this));
-			this.$el.on('pinch', $.proxy(this.toggleZoom, this));
+			this.$el.on('tap', $.proxy(this.toggleZoom, this));
+			//this.$el.on('pinch', $.proxy(this.toggleZoom, this));
 			this.$el.addClass("interactive");
 
 		},

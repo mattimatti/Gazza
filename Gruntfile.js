@@ -12,13 +12,22 @@ module.exports = function(grunt) {
         // Task configuration
         uglify: {
             options: {
-                preserveComments : false,
+                preserveComments: false,
                 banner: '/*! GazzaScroll v.01 @flolovebit @mattimatti */'
             },
             dist: {
-                src: 'js/require.js',
+                src: 'js/require.production.js',
                 dest: 'js/require.min.js'
             }
+        },
+        concat: {
+            options: {
+                separator: ';',
+            },
+            dist: {
+                src: ['src/productionfix.js', 'js/require.js'],
+                dest: 'js/require.production.js',
+            },
         },
         jshint: {
             options: {
@@ -39,7 +48,7 @@ module.exports = function(grunt) {
                     define: true,
                     createjs: true,
                     $: true,
-                    s:true,
+                    s: true,
                     TweenMax: true,
                     videojs: true
                 },
@@ -107,5 +116,6 @@ module.exports = function(grunt) {
 
     // Default task
     grunt.registerTask('default', ['jshint']);
-    grunt.registerTask('release', ['jshint', 'requirejs', 'uglify']);
+    grunt.registerTask('debug', ['jshint', 'requirejs','uglify']);
+    grunt.registerTask('release', ['jshint', 'requirejs', 'concat:dist', 'uglify']);
 };
