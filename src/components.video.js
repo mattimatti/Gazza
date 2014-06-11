@@ -1,8 +1,10 @@
 define(['jquery', 'mixins.preloader', 'mixins.sound','mixins.genericcomponent', 'html5.video'], function($, MixinPreloader, MixinSound, MixinGenericComponent, HTML5VideoPlayer) {
 
-	var console = window.muteConsole;
+	var console = window.console;
 
-
+	if(window.REMOVECONSOLE){
+		console = window.muteConsole;
+	}	
 
 	$.fn.showVisible = function() {
 		this.css('visibility', 'visible');

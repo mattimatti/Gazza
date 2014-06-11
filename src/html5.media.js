@@ -1,6 +1,10 @@
 define(['jquery'], function($) {
 
-	var console = window.muteConsole;
+	var console = window.console;
+
+	if(window.REMOVECONSOLE){
+		console = window.muteConsole;
+	}	
 
 
 	var HTML5Media = {

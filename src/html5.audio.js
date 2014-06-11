@@ -1,6 +1,10 @@
 define(['jquery','html5.media'], function($,HTML5Media) {
 
-	var console = window.muteConsole;
+	var console = window.console;
+
+	if(window.REMOVECONSOLE){
+		console = window.muteConsole;
+	}	
 
 
 	var HTML5AudioPlayer = function(elementId, container, options) {
@@ -41,7 +45,7 @@ define(['jquery','html5.media'], function($,HTML5Media) {
 
 		createMarkup : function(){
 
-			console.error('createMarkup');
+			console.debug('createMarkup');
 
 			this.removeMarkup();
 
@@ -79,18 +83,43 @@ define(['jquery','html5.media'], function($,HTML5Media) {
 
 		removeMarkup : function(){
 
-			console.error('removeMarkup');
+			console.debug('removeMarkup');
 
 			this.plugin = document.getElementById(this.getInstanceId());
 
 			if(this.plugin){
-				console.error('esiste lo rimouvo');
+
+				try{
+
+					this.plugin.setAttribute('src',null); //change the source
+					this.plugin.load(); //load the new source
+					this.plugin.play(); //play
+				}catch(e){
+					console.error('errore a stoppare',e);
+				}
+
+				try{
+					this.plugin.pause();
+				}catch(e){
+					console.error('errore a pausare',e);
+				}
+
+				try{
+					this.stop();
+				}catch(e){
+					console.error('errore a stoppare global',e);
+				}
+
+
+				console.debug('esiste lo rimouvo');
 
 				var theEl = this.$container.find("#"+this.getInstanceId());
 
-				console.error(theEl);
+				console.debug(theEl);
 
 				theEl.off().empty().remove();
+
+				this.plugin = {};
 				delete this.plugin;
 			}
 

@@ -10491,7 +10491,7 @@ define('html5.media',['jquery'], function($) {
 });
 define('html5.audio',['jquery','html5.media'], function($,HTML5Media) {
 
-	var console = window.muteConsole;
+	var console = window.console;
 
 
 	var HTML5AudioPlayer = function(elementId, container, options) {
@@ -10532,7 +10532,7 @@ define('html5.audio',['jquery','html5.media'], function($,HTML5Media) {
 
 		createMarkup : function(){
 
-			console.error('createMarkup');
+			console.debug('createMarkup');
 
 			this.removeMarkup();
 
@@ -10570,18 +10570,43 @@ define('html5.audio',['jquery','html5.media'], function($,HTML5Media) {
 
 		removeMarkup : function(){
 
-			console.error('removeMarkup');
+			console.debug('removeMarkup');
 
 			this.plugin = document.getElementById(this.getInstanceId());
 
 			if(this.plugin){
-				console.error('esiste lo rimouvo');
+
+				try{
+
+					this.plugin.setAttribute('src',null); //change the source
+					this.plugin.load(); //load the new source
+					this.plugin.play(); //play
+				}catch(e){
+					console.error('errore a stoppare',e);
+				}
+
+				try{
+					this.plugin.pause();
+				}catch(e){
+					console.error('errore a pausare',e);
+				}
+
+				try{
+					this.stop();
+				}catch(e){
+					console.error('errore a stoppare global',e);
+				}
+
+
+				console.debug('esiste lo rimouvo');
 
 				var theEl = this.$container.find("#"+this.getInstanceId());
 
-				console.error(theEl);
+				console.debug(theEl);
 
 				theEl.off().empty().remove();
+
+				this.plugin = {};
 				delete this.plugin;
 			}
 
@@ -13874,8 +13899,19 @@ define('components.360',['jquery', 'mixins.preloader', 'mixins.sound','mixins.ge
 
 
 		// the user click
-		clickComponent: function() {
+		clickComponent: function(event) {
 			console.debug('clickComponent');
+
+			if(this.options.soundControls){
+				// prevent overlapping commands
+				try{
+					if($(event.target).hasClass("playSound")){
+						return;
+					}
+				}catch(soundex){}
+			}
+
+
 			this.initSound();
 			this.playSound();
 		},
@@ -14404,7 +14440,7 @@ define('components.video',['jquery', 'mixins.preloader', 'mixins.sound','mixins.
 });
 define('components.easy',['jquery','mixins.preloader','mixins.sound'], function($,MixinPreloader,MixinSound){
 	
-	var console = window.muteConsole;
+	var console = window.console;
 
 	var ComponentEasy = function(element, options) {
 		
@@ -14461,8 +14497,20 @@ define('components.easy',['jquery','mixins.preloader','mixins.sound'], function(
 		},
 
 
-		elementClick: function(){
-			console.debug(this.elementId + ' ComponentEasy elementClick');
+		elementClick: function(event){
+			console.debug(this.elementId + ' ComponentEasy elementClick', event);
+
+			if(this.options.soundControls){
+				// prevent overlapping commands
+				try{
+					if($(event.target).hasClass("playSound")){
+						return;
+					}
+				}catch(soundex){}
+			}
+			
+
+
 			this.initSound();
 			this.playSound();
 		},
@@ -14470,7 +14518,7 @@ define('components.easy',['jquery','mixins.preloader','mixins.sound'], function(
 
 		dispose: function() {
 			if(!this.initialized){
-				console.warn(this.elementId + ' Component not initialized no dispose');
+				console.warn(this.elementId + ' ComponentEasy not initialized no dispose');
 				return;
 			}
 			this.disposeSound();
@@ -14691,8 +14739,18 @@ define('components.pan',['jquery', 'mixins.preloader', 'mixins.sound','mixins.ge
 		},
 
 
-		clickComponent: function(e) {
-			console.debug(this.elementId + ' ComponentPan clickComponent', e);
+		clickComponent: function(event) {
+			console.debug(this.elementId + ' ComponentPan clickComponent', event);
+
+			if(this.options.soundControls){
+				// prevent overlapping commands
+				try{
+					if($(event.target).hasClass("playSound")){
+						return;
+					}
+				}catch(soundex){}
+			}
+
 			this.playSound();
 			this.toggleZoom();
 		},

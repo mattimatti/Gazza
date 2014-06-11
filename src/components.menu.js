@@ -1,6 +1,10 @@
 define(['jquery', 'mixins.preloader', 'mixins.sound'], function($, MixinPreloader, MixinSound) {
 
-	var console = window.muteConsole;
+	var console = window.console;
+
+	if(window.REMOVECONSOLE){
+		console = window.muteConsole;
+	}	
 
 	var Component = function(element, options) {
 		console.error('constructor', arguments);
@@ -77,7 +81,7 @@ define(['jquery', 'mixins.preloader', 'mixins.sound'], function($, MixinPreloade
 
 
 		onWindowScroll: function() {
-			console.error("menu onWindowScroll");
+
 			var $windowTag = $(window);
 			var scrollTop = $windowTag.scrollTop();
 

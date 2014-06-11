@@ -1,6 +1,10 @@
 define(['jquery', 'mixins.preloader', 'mixins.sound','mixins.genericcomponent', 'reel'], function($, MixinPreloader, MixinSound, MixinGenericComponent) {
 
-	var console = window.muteConsole;
+	var console = window.console;
+
+	if(window.REMOVECONSOLE){
+		console = window.muteConsole;
+	}	
 
 	var Component360 = function(element, options) {
 
@@ -81,8 +85,19 @@ define(['jquery', 'mixins.preloader', 'mixins.sound','mixins.genericcomponent', 
 
 
 		// the user click
-		clickComponent: function() {
+		clickComponent: function(event) {
 			console.debug('clickComponent');
+
+			if(this.options.soundControls){
+				// prevent overlapping commands
+				try{
+					if($(event.target).hasClass("playSound")){
+						return;
+					}
+				}catch(soundex){}
+			}
+
+
 			this.initSound();
 			this.playSound();
 		},

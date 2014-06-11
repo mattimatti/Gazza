@@ -15,6 +15,10 @@ if (window.jQuery) {
 
 */
 
+
+
+window.REMOVECONSOLE = false;
+
 // Polyfill the console object
 
 window.console = window.console || {};

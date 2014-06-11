@@ -1,7 +1,10 @@
 define(['jquery', 'mixins.preloader', 'mixins.sound','mixins.genericcomponent'], function($, MixinPreloader, MixinSound, MixinGenericComponent) {
 
-	var console = window.muteConsole;
+	var console = window.muteConsole;	var console = window.console;
 
+	if(window.REMOVECONSOLE){
+		console = window.muteConsole;
+	}	
 
 
 	$.fn.draggable = function() {
@@ -202,8 +205,18 @@ define(['jquery', 'mixins.preloader', 'mixins.sound','mixins.genericcomponent'],
 		},
 
 
-		clickComponent: function(e) {
-			console.debug(this.elementId + ' ComponentPan clickComponent', e);
+		clickComponent: function(event) {
+			console.debug(this.elementId + ' ComponentPan clickComponent', event);
+
+			if(this.options.soundControls){
+				// prevent overlapping commands
+				try{
+					if($(event.target).hasClass("playSound")){
+						return;
+					}
+				}catch(soundex){}
+			}
+
 			this.playSound();
 			this.toggleZoom();
 		},

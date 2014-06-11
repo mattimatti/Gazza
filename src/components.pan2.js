@@ -1,6 +1,10 @@
 define(['jquery', 'mixins.preloader', 'mixins.sound', 'hammer', 'elevatezoom'], function($, MixinPreloader, MixinSound) {
 
-	var console = window.muteConsole;
+	var console = window.console;
+
+	if(window.REMOVECONSOLE){
+		console = window.muteConsole;
+	}	
 
 	var ComponentPan = function(element, options) {
 

@@ -1,6 +1,10 @@
 define(['jquery','mixins.preloader','mixins.sound'], function($,MixinPreloader,MixinSound){
 	
-	var console = window.muteConsole;
+	var console = window.console;
+
+	if(window.REMOVECONSOLE){
+		console = window.muteConsole;
+	}	
 
 	var ComponentEasy = function(element, options) {
 		
@@ -57,8 +61,20 @@ define(['jquery','mixins.preloader','mixins.sound'], function($,MixinPreloader,M
 		},
 
 
-		elementClick: function(){
-			console.debug(this.elementId + ' ComponentEasy elementClick');
+		elementClick: function(event){
+			console.debug(this.elementId + ' ComponentEasy elementClick', event);
+
+			if(this.options.soundControls){
+				// prevent overlapping commands
+				try{
+					if($(event.target).hasClass("playSound")){
+						return;
+					}
+				}catch(soundex){}
+			}
+			
+
+
 			this.initSound();
 			this.playSound();
 		},
@@ -66,7 +82,7 @@ define(['jquery','mixins.preloader','mixins.sound'], function($,MixinPreloader,M
 
 		dispose: function() {
 			if(!this.initialized){
-				console.warn(this.elementId + ' Component not initialized no dispose');
+				console.warn(this.elementId + ' ComponentEasy not initialized no dispose');
 				return;
 			}
 			this.disposeSound();

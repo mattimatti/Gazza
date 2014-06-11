@@ -1,8 +1,11 @@
 define(['jquery', 'html5.audio'], function($, AudioPlayer) {
 
 
-	var console = window.muteConsole;
+	var console = window.console;
 
+	if(window.REMOVECONSOLE){
+		console = window.muteConsole;
+	}	
 
 	var MixinSound = {
 

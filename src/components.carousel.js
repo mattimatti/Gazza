@@ -1,6 +1,10 @@
 define(['jquery', 'mixins.preloader', 'mixins.sound','mixins.genericcomponent', 'hammer'], function($, MixinPreloader, MixinSound, MixinGenericComponent) {
 
-	var console = window.muteConsole;
+	var console = window.console;
+
+	if(window.REMOVECONSOLE){
+		console = window.muteConsole;
+	}	
 
 
 	var ComponentCarousel = function(element, options) {
