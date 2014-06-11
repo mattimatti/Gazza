@@ -1,6 +1,6 @@
-define(['jquery', 'mixins.preloader', 'mixins.sound', 'html5.video'], function($, MixinPreloader, MixinSound, HTML5VideoPlayer) {
+define(['jquery', 'mixins.preloader', 'mixins.sound','mixins.genericcomponent', 'html5.video'], function($, MixinPreloader, MixinSound, MixinGenericComponent, HTML5VideoPlayer) {
 
-	var console = window.console;
+	var console = window.muteConsole;
 
 
 
@@ -57,6 +57,7 @@ define(['jquery', 'mixins.preloader', 'mixins.sound', 'html5.video'], function($
 
 	$.extend(ComponentVideo.prototype, MixinPreloader);
 	$.extend(ComponentVideo.prototype, MixinSound);
+	$.extend(ComponentVideo.prototype, MixinGenericComponent);
 
 	//extend prototype
 
@@ -110,7 +111,7 @@ define(['jquery', 'mixins.preloader', 'mixins.sound', 'html5.video'], function($
 
 			// if the video has no id return 
 			if (!this.options.id) {
-				return;
+				console.error(this.elementId + ' ComponentVideo MISSING ID!!!!!');
 			}
 
 
@@ -139,9 +140,6 @@ define(['jquery', 'mixins.preloader', 'mixins.sound', 'html5.video'], function($
 			}
 
 
-
-			// toggle visibility
-			var playerStyle = 'hide';
 
 
 			var videoOptions = {
@@ -176,7 +174,12 @@ define(['jquery', 'mixins.preloader', 'mixins.sound', 'html5.video'], function($
 			this.videoPlayerObject.setSource(source);
 			this.videoPlayerObject.applySource();
 
-			this.showPoster();
+			if(this.isMobileBrowser()){
+				this.hidePoster();
+			}else{
+				this.showPoster();
+			}
+			
 
 			this.initLoadCheck();
 
@@ -211,6 +214,7 @@ define(['jquery', 'mixins.preloader', 'mixins.sound', 'html5.video'], function($
 			if (this.videoPlayerObject && this.videoPlayerObject.isPlayable()) {
 				this.disposeLoadCheck();
 				this.checkInteract();
+
 			}
 
 		},
@@ -222,11 +226,6 @@ define(['jquery', 'mixins.preloader', 'mixins.sound', 'html5.video'], function($
 
 
 		showPoster: function() {
-
-			if (this.isMobileBrowser()) {
-				return;
-			}
-
 			console.debug(this.elementId + " showPoster");
 			this.objWrapper.find('img').showVisible();
 		},

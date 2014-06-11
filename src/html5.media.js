@@ -1,6 +1,6 @@
 define(['jquery'], function($) {
 
-	var console = window.console;
+	var console = window.muteConsole;
 
 
 	var HTML5Media = {
@@ -266,8 +266,13 @@ define(['jquery'], function($) {
 			}
 			this.removeMarkup();
 
-			this.$el.off();
-			delete this.$el;
+			if(this.$el){
+				if($.isFunction(this.$el.off)){
+					this.$el.off();
+				}
+				delete this.$el;
+			}
+
 
 		}
 

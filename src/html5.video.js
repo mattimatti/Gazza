@@ -1,7 +1,6 @@
 define(['jquery','html5.media'], function($,HTML5Media) {
 
-	var console = window.console;
-
+	var console = window.muteConsole;
 
 	var HTML5VideoPlayer = function(elementId, container, options) {
 
@@ -91,7 +90,7 @@ if ( testEl.canPlayType ) {
 
 			var flashHeight = 500;
 			var flashExtension = '.mp4';
-			var flashVars = "preload=true&amp;autoplay=true&amp;debug=true&amp;controls=true&amp;file=" + this.encodeUrl(this.absolutizePath(this._sourceWithoutExtension+flashExtension));
+			var flashVars = "preload=true&amp;autoplay=true&amp;controls=true&amp;file=" + this.encodeUrl(this.absolutizePath(this._sourceWithoutExtension+flashExtension));
 			var flashCode = "<object width='100%' height='"+flashHeight+"' type='application/x-shockwave-flash' data='./images/flashmediaelement.swf'><param name='movie' value='./images/flashmediaelement.swf' /><param name='flashvars' value='" + flashVars + "' /><img src='http://placehold.it/350x"+flashHeight+"' width='100%' height='"+flashHeight+"' title='No video playback capabilities' /></object>";
 			
 

@@ -1,7 +1,7 @@
 define(['jquery', 'html5.audio'], function($, AudioPlayer) {
 
 
-	var console = window.console;
+	var console = window.muteConsole;
 
 
 	var MixinSound = {
@@ -55,6 +55,19 @@ define(['jquery', 'html5.audio'], function($, AudioPlayer) {
 			if (this.audioPlayerObj) {
 				console.debug('MixinSound:playSound');
 				this.audioPlayerObj.play();
+			}else{
+				console.warn('MixinSound:playSound no player');
+			}
+		},
+
+
+		// Play the component sound
+		// Seems like the audio tag must be redrawn evey time we want to play..
+		// see http://stackoverflow.com/questions/8733330/why-cant-i-play-sounds-more-than-once-using-html5-audio-tag
+		toggleSound: function() {
+			if (this.audioPlayerObj) {
+				console.debug('MixinSound:toggleSound');
+				this.audioPlayerObj.togglePlayback();
 			}else{
 				console.warn('MixinSound:playSound no player');
 			}

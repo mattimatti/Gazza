@@ -1,4 +1,4 @@
-define(['jquery', 'mixins.preloader', 'mixins.sound', 'hammer'], function($, MixinPreloader, MixinSound) {
+define(['jquery', 'mixins.preloader', 'mixins.sound','mixins.genericcomponent', 'hammer'], function($, MixinPreloader, MixinSound, MixinGenericComponent) {
 
 	var console = window.muteConsole;
 
@@ -27,6 +27,7 @@ define(['jquery', 'mixins.preloader', 'mixins.sound', 'hammer'], function($, Mix
 
 	$.extend(ComponentCarousel.prototype, MixinPreloader);
 	$.extend(ComponentCarousel.prototype, MixinSound);
+	$.extend(ComponentCarousel.prototype, MixinGenericComponent);
 
 	//extend prototype
 
@@ -99,14 +100,14 @@ define(['jquery', 'mixins.preloader', 'mixins.sound', 'hammer'], function($, Mix
 			if (this.options.interactive) {
 				// assign click event
 
+				this.disposeEventsSafe();
 
-
-				this.$el.off();
-				this.$el.hammer().off();
+				this.$el.hammer();
 
 				this.$el.on("click",$.proxy(this.clickComponent, this));
 				
-				this.$el.hammer().on("doubletap",$.proxy(this.clickComponent, this));
+				this.$el.on("doubletap",$.proxy(this.clickComponent, this));
+				this.$el.on("swipeleft",$.proxy(this.clickComponent, this));
 
 				this.$el.addClass('interactive');
 			}

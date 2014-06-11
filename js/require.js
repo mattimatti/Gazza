@@ -10189,6 +10189,7 @@ define('mixins.preloader',['jquery'], function($) {
 			this.$el.off("dblclick");
 			this.$el.off("touch");
 			this.$el.off("swipe");
+			this.$el.off("swipeleft");
 			this.$el.off("doubletap");
 			this.$el.off("mouseover");
 			this.$el.off("mouseout");
@@ -10203,7 +10204,7 @@ define('mixins.preloader',['jquery'], function($) {
 });
 define('html5.media',['jquery'], function($) {
 
-	var console = window.console;
+	var console = window.muteConsole;
 
 
 	var HTML5Media = {
@@ -10469,8 +10470,13 @@ define('html5.media',['jquery'], function($) {
 			}
 			this.removeMarkup();
 
-			this.$el.off();
-			delete this.$el;
+			if(this.$el){
+				if($.isFunction(this.$el.off)){
+					this.$el.off();
+				}
+				delete this.$el;
+			}
+
 
 		}
 
@@ -10534,7 +10540,7 @@ define('html5.audio',['jquery','html5.media'], function($,HTML5Media) {
 
 			var flashHeight = 50;
 			var flashExtension = '.mp3';
-			var flashVars = "preload=true&amp;autoplay=true&amp;debug=true&amp;controls=true&amp;file=" + this.encodeUrl(this.absolutizePath(this._sourceWithoutExtension+flashExtension));
+			var flashVars = "preload=true&amp;autoplay=true&amp;controls=true&amp;file=" + this.encodeUrl(this.absolutizePath(this._sourceWithoutExtension+flashExtension));
 			var flashCode = "<object width='100%' height='"+flashHeight+"' type='application/x-shockwave-flash' data='./images/flashmediaelement.swf'><param name='movie' value='./images/flashmediaelement.swf' /><param name='flashvars' value='" + flashVars + "' /><img src='http://placehold.it/350x"+flashHeight+"' width='100%' height='"+flashHeight+"' title='No video playback capabilities' /></object>";
 			
 
@@ -10592,7 +10598,7 @@ define('html5.audio',['jquery','html5.media'], function($,HTML5Media) {
 define('mixins.sound',['jquery', 'html5.audio'], function($, AudioPlayer) {
 
 
-	var console = window.console;
+	var console = window.muteConsole;
 
 
 	var MixinSound = {
@@ -10646,6 +10652,19 @@ define('mixins.sound',['jquery', 'html5.audio'], function($, AudioPlayer) {
 			if (this.audioPlayerObj) {
 				console.debug('MixinSound:playSound');
 				this.audioPlayerObj.play();
+			}else{
+				console.warn('MixinSound:playSound no player');
+			}
+		},
+
+
+		// Play the component sound
+		// Seems like the audio tag must be redrawn evey time we want to play..
+		// see http://stackoverflow.com/questions/8733330/why-cant-i-play-sounds-more-than-once-using-html5-audio-tag
+		toggleSound: function() {
+			if (this.audioPlayerObj) {
+				console.debug('MixinSound:toggleSound');
+				this.audioPlayerObj.togglePlayback();
 			}else{
 				console.warn('MixinSound:playSound no player');
 			}
@@ -10963,6 +10982,37 @@ define('components.fade',['jquery', 'mixins.preloader', 'mixins.sound'], functio
 
 	return Component;
 
+
+});
+define('mixins.genericcomponent',['jquery'], function($) {
+
+	var console = window.muteConsole;
+
+	var MixinGenericComponent = {
+
+		
+		// safely dispose events
+		disposeEventsSafe: function(){
+			if(this.$el){
+
+				this.$el.off("click");
+				this.$el.off("dblclick");
+				this.$el.off("touch");
+				this.$el.off("swipe");
+				this.$el.off("swiperight");
+				this.$el.off("swipeleft");
+				this.$el.off("doubletap");
+				this.$el.off("mouseover");
+				this.$el.off("mouseout");
+			}
+
+
+		}
+
+	};
+
+
+	return MixinGenericComponent;
 
 });
 
@@ -13741,11 +13791,11 @@ define('components.fade',['jquery', 'mixins.preloader', 'mixins.sound'], functio
 
 });
 
-define('components.360',['jquery', 'mixins.preloader', 'mixins.sound', 'reel'], function($, MixinPreloader, MixinSound) {
+define('components.360',['jquery', 'mixins.preloader', 'mixins.sound','mixins.genericcomponent', 'reel'], function($, MixinPreloader, MixinSound, MixinGenericComponent) {
 
 	var console = window.muteConsole;
 
-	var Component = function(element, options) {
+	var Component360 = function(element, options) {
 
 		this.$el = $(element);
 
@@ -13766,12 +13816,13 @@ define('components.360',['jquery', 'mixins.preloader', 'mixins.sound', 'reel'], 
 
 	// MIXIN
 
-	$.extend(Component.prototype, MixinPreloader);
-	$.extend(Component.prototype, MixinSound);
+	$.extend(Component360.prototype, MixinPreloader);
+	$.extend(Component360.prototype, MixinSound);
+	$.extend(Component360.prototype, MixinGenericComponent);
 
 	//extend prototype
 
-	$.extend(Component.prototype, {
+	$.extend(Component360.prototype, {
 
 		initialize: function() {
 
@@ -13858,13 +13909,12 @@ define('components.360',['jquery', 'mixins.preloader', 'mixins.sound', 'reel'], 
 
 	});
 
-	return Component;
+	return Component360;
 
 });
 define('html5.video',['jquery','html5.media'], function($,HTML5Media) {
 
-	var console = window.console;
-
+	var console = window.muteConsole;
 
 	var HTML5VideoPlayer = function(elementId, container, options) {
 
@@ -13954,7 +14004,7 @@ if ( testEl.canPlayType ) {
 
 			var flashHeight = 500;
 			var flashExtension = '.mp4';
-			var flashVars = "preload=true&amp;autoplay=true&amp;debug=true&amp;controls=true&amp;file=" + this.encodeUrl(this.absolutizePath(this._sourceWithoutExtension+flashExtension));
+			var flashVars = "preload=true&amp;autoplay=true&amp;controls=true&amp;file=" + this.encodeUrl(this.absolutizePath(this._sourceWithoutExtension+flashExtension));
 			var flashCode = "<object width='100%' height='"+flashHeight+"' type='application/x-shockwave-flash' data='./images/flashmediaelement.swf'><param name='movie' value='./images/flashmediaelement.swf' /><param name='flashvars' value='" + flashVars + "' /><img src='http://placehold.it/350x"+flashHeight+"' width='100%' height='"+flashHeight+"' title='No video playback capabilities' /></object>";
 			
 
@@ -14027,9 +14077,9 @@ if ( testEl.canPlayType ) {
 	return HTML5VideoPlayer;
 
 });
-define('components.video',['jquery', 'mixins.preloader', 'mixins.sound', 'html5.video'], function($, MixinPreloader, MixinSound, HTML5VideoPlayer) {
+define('components.video',['jquery', 'mixins.preloader', 'mixins.sound','mixins.genericcomponent', 'html5.video'], function($, MixinPreloader, MixinSound, MixinGenericComponent, HTML5VideoPlayer) {
 
-	var console = window.console;
+	var console = window.muteConsole;
 
 
 
@@ -14086,6 +14136,7 @@ define('components.video',['jquery', 'mixins.preloader', 'mixins.sound', 'html5.
 
 	$.extend(ComponentVideo.prototype, MixinPreloader);
 	$.extend(ComponentVideo.prototype, MixinSound);
+	$.extend(ComponentVideo.prototype, MixinGenericComponent);
 
 	//extend prototype
 
@@ -14139,7 +14190,7 @@ define('components.video',['jquery', 'mixins.preloader', 'mixins.sound', 'html5.
 
 			// if the video has no id return 
 			if (!this.options.id) {
-				return;
+				console.error(this.elementId + ' ComponentVideo MISSING ID!!!!!');
 			}
 
 
@@ -14168,9 +14219,6 @@ define('components.video',['jquery', 'mixins.preloader', 'mixins.sound', 'html5.
 			}
 
 
-
-			// toggle visibility
-			var playerStyle = 'hide';
 
 
 			var videoOptions = {
@@ -14205,7 +14253,12 @@ define('components.video',['jquery', 'mixins.preloader', 'mixins.sound', 'html5.
 			this.videoPlayerObject.setSource(source);
 			this.videoPlayerObject.applySource();
 
-			this.showPoster();
+			if(this.isMobileBrowser()){
+				this.hidePoster();
+			}else{
+				this.showPoster();
+			}
+			
 
 			this.initLoadCheck();
 
@@ -14240,6 +14293,7 @@ define('components.video',['jquery', 'mixins.preloader', 'mixins.sound', 'html5.
 			if (this.videoPlayerObject && this.videoPlayerObject.isPlayable()) {
 				this.disposeLoadCheck();
 				this.checkInteract();
+
 			}
 
 		},
@@ -14251,11 +14305,6 @@ define('components.video',['jquery', 'mixins.preloader', 'mixins.sound', 'html5.
 
 
 		showPoster: function() {
-
-			if (this.isMobileBrowser()) {
-				return;
-			}
-
 			console.debug(this.elementId + " showPoster");
 			this.objWrapper.find('img').showVisible();
 		},
@@ -14438,7 +14487,7 @@ define('components.easy',['jquery','mixins.preloader','mixins.sound'], function(
 	return ComponentEasy;
 
 });
-define('components.pan',['jquery', 'mixins.preloader', 'mixins.sound'], function($, MixinPreloader, MixinSound) {
+define('components.pan',['jquery', 'mixins.preloader', 'mixins.sound','mixins.genericcomponent'], function($, MixinPreloader, MixinSound, MixinGenericComponent) {
 
 	var console = window.muteConsole;
 
@@ -14542,6 +14591,7 @@ define('components.pan',['jquery', 'mixins.preloader', 'mixins.sound'], function
 
 	$.extend(ComponentPan.prototype, MixinPreloader);
 	$.extend(ComponentPan.prototype, MixinSound);
+	$.extend(ComponentPan.prototype, MixinGenericComponent);
 
 	//extend prototype	
 
@@ -14620,13 +14670,17 @@ define('components.pan',['jquery', 'mixins.preloader', 'mixins.sound'], function
 			this.plugin.css('left', 0);
 			this.plugin.css('right', 0);
 
+			if(this.options.soundControls){
+				this.initSound();
+			}
+
 		},
 
 
 		enableInteraction: function() {
 			console.debug(this.elementId + ' ComponentPan enableInteraction');
-			this.$el.off();
-
+			
+			this.disposeEventsSafe();
 
 			// uso il doubleclick perchè il click bubblea..
 			this.$el.hammer();
@@ -17033,7 +17087,7 @@ if(typeof define == 'function' && define.amd) {
 }
 
 })(window);
-define('components.carousel',['jquery', 'mixins.preloader', 'mixins.sound', 'hammer'], function($, MixinPreloader, MixinSound) {
+define('components.carousel',['jquery', 'mixins.preloader', 'mixins.sound','mixins.genericcomponent', 'hammer'], function($, MixinPreloader, MixinSound, MixinGenericComponent) {
 
 	var console = window.muteConsole;
 
@@ -17062,6 +17116,7 @@ define('components.carousel',['jquery', 'mixins.preloader', 'mixins.sound', 'ham
 
 	$.extend(ComponentCarousel.prototype, MixinPreloader);
 	$.extend(ComponentCarousel.prototype, MixinSound);
+	$.extend(ComponentCarousel.prototype, MixinGenericComponent);
 
 	//extend prototype
 
@@ -17134,14 +17189,14 @@ define('components.carousel',['jquery', 'mixins.preloader', 'mixins.sound', 'ham
 			if (this.options.interactive) {
 				// assign click event
 
+				this.disposeEventsSafe();
 
-
-				this.$el.off();
-				this.$el.hammer().off();
+				this.$el.hammer();
 
 				this.$el.on("click",$.proxy(this.clickComponent, this));
 				
-				this.$el.hammer().on("doubletap",$.proxy(this.clickComponent, this));
+				this.$el.on("doubletap",$.proxy(this.clickComponent, this));
+				this.$el.on("swipeleft",$.proxy(this.clickComponent, this));
 
 				this.$el.addClass('interactive');
 			}

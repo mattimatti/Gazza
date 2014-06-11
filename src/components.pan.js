@@ -1,4 +1,4 @@
-define(['jquery', 'mixins.preloader', 'mixins.sound'], function($, MixinPreloader, MixinSound) {
+define(['jquery', 'mixins.preloader', 'mixins.sound','mixins.genericcomponent'], function($, MixinPreloader, MixinSound, MixinGenericComponent) {
 
 	var console = window.muteConsole;
 
@@ -102,6 +102,7 @@ define(['jquery', 'mixins.preloader', 'mixins.sound'], function($, MixinPreloade
 
 	$.extend(ComponentPan.prototype, MixinPreloader);
 	$.extend(ComponentPan.prototype, MixinSound);
+	$.extend(ComponentPan.prototype, MixinGenericComponent);
 
 	//extend prototype	
 
@@ -180,13 +181,17 @@ define(['jquery', 'mixins.preloader', 'mixins.sound'], function($, MixinPreloade
 			this.plugin.css('left', 0);
 			this.plugin.css('right', 0);
 
+			if(this.options.soundControls){
+				this.initSound();
+			}
+
 		},
 
 
 		enableInteraction: function() {
 			console.debug(this.elementId + ' ComponentPan enableInteraction');
-			this.$el.off();
-
+			
+			this.disposeEventsSafe();
 
 			// uso il doubleclick perchè il click bubblea..
 			this.$el.hammer();

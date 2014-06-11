@@ -1,8 +1,8 @@
-define(['jquery', 'mixins.preloader', 'mixins.sound', 'reel'], function($, MixinPreloader, MixinSound) {
+define(['jquery', 'mixins.preloader', 'mixins.sound','mixins.genericcomponent', 'reel'], function($, MixinPreloader, MixinSound, MixinGenericComponent) {
 
 	var console = window.muteConsole;
 
-	var Component = function(element, options) {
+	var Component360 = function(element, options) {
 
 		this.$el = $(element);
 
@@ -23,12 +23,13 @@ define(['jquery', 'mixins.preloader', 'mixins.sound', 'reel'], function($, Mixin
 
 	// MIXIN
 
-	$.extend(Component.prototype, MixinPreloader);
-	$.extend(Component.prototype, MixinSound);
+	$.extend(Component360.prototype, MixinPreloader);
+	$.extend(Component360.prototype, MixinSound);
+	$.extend(Component360.prototype, MixinGenericComponent);
 
 	//extend prototype
 
-	$.extend(Component.prototype, {
+	$.extend(Component360.prototype, {
 
 		initialize: function() {
 
@@ -115,6 +116,6 @@ define(['jquery', 'mixins.preloader', 'mixins.sound', 'reel'], function($, Mixin
 
 	});
 
-	return Component;
+	return Component360;
 
 });
