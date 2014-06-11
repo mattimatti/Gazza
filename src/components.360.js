@@ -71,6 +71,9 @@ define(['jquery', 'mixins.preloader', 'mixins.sound', 'reel'], function($, Mixin
 				this.plugin.addClass('interactive');
 			}
 
+			if(this.options.soundControls){
+				this.initSound();
+			}
 
 
 		},

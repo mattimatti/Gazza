@@ -63,7 +63,7 @@
 
 
             <!-- Easy Sound Controls -->
-            <div class="box"   id='easy_controls_03'   obj-type='image-easy'  obj-config='{"soundControls":true ,"sound": "./modules/1950/assets/video/pagina.ogv"}'>
+            <div class="box"   id='easy_controls_03'   obj-type='image-easy'  obj-config='{"soundControls":true ,"sound": "http://media2.gazzetta.it/gazzetta/content/2014/06/10/Varie/italia82.ogv"}'>
               
               <img class="component responsive" src="./images/blank.png" data-src="./modules/1934/assets/imgs/fotovittoria.jpg" />
               
@@ -194,71 +194,53 @@
             <h2>componente video </h2>
 
             <!-- Video Interactive-->
-            <div class="box"   id='video_11'    obj-type='video-clip'  obj-config='{"interactive":true,"id":"clip_01"}'>
+            <div class="box"   id='video_11'    obj-type='video-clip'  obj-config='{"interactive":true,"id":"clip_01", "video": "./modules/1950/assets/video/obdulio","poster":"./modules/1950/assets/video/poster.jpg"}'>
               
               <div class='videoWrapper'>
-                <video  id= 'clip_01' preload="none" width="1000" height="700"  class="responsive"   poster="./modules/1950/assets/video/poster.jpg" >
-                  <source src="./modules/1950/assets/video/obdulio.mp4" type="video/mp4">
-                  <source src="./modules/1950/assets/video/obdulio.webm" type="video/webm">
-                  <source src="./modules/1950/assets/video/obdulio.ogv" type="video/ogg">
-                </video>
+                
                 <img class="videoposter" src="./modules/1950/assets/video/poster.jpg" />
               </div>
-
-              
-
-              <div class="row">
-              <h3><span class="blinker" ><span class="blink_1" ></span><span class="blink_2" ></span><span class="blink_3" ></span></span><strong>Video Interactive</strong><br/><br/></h3>
-              </div>
-              
 
             </div>
             <!-- End Video Interactive-->
 
-
+            <div class="row">
+            <h3><span class="blinker" ><span class="blink_1" ></span><span class="blink_2" ></span><span class="blink_3" ></span></span><strong>Video Interactive</strong><br/><br/></h3>
+            </div>
 
             <!-- Video videoOver caso maradona-->
-            <div class="box"   id='video_12'   obj-type='video-clip'  obj-config='{"interactive":true,"videoOver":true,"id":"clip_02"}'>
+            <div class="box"   id='video_12'   obj-type='video-clip'  obj-config='{"interactive":true,"videoOver":true,"id":"clip_02", "video": "./modules/1986/assets/video/maradona", "poster":"./modules/1986/assets/video/poster.jpg"}'>
               
               <div class='videoWrapper'>
-                <video  id= 'clip_02' preload="none"  class="responsive"   poster="./modules/1986/assets/video/poster.jpg" >
-                  <source src="./modules/1986/assets/video/maradona.mp4" type="video/mp4">
-                  <source src="./modules/1986/assets/video/maradona.webm" type="video/webm">
-                  <source src="./modules/1986/assets/video/maradona.ogv" type="video/ogg">
-                </video>
+                
                 <img class="videoposter" src="./modules/1986/assets/video/poster.jpg" />
               </div>
 
               
-              <div class="row">
-                <h3><span class="blinker" ><span class="blink_1" ></span><span class="blink_2" ></span><span class="blink_3" ></span></span><strong>Video Interactive 4-3</strong>Usa la classe videoOver<br/><br/></h3>
-              </div>
+
 
             </div>
              <!-- End Video videoOver-->
 
-
+              <div class="row">
+                <h3><span class="blinker" ><span class="blink_1" ></span><span class="blink_2" ></span><span class="blink_3" ></span></span><strong>Video Interactive 4-3</strong>Usa la classe videoOver<br/><br/></h3>
+              </div>
 
             <!-- Video Interactive-->
-            <div class="box"   id='video_13'   obj-type='video-clip'  obj-config='{"interactive":true,"id":"clip_03"}'>
+            <div class="box"   id='video_13'   obj-type='video-clip'  obj-config='{"interactive":true,"id":"clip_03", "video": "./modules/1966/assets/video/eng-mex66","poster":"./modules/1966/assets/video/poster.jpg"}'>
               
-              <div class="videoWrapper">
-                <video  id= 'clip_03' preload="none" class="responsive"   poster="./modules/1966/assets/video/poster.jpg" >
-                  <source src="./modules/1966/assets/video/eng-mex66.mp4" type="video/mp4">
-                  <source src="./modules/1966/assets/video/eng-mex66.webm" type="video/webm">
-                  <source src="./modules/1966/assets/video/eng-mex66.ogv" type="video/ogg">
-                </video>
+              <div class="videoWrapper4-3">
                  <img class="videoposter" src="./modules/1966/assets/video/poster.jpg" />
               </div>
              
-              <div class="row">
-                <h3><span class="blinker" ><span class="blink_1" ></span><span class="blink_2" ></span><span class="blink_3" ></span></span><strong>Video Interactive 4-3</strong>Usa la classe videoWrapper4-3<br/><br/></h3>
-              </div>
+
             </div>
             <!-- End Video Interactive-->
 
 
-
+              <div class="row">
+                <h3><span class="blinker" ><span class="blink_1" ></span><span class="blink_2" ></span><span class="blink_3" ></span></span><strong>Video Interactive 4-3</strong>Usa la classe videoWrapper4-3<br/><br/></h3>
+              </div>
 
 
 
@@ -280,10 +262,13 @@
             <noscript>
             <img class="responsive" src="./modules/1930/assets/imgs/poster.jpg" />
             </noscript>
-            <h3><span class="blinker" ><span class="blink_1" ></span><span class="blink_2" ></span><span class="blink_3" ></span></span><strong>Pan con HQ</strong><br/><br/></h3>
+
           </div>
           <!-- End Pan con HQ -->
-          
+
+          <div class="row">
+           <h3><span class="blinker" ><span class="blink_1" ></span><span class="blink_2" ></span><span class="blink_3" ></span></span><strong>Pan con HQ</strong><br/><br/></h3>
+          </div>
 
 
           <!-- Pan senza HQ  maxZoom: 2 -->
@@ -295,11 +280,14 @@
             <img class="responsive" src="./modules/1930/assets/imgs/poster.jpg" />
             </noscript>
             
-            <h3><span class="blinker" ><span class="blink_1" ></span><span class="blink_2" ></span><span class="blink_3" ></span></span><strong>Pan senza HQ  maxZoom: 2</strong><br/><br/></h3>
+            
           </div>
           <!-- End Pan senza HQ  maxZoom: 2 -->
           
 
+          <div class="row">
+            <h3><span class="blinker" ><span class="blink_1" ></span><span class="blink_2" ></span><span class="blink_3" ></span></span><strong>Pan senza HQ  maxZoom: 2</strong><br/><br/></h3>
+            </div>
 
 
           </div>

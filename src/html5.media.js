@@ -1,9 +1,17 @@
 define(['jquery'], function($) {
 
-	var console = window.muteConsole;
+	var console = window.console;
 
 
 	var HTML5Media = {
+
+
+		isAudio: false,
+
+		controlsVisible: false,
+
+		// are we running in debug?
+		____debugMode : false,
 
 
 		_______playCount: 0,
@@ -13,10 +21,37 @@ define(['jquery'], function($) {
 			this._______playCount ++;
 		},
 
+		encodeUrl: function(url) {
+			return window.encodeURIComponent(url);
+		},
+		escapeHTML: function(s) {
+			return s.toString().split('&').join('&amp;').split('<').join('&lt;').split('"').join('&quot;');
+		},
 
+		getDom: function(){
+			return this.plugin;
+		},
+
+
+		absolutizePath: function(path){
+			var el = document.createElement('div');
+			el.innerHTML = '<a href="' + this.escapeHTML(path) + '">x</a>';
+			return el.firstChild.href;
+		},
+
+
+		applySource: function(){
+			console.error('applySource');
+			this.createMarkup();
+		},
+
+		setSource : function(source){
+			console.error('setSource', source);
+			this._sourceWithoutExtension = source;
+		},
 
 		getInstanceId: function (){
-			return "html5_audio_" + this.elementId + "_" + this._______playCount;
+			return "html5_media_" + this.elementId + "_" + this._______playCount;
 		},
 
 		isMobileBrowser: function() {
@@ -25,7 +60,7 @@ define(['jquery'], function($) {
 
 
 		// check if the browser can play a video
-		hasFeature: function() {
+		hasHTML5MediaFeature: function() {
 			return false;
 		},
 
@@ -56,6 +91,7 @@ define(['jquery'], function($) {
 
 			if (this.isPlayable()) {
 				this.disposeLoadCheck();
+				this.play();
 			}
 
 		},
@@ -147,12 +183,20 @@ define(['jquery'], function($) {
 			var self = this;
 			if (this.plugin) {
 				console.debug('READYSTATE:', this.plugin.readyState);
-				isPlayable = (this.plugin.readyState >= 2);
-				if (!isPlayable) {
-					this.plugin.addEventListener("canplaythrough", function() {
-						return true;
-					});
+				//if(this.isAudio){
+					isPlayable = (this.plugin.readyState === 0 ||this.plugin.readyState >= 2);
+				//}else{
+				//	isPlayable = (this.plugin.readyState >= 2);
+				//}
+				
+				if(this.hasHTML5MediaFeature()){
+					if (!isPlayable) {
+						this.plugin.addEventListener("canplaythrough", function() {
+							return true;
+						});
+					}
 				}
+
 			}
 			return isPlayable;
 		},
@@ -162,8 +206,15 @@ define(['jquery'], function($) {
 		play: function() {
 			this.applySource();
 			if (this.plugin) {
-				console.debug('play');
-				this.plugin.play();
+
+				if(this.isPlayable()){
+					console.debug('play');
+					this.plugin.play();
+				}else{
+					console.debug('not playable');
+				}
+				
+				
 			}
 		},
 
@@ -172,10 +223,10 @@ define(['jquery'], function($) {
 
 			try {
 
-				if (this.isPlayable()) {
+				//if (this.isPlayable()) {
 					this.plugin.pause();
 					this.resetPlayback();
-				}
+				//}
 
 			} catch (e) {
 				console.error('Error stopping');

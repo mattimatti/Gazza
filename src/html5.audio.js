@@ -30,9 +30,12 @@ define(['jquery','html5.media'], function($,HTML5Media) {
 
 	$.extend(HTML5AudioPlayer.prototype, {
 
+		isAudio: true,
+
+
 		// check if the browser can play a video
-		hasFeature: function() {
-			return !!document.createElement('audio').canPlayType;
+		hasHTML5MediaFeature: function() {
+			return document.createElement('audio').canPlayType;
 		},
 
 
@@ -44,8 +47,12 @@ define(['jquery','html5.media'], function($,HTML5Media) {
 
 			var playerStyle = '';
 
-			var flashCode = "<object width='320' height='240' type='application/x-shockwave-flash' data='./images/flashmediaelement.swf'><param name='movie' value='./images/flashmediaelement.swf' /><param name='flashvars' value='controls=false&file='" + this._sourceWithoutExtension + ".mp3' /><img src='http://placehold.it/350x150' width='320' height='240' title='No video playback capabilities' /></object>";
+			var flashHeight = 50;
+			var flashExtension = '.mp3';
+			var flashVars = "preload=true&amp;autoplay=true&amp;debug=true&amp;controls=true&amp;file=" + this.encodeUrl(this.absolutizePath(this._sourceWithoutExtension+flashExtension));
+			var flashCode = "<object width='100%' height='"+flashHeight+"' type='application/x-shockwave-flash' data='./images/flashmediaelement.swf'><param name='movie' value='./images/flashmediaelement.swf' /><param name='flashvars' value='" + flashVars + "' /><img src='http://placehold.it/350x"+flashHeight+"' width='100%' height='"+flashHeight+"' title='No video playback capabilities' /></object>";
 			
+
 			if(!this.options.flasCompatible){
 				flashCode = '';
 				this.hasFlash = false;
@@ -59,7 +66,9 @@ define(['jquery','html5.media'], function($,HTML5Media) {
 			if(this.options.controls){
 				this.$el.attr("controls","controls");
 			}
-
+			if(this.options.preload){
+				this.$el.attr("preload","preload");
+			}
 
 			// the audio element control
 			this.plugin = document.getElementById(this.getInstanceId());
@@ -86,23 +95,7 @@ define(['jquery','html5.media'], function($,HTML5Media) {
 			}
 
 			this.increasePlayCount();
-		},
-
-
-
-
-		applySource: function(){
-			console.error('applySource');
-			this.createMarkup();
-		},
-
-		setSource : function(source){
-			console.error('setSource', source);
-			this._sourceWithoutExtension = window.escape(source);
 		}
-
-
-
 
 
 	});

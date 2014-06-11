@@ -42,6 +42,10 @@ define(['jquery','mixins.preloader','mixins.sound'], function($,MixinPreloader,M
 			if(this.options.sound){
 				this.options.interactive  = true;
 			}
+
+			if(this.options.soundControls){
+				this.initSound();
+			}
 			
 
 			if(this.options.interactive){
