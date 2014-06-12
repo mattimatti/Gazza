@@ -14758,6 +14758,12 @@ define('components.pan',['jquery', 'mixins.preloader', 'mixins.sound','mixins.ge
 				return;
 			}
 
+			if (this.isMobileBrowser()) {
+				this.hideBlinker();
+				console.warn(this.elementId + ' NO INTERACTIVITY IN MOBILE');
+				return;
+			}
+
 
 			console.info(this.elementId + ' ComponentPan initialize');
 

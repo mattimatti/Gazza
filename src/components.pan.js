@@ -134,6 +134,12 @@ define(['jquery', 'mixins.preloader', 'mixins.sound','mixins.genericcomponent'],
 				return;
 			}
 
+			if (this.isMobileBrowser()) {
+				this.hideBlinker();
+				console.warn(this.elementId + ' NO INTERACTIVITY IN MOBILE');
+				return;
+			}
+
 
 			console.info(this.elementId + ' ComponentPan initialize');
 
