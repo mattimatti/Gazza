@@ -18,8 +18,15 @@ define(['jquery'], function($) {
 
 		// remove the blinker
 		hideBlinker: function(){
+			var blinker;
 			if(this.$el){
-				this.$el.find(".blinker").hide();
+				blinker = this.$el.find(".blinker");
+				if(blinker.length > 0 ){
+					blinker.hide();
+				}else{
+					blinker = this.$el.next(".row").find(".blinker").first();
+					blinker.hide();
+				}
 			}
 		},
 
